@@ -119,12 +119,58 @@ Design questions: what the skeleton contains; how it links into the C3
 monorepo; how much comes from agentic-project-template's governance
 patterns vs being cc-specific.
 
+### C5 — first-class CLI and API
+
+cc is a library and a CLI, both first-class: the merge/diff/adopt engines
+are importable with a stable, tested API, and the CLI exposes the same
+operations with stable commands, stable exit codes, and machine-readable
+output (JSON / agent formats) so that agents — not just humans — are
+first-class users.
+
+Design questions:
+
+- API stability policy (what is public, semver from when).
+- Output contracts: a JSON schema per command result; agent-consumable
+  error and finding formats (the alint `agent` output format is prior art
+  in the maintainer's toolchain).
+- Whether skills call only the CLI (keeping one surface) or may use the
+  library directly.
+
+### C6 — agentic skills, with a graduation principle
+
+cc ships dotagents-installable skills so agents can (a) author a copier
+template well — questions, jinja gotchas, answers files, stamp testing —
+and (b) drive cc directly for adopt/update/contribute flows.
+
+**Graduation principle:** cc must leave users better at copier, not
+dependent on cc. Every cc operation is explainable in copier terms; skills
+teach the copier concepts they use; running cc's flows never produces a
+state a user cannot understand or continue with plain copier. A user who
+outgrows cc loses nothing. This is the "extend the human" principle made
+testable.
+
+Design questions:
+
+- Skill inventory and granularity: template-authoring, adopt, update,
+  contribute — one skill each or composed?
+- Where skills live (cc repo, dotagents-installable) and how they stay in
+  sync with CLI behavior (the referenced-skill-is-a-declared-dependency
+  rule from the house spec style).
+- How "explainable in copier terms" is enforced: per-command copier
+  equivalents in docs/help, an `--explain` surface, or skill-authored
+  teaching sections — pick a mechanism that can fail a review, not just an
+  intention.
+
 ## Constraints
 
 - cc never modifies a project or pushes to a remote without explicit,
   reviewable human consent at the moment of the action.
 - The merge/diff engines are libraries with tests, usable independently
-  of any CLI flow.
+  of any CLI flow — the CLI is a surface over them, not the definition
+  of them (C5).
+- **No lock-in.** Anything cc produces or changes in a project is
+  understandable and continuable with plain copier; every flow documents
+  its copier-native equivalent (C6, graduation principle).
 - cc stays tool-agnostic about which template is "in charge"; multi-template
   coexistence is a first-class state, not an edge case.
 

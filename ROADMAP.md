@@ -13,13 +13,18 @@
   adopt UX, baseline establishment).
 - Choose stack, seed harness, adopt a task store.
 
-## Phase 1 — adopt MVP (C1)
+## Phase 1 — adopt MVP (C1, C5, C6)
 
 - Merge-engine library extracted and generalized from the
   agentic-project-template prototype: per-format mergers (TOML, YAML,
-  marked sections) + conflict-marker fallback for unknown formats.
+  marked sections) + conflict-marker fallback for unknown formats —
+  shipped as a tested library API and a CLI with stable commands, exit
+  codes, and JSON output.
 - `adopt` flow: render → classify per file (add / identical / conflict) →
   apply with review → write answers with a valid baseline.
+- First cc skill shipped alongside (adopt/update), carrying its teaching
+  sections — the graduation principle is exercised from the first release,
+  not deferred.
 - Dogfood: adopt a real template into a real existing personal repo.
 
 ## Phase 2 — contribute / phone home MVP (C2)
@@ -33,6 +38,9 @@
 
 - Monorepo layout with per-template copier roots.
 - Choosing flow (picker or meta-template), DRY shared-data mechanism.
+- Template-authoring skill (C6): walks an agent or human through building
+  a template with house conventions — questions, jinja, answers files,
+  stamp tests — teaching copier concepts throughout.
 - Migrate the maintainer's existing templates (copier-mise-sandbox,
   python-cli-template, dotfile-topic-copier, agentic-project-template) as
   the first collection.
