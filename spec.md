@@ -54,6 +54,13 @@ Design questions:
   agentic-project-template merge engine argues for a **registry of
   structure-aware mergers** (TOML deep-merge, YAML list merge, marked
   sections) with conflict markers as the fallback for unknown formats.
+- Prior art close to home: copier-uv-bleeding implements a different
+  architecture for the same problem — `_skip_if_exists` on mixed
+  template/user files plus a migration task that regenerates them while
+  preserving `template-preserve:<name>:start/:end` marked regions
+  byte-for-byte. Evaluate marked-region preservation as a mechanism cc
+  can adopt or compose with the merger registry; it may be strictly
+  better for files with stable named regions.
 - Adopt of one template vs several into one project (#1738): how do
   per-template answers files coexist (the two-answers-files pattern
   generalizes to N)?
@@ -160,6 +167,41 @@ Design questions:
   equivalents in docs/help, an `--explain` surface, or skill-authored
   teaching sections — pick a mechanism that can fail a review, not just an
   intention.
+- Skill references to foundational templates and tooling: the authoring
+  and usage skills should point at the real catalog (the cc monorepo
+  templates, agentic-project-template, mise, dotagents, base project
+  templates) rather than generic advice — a curated reference list the
+  skills cite, kept in the repo where it can be reviewed and updated.
+
+### C7 — learnings routing (the virtuous knowledge cycle)
+
+Learnings made in one project routinely apply to others — the same
+failure, the same convention, the same tool discovery. cc (or a cc-borne
+skill) should close that loop: harvest learnings from a project's
+existing surfaces (experiments logs, retro reports, handoff docs,
+spec decisions), propose destinations for each (another project's spec or
+context, a central learnings area, promotion into the cc monorepo's
+shared data, or generation into a reusable skill), and act only with
+human review.
+
+Real instances that motivate this: the naming-skill watchlist handoff
+(collisions learned during one session belong in a shared reference),
+handoff documents written for one session that carry decisions other
+repos need, and the agentic layer's shrink-loop retro, which already
+produces findings that outlive their project.
+
+Design questions:
+
+- Harvest surfaces and formats: what counts as a learning, and what
+  machine-readable shape does it take (a structured record vs prose)?
+- Destination routing: per-learning destination rules, a central
+  learnings store, or both — and how destinations consent.
+- Skill generator: when a learning recurs across projects, promote it to
+  a dotagents-installable skill rather than repeating it — cc's C6
+  machinery is the natural home.
+- Relationship to C2: C2 routes *code* changes upstream to templates;
+  C7 routes *knowledge* sideways and upward. Same review discipline,
+  different artifact type.
 
 ## Constraints
 
