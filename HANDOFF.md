@@ -41,6 +41,33 @@ hardest concepts:
   problem (#1738) for a two-layer case. cc generalizes to N templates.
 - cc does not replace it today. Whether cc eventually absorbs that CLI or
   apt consumes cc is an open question in the spec (do not decide casually).
+  Tracked in apt's backlog as APT-16.
+- cc is seeded at `~/code/projects/personal/templates/copier-cat` (the
+  template family moved under `templates/` on 2026-10-13).
+
+## Changes since seed (2026-10-13)
+
+- **C7 added** (learnings routing — the virtuous knowledge cycle): harvest
+  learnings from project surfaces and route them to where they will be
+  acted on; recurring learnings promote into generated skills. Real
+  motivating instances: the naming-skill watchlist handoff, handoff docs,
+  and agentic-project-template's shrink-loop retro.
+- **C1 gained close prior art**: copier-uv-bleeding implements the
+  alternative architecture (skip-if-exists + migration script regenerating
+  mixed files while preserving `template-preserve:<name>:start/:end`
+  marked regions byte-for-byte). Evaluate against the merger registry
+  before designing.
+- **C6 gained a references design question**: skills must cite the real
+  foundational catalog (monorepo templates, agentic-project-template,
+  mise, dotagents, base project templates), not generic advice.
+- **The sibling fork is now a concrete monorepo candidate**:
+  copier-template-copier-template (bengineerdavis's fork of cbrown1234's)
+  was customized — go-task replaced by mise everywhere (repo + generated
+  template + CI + renovate), licensing expanded to 16 SPDX options
+  including BlueOak-1.0.0 and the FSL Fair Source pair. Its own
+  HANDOFF.md documents divergence and the upstream-sync question.
+- agentic-project-template tracks the cc relationship as backlog task
+  APT-16 (absorb / consume / coexist — spec open question).
 
 ## First-session suggestions (in rough order)
 
