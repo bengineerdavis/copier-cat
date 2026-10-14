@@ -110,10 +110,12 @@ Design questions:
 - The choosing flow: cc-native interactive picker vs a real meta-template
   that delegates — what does the meta-template actually render (a stub?
   nothing? answers only)?
-- DRY shared data: copier has no include mechanism. Candidates: a shared
-  answers file cc seeds via `--data`, a question/defaults library cc
-  composes, or generation-time injection. This is cc's biggest design
-  space; prototype before committing.
+- DRY shared data: copier has `!include` in `copier.yml` (glob-capable,
+  documented merge semantics) and `_external_data` for reading another
+  template's answers file — but conditional/variable-driven includes are
+  an unresolved ask (#1076), base-template inheritance is open (#934),
+  and no mechanism shares data across repos without vendoring (the
+  shared-config-as-submodule practice is workaround, not mechanism).
 - Versioning: per-template tags vs monorepo-wide releases; how updates
   address a specific template inside the monorepo.
 
@@ -252,3 +254,4 @@ questions move to the decision record.
 | cc ↔ apt | agentic-project-template is a regular copier template for now — not an engine owner or special consumer. Its CLI is the prototype cc's C1 engine ports from (2026-10-13, revised from an earlier full-absorb decision the same session) |
 | Binary name | `copier-cat` (2026-10-13) |
 | Upstream posture | Prototype adopt in cc, shaped to stay donatable upstream (copier#2486); no PR-first engagement (2026-10-13) |
+
