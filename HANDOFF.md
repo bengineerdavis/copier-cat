@@ -64,6 +64,29 @@ All four spec open questions resolved (see spec decision record):
   This came from the session's cc↔apt resolution: apt is just a
   regular template, and that generalized.
 
+## Session 2026-10-13 — prior-art research landed
+
+Findings recorded as the spec's new **References** section (not
+decisions). Headlines:
+
+- **cruft** is the closest analogue; its complaint history (all-or-nothing
+  apply, `.rej` UX, blind re-prompt adoption, `git apply -3` blob
+  dependency) is cc's requirements list for adopt/update UX.
+- **copier#2376** proposes a `git merge`-based update rewrite — C1's
+  design must be merge-shaped to stay donatable; conflict markers-only
+  would fight the direction of travel.
+- **C2's gap is real and unclaimed**: zero contribute-back tooling
+  exists anywhere found. copier's update already computes the
+  user-modifications diff internally; that's the seed.
+- **C3 correction recorded**: copier DOES have `!include` and
+  `_external_data`; the missing pieces are cross-repo sharing,
+  conditional includes (#1076), inheritance (#934). No chooser/
+  meta-picker exists anywhere — multiple-template repos in the wild
+  all paper over it with custom wrapper CLIs.
+- **Upstream risk noted**: copier#2487 (adopt PR) was closed unmerged
+  with no stated reason; revivals got silence. Donatability requires
+  small, deference-shaped changes.
+
 ## Changes since seed (2026-10-13)
 
 - **C7 added** (learnings routing — the virtuous knowledge cycle): harvest
