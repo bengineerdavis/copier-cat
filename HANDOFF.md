@@ -39,11 +39,30 @@ hardest concepts:
 - Its spec (Behavior: Composition; ARCHITECTURE.md merge table) documents
   the "two answers files" pattern — one answer to the multi-template
   problem (#1738) for a two-layer case. cc generalizes to N templates.
-- cc does not replace it today. Whether cc eventually absorbs that CLI or
-  apt consumes cc is an open question in the spec (do not decide casually).
-  Tracked in apt's backlog as APT-16.
+- cc treats it as a regular copier template (2026-10-13 session): it will
+  join cc's Phase 3 collection like any other template. Its CLI stays the
+  prototype cc's C1 engine ports from; no absorb/consume mechanics for
+  now.
 - cc is seeded at `~/code/projects/personal/templates/copier-cat` (the
   template family moved under `templates/` on 2026-10-13).
+
+## Session 2026-10-13 — open questions resolved
+
+All four spec open questions resolved (see spec decision record):
+
+- Stack: **Python, uv-managed**. Phase 0's stack decision has landed; the
+  "no scaffolding before stack decision" rule in AGENTS.md is satisfied —
+  harness seeding may begin.
+- cc ↔ apt: revised mid-session — **agentic-project-template is just a
+  regular copier template for now**, not an engine owner or special
+  consumer. Its CLI remains the prototype cc's C1 engine ports from
+  (APT-16 settled this way).
+- Binary: **copier-cat**. Upstream: **prototype in cc, donatable**.
+- New hard constraint recorded: **cc operates on regular copier
+  templates as their own units** — cc-native structure is always
+  additive, never a prerequisite for a template to work with cc.
+  This came from the session's cc↔apt resolution: apt is just a
+  regular template, and that generalized.
 
 ## Changes since seed (2026-10-13)
 

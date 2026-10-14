@@ -104,7 +104,9 @@ templates is defined once.
 Design questions:
 
 - Layout: `templates/<name>/{copier.yml,template/}` and how copier's
-  `_subdirectory` maps onto it (each template is its own copier root).
+  `_subdirectory` maps onto it (each template is its own copier root) —
+  every template must remain a plain, standalone-usable copier template
+  regardless of monorepo hosting.
 - The choosing flow: cc-native interactive picker vs a real meta-template
   that delegates — what does the meta-template actually render (a stub?
   nothing? answers only)?
@@ -215,21 +217,29 @@ Design questions:
   its copier-native equivalent (C6, graduation principle).
 - cc stays tool-agnostic about which template is "in charge"; multi-template
   coexistence is a first-class state, not an edge case.
+- **Operates on regular copier templates.** cc acts on copier templates as
+  their own units — any conforming copier template works with cc without
+  cc-specific structure. cc's conveniences (monorepo hosting, shared data,
+  automation) are additive layers on top, never prerequisites: a template
+  that never touches cc's extras must remain fully usable by plain copier
+  and by cc alike.
 
 ## Open questions
 
-Each open question carries a safe default until resolved.
+Each open question carries a safe default until resolved. Resolved
+questions move to the decision record.
 
-- **Language/stack.** Python (matches the maintainer's tooling and the
-  prototype code). Default: Python, uv-managed. Owner: bdavis.
-- **cc vs agentic-project-template CLI.** Absorb, consume, or coexist?
-  Default: coexist until cc's adopt reaches parity; revisit then.
-  Owner: bdavis.
-- **Binary name.** `copier-cat`; `cc` is the C compiler and stays a
-  personal alias. Default: confirmed. Owner: bdavis.
-- **Upstream posture for adopt.** Prototype in cc vs contribute a PR to
-  copier (a prior attempt, #2487, was closed). Default: prototype in cc,
-  keep it donatable. Owner: bdavis.
+- ~~**Language/stack.**~~ Resolved 2026-10-13: Python, uv-managed.
+- ~~**cc vs agentic-project-template CLI.**~~ Resolved 2026-10-13, revised
+  same session: agentic-project-template is just a regular copier
+  template for now — a managed member of cc's future template collection,
+  not a special engine owner or consumer. Its adopt-shaped CLI is the
+  prototype cc's C1 engine ports from; absorb/consume questions for its
+  CLI are moot for now (apt backlog APT-16).
+- ~~**Binary name.**~~ Resolved 2026-10-13: `copier-cat`; `cc` remains a
+  personal alias.
+- ~~**Upstream posture for adopt.**~~ Resolved 2026-10-13: prototype in
+  cc, keep it donatable.
 
 ## Decision record
 
@@ -238,3 +248,7 @@ Each open question carries a safe default until resolved.
 | Name | copier-cat (cc); free on PyPI/npm/crates, unclaimed under bengineerdavis on GitHub (checked 2026-10-12) |
 | Origin | Spun out of the agentic-project-template session (2026-10-12); its CLI is the prototype of C1/C2 mechanics |
 | Seed scope | Docs only — no code or harness; the next session chooses the stack and seeds it |
+| Language/stack | Python, uv-managed (2026-10-13) — matches the maintainer's tooling and the apt merge-engine prototype that C1 ports; copier itself is Python, so C2 diff-reuse is direct library use |
+| cc ↔ apt | agentic-project-template is a regular copier template for now — not an engine owner or special consumer. Its CLI is the prototype cc's C1 engine ports from (2026-10-13, revised from an earlier full-absorb decision the same session) |
+| Binary name | `copier-cat` (2026-10-13) |
+| Upstream posture | Prototype adopt in cc, shaped to stay donatable upstream (copier#2486); no PR-first engagement (2026-10-13) |
