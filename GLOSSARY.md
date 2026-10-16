@@ -27,6 +27,13 @@ _Avoid_: snapshot, seed commit
 The set of structure-aware, deterministic per-format mergers cc uses to combine project files with template output, with a fallback for unknown formats.
 _Avoid_: merge engine, merge driver (as a cc term)
 
+**Per-file review**:
+The unit of consent in adopt: every rendered file is accepted, rejected, or edited individually before it lands.
+
+**Marked region**:
+A named, byte-stable section inside a generated file that the template owns; candidates for preservation across regenerations.
+_Avoid_: preserve markers, template-preserve (that name belongs to copier-uv-bleeding's mechanism)
+
 **Template-worthy change**:
 A change made in a stamped project that belongs in the template rather than staying project-local.
 _Avoid_: upstreamable change, template fix
