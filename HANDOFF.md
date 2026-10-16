@@ -26,12 +26,12 @@ Handoff for the next agent/human session. Read top to bottom.
 
 ## What exists here
 
-Documentation only, on purpose: README, spec draft, roadmap, this handoff,
-license, gitignore. No code, no harness. The next session chooses the
-language/stack (Python is the working assumption — see spec open questions)
-and seeds its own harness; the house harness pattern (mise + prek + backlog)
-is demonstrated in agentic-project-template and can be copied when wanted,
-not before the shape settles.
+Seeded (2026-10-15/16): spec + PRINCIPLES.md + glossary + ADRs, the
+harness (mise, prek.toml, uv, roborev reviewing every commit), and the
+backlog store with tasks CC-1..3. Phase 1 starts at CC-1, the
+merger-registry extraction from the agentic-project-template prototype
+(`~/code/projects/personal/templates/agentic-project-template`), not
+from new scaffolding.
 
 ## The relationship to agentic-project-template
 
@@ -207,18 +207,21 @@ decisions). Headlines:
 
 ## First-session suggestions (in rough order)
 
-1. Read spec.md open questions; confirm or challenge them — the spec is a
-   draft and the session should push back, not obey.
-2. Research prior art before designing: `cruft` (update story for
+1. ~~Read spec.md open questions; confirm or challenge them — the spec is
+   a draft and the session should push back, not obey.~~ (2026-10-13, and
+   grill rounds 1-3 pushed back several times.)
+2. ~~Research prior art before designing: `cruft` (update story for
    cookiecutter), copier's own discussions on contribute-back workflows,
    monorepo template collections (how others host N templates in one repo).
-   Record findings as spec references, not as decisions.
-3. Prototype `adopt` first (Roadmap Phase 1): it is the most grounded
-   feature — port the apt merge engine behind a per-format merger registry
-   (TOML/YAML/markdown-section first), dogfood by adopting a real template
+   Record findings as spec references, not as decisions.~~ (2026-10-13,
+   recorded as the spec's References section.)
+3. Prototype `adopt` first (Roadmap Phase 1, current): it is the most
+   grounded feature — port the apt merge engine behind the merger
+   registry (task CC-1, then CC-3), dogfood by adopting a real template
    into a real personal repo.
-4. Keep commits per commit-hygiene; keep the spec's ambiguity discipline
-   (open questions with safe defaults and owners, never guesses).
+4. Keep commits per commit-hygiene; keep the ambiguity discipline
+   (open questions with safe defaults and owners, never guesses), and
+   treat PRINCIPLES.md as the constitution its amendment rule says it is.
 
 ## Environment notes
 
@@ -228,4 +231,4 @@ decisions). Headlines:
 - Backlog/backlog-md-py is the task-store convention in the sibling
   projects; **backlog-md-py is adopted here too** (grill round 2,
   2026-10-15 — partial parity accepted with the verdict recorded),
-  seeding the harness/backlog store is the next action.
+  seeding the harness/backlog store is done; Phase 1 starts at task CC-1.

@@ -1,9 +1,12 @@
 # Default agent for this repo when no workflow-specific agent is set.
 agent = 'opencode'
 review_guidelines = '''
-This is copier-cat (cc): a copier template manager currently in Phase 0
-(docs-only). Until the harness lands, do not flag missing code, tests,
-or CI — the seed scope deliberately ships docs only.
+This is copier-cat (cc): a copier template manager. Phase 0 is complete
+(spec, principles, ADRs, glossary, harness, task store); Phase 1 is
+active — the merge-engine extraction, backlog task CC-1. The repo is
+still mostly documentation, so do not flag missing code or tests where
+work is explicitly gated by open questions or by backlog tasks still
+To Do.
 
 Ground rules the reviewer should enforce:
 
@@ -23,8 +26,8 @@ Ground rules the reviewer should enforce:
 
 What to leave alone:
 
-- Deliberately deferred work gated by open questions.
-- The seed's lack of tooling (no harness yet is intentional).
+- Deliberately deferred work gated by open questions (spec) or by
+  backlog tasks still To Do (CC-2, CC-3).
 '''
 # Default model for this repo when no workflow-specific model is set.
 model = ''

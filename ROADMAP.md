@@ -1,10 +1,10 @@
 # Roadmap
 
-> Seed phase. Nothing here is committed; phases re-order as design answers
-> land. Current priorities live in the spec's open questions until a task
-> store is adopted.
+> Seed phase complete. Nothing here is committed forever; phases re-order
+> as design answers land. Current priorities live in the backlog store
+> (`backlog/tasks/`).
 
-## Phase 0 — Ground and design (current)
+## Phase 0 — Ground and design (complete)
 
 - Read and digest copier#2486, #955, #2005, #1738, and the closed PR #2487.
 - Survey prior art: cruft's update story, existing monorepo template
@@ -14,10 +14,10 @@
   record; docs/adr/0001-0002; grill rounds 1-2 for per-file review and the
   apply flow), with the marked-region evaluation and multi-template
   answers-file coexistence (#1738) still open.
-- ~~Choose stack~~ (2026-10-13); seed the harness and adopt the task store
-  (backlog-md-py, grill round 2 2026-10-15) — the next action.
+- ~~Choose stack~~ (2026-10-13); ~~seed the harness and adopt the task
+  store (backlog-md-py)~~ (2026-10-15).
 
-## Phase 1 — adopt MVP (C1, C5, C6)
+## Phase 1 — adopt MVP (C1, C5, C6) (current)
 
 - Merger-registry library extracted and generalized from the
   agentic-project-template prototype: per-format mergers (TOML, YAML,
