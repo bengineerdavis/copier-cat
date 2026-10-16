@@ -120,7 +120,21 @@ nuance worth preserving:
 
 C2's design questions in the spec are struck with these resolutions;
 round 4's frontier is C3's choosing flow and shared data, plus the
-C4/C6/C7 ground. Harness seeding remains the next action.
+C4/C6/C7 ground.
+
+## Session 2026-10-15 — harness seeded
+
+Phase 0's last item landed. The harness follows the apt house pattern,
+with one deliberate deviation the author specified: **prek's config is
+`prek.toml`** (prek 0.5.5 defaults to TOML), not the legacy
+`.pre-commit-config.yaml`. Stack: uv + Python 3.12, ruff + pyrefly via
+uv-run local prek hooks (tool pins live in pyproject.toml only), tombi
+for TOML lint, copier 9.18.2 as a real dependency (C2's diff-sourcing
+decision exercised by the smoke test). Task store: backlog-md-py,
+`backlog-py init --defaults --task-prefix cc`; seed tasks CC-1 (merger
+registry extraction), CC-2 (marked-region study), CC-3 (adopt CLI MVP).
+AGENTS.md's "nothing is implemented" routing rule is retired. Phase 1
+starts at CC-1.
 
 ## Session 2026-10-13 — open questions resolved
 

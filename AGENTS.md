@@ -13,7 +13,8 @@ only, by decision (spec: Decision record, Seed scope).
 
 - The spec governs; this file routes. Do not invent normative behaviors
   here before the spec's open questions resolve.
-- Nothing is implemented yet: resist scaffolding code until Phase 0's
-  stack decision lands.
+- The harness is seeded (mise + prek.toml + uv + backlog-md-py store);
+  C1 work starts from the merger-registry extraction (task CC-1), not
+  from new scaffolding.
 - Grounding links live in HANDOFF.md; read the copier issues before
   designing adopt/contribute mechanics.
