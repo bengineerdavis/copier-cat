@@ -208,4 +208,6 @@ decisions). Headlines:
   9.18.2 is pinned user-wide via pipx.
 - GitHub CLI (`gh`) is authenticated as bengineerdavis.
 - Backlog/backlog-md-py is the task-store convention in the sibling
-  projects; adopting it here is the new session's call.
+  projects; **backlog-md-py is adopted here too** (grill round 2,
+  2026-10-15 — partial parity accepted with the verdict recorded),
+  seeding the harness/backlog store is the next action.
