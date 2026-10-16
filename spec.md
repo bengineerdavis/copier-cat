@@ -292,6 +292,7 @@ questions move to the decision record.
 | Proposal state (C2) | cc-local state dir keyed by (project, template) identity; no in-project markers (grill round 3, 2026-10-15) |
 | PR mechanics (C2) | Two explicit commands: prepare (branch + commits in a template checkout) and publish (user's own `gh` auth); no fork management in MVP (grill round 3, 2026-10-15) |
 | Monorepo subpath (C2) | Ownership map carries a template-root offset from day one; subpath PRs deferred to Phase 3 (grill round 3, 2026-10-15) |
+| Diff sourcing (C2) | Reuse copier's own update computation as a library import — one source of truth; tracks copier#2376's rewrite rather than drifting from it (grill round 3, 2026-10-15) |
 
 ## References
 
