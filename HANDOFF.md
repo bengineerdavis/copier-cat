@@ -96,6 +96,32 @@ GLOSSARY gained per-file review and marked region (avoid-words:
 preserve markers / template-preserve). The frontier now points at C2
 (classification, state, trust) once the engine exists.
 
+## Session 2026-10-15 — grill round 3 (C2)
+
+All seven C2 frontier questions resolved; two answers carried author
+nuance worth preserving:
+
+- **Diff sourcing**: reuse copier's own update computation (library
+  import, one source of truth — inherits #2376 rather than drifting).
+- **Ownership**: render-derived + cc config overrides, and the boundary
+  is a rule, not a taste: cc computes classification from artifacts
+  copier and the template already produce; nothing is pushed onto
+  either. A mechanism that would require template cooperation is a
+  scope error (author wording: "out of the scope of copier and a given
+  template, anyway").
+- **Render→source mapping**: reconstruct by re-rendering with recorded
+  answers. Author's conditional on record: if reconstruction proves
+  expensive, cc owns the render-map cache — a template-maintained map
+  file is never the fallback shape.
+- Per-file changesets, cc-local state dir keyed by (project, template),
+  two-command prepare/publish with the user's own `gh` auth, and a
+  template-root offset in the ownership map (subpath PRs deferred to
+  Phase 3).
+
+C2's design questions in the spec are struck with these resolutions;
+round 4's frontier is C3's choosing flow and shared data, plus the
+C4/C6/C7 ground. Harness seeding remains the next action.
+
 ## Session 2026-10-13 — open questions resolved
 
 All four spec open questions resolved (see spec decision record):

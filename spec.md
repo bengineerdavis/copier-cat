@@ -95,16 +95,32 @@ before anything leaves the machine.
 
 Design questions:
 
-- Classification: deterministic heuristics first (file ownership paths,
-  marker comments, answers-file knowledge), LLM-assisted suggestions as
-  an opt-in layer — never the decider.
-- State: where does "already proposed / already merged" live without
-  polluting projects (cc-local state dir vs project marker)?
-- Trust: PR creation is always human-triggered; scope tokens/permissions
-  to the template repo only.
-- Monorepo interplay: a template living at `templates/<name>/` inside a
-  monorepo means PRs target a subpath — file ownership maps must handle
-  that (ties into C3).
+- ~~**Classification**: deterministic heuristics first (file ownership
+  paths, marker comments, answers-file knowledge), LLM-assisted
+  suggestions as an opt-in layer — never the decider.~~ Resolved
+  2026-10-15 (grill round 3): ownership derives deterministically from
+  the render itself — paths the template renders are template-owned,
+  paths it does not touch are project-owned, with cc config as the
+  override channel. The boundary this draws: cc computes classification
+  from artifacts copier already produces and never asks the template to
+  cooperate (no marker conventions required); LLM-assisted suggestions
+  remain opt-in and non-deciding. Any mechanism that would push work
+  onto templates or into copier is out of scope by this rule.
+- ~~**State**: where does "already proposed / already merged" live
+  without polluting projects (cc-local state dir vs project marker)?~~
+  Resolved 2026-10-15 (grill round 3): cc-local state dir keyed by a
+  stable (project, template) identity; projects carry no cc residue.
+- ~~**Trust**: PR creation is always human-triggered; scope
+  tokens/permissions to the template repo only.~~ Resolved 2026-10-15
+  (grill round 3): structurally two commands — prepare (branch + commits
+  in a template checkout) and publish (explicit, using the user's own
+  `gh` auth); no fork management in the MVP.
+- ~~**Monorepo interplay**: a template living at `templates/<name>/`
+  inside a monorepo means PRs target a subpath — file ownership maps
+  must handle that (ties into C3).~~ Resolved 2026-10-15 (grill round
+  3): the ownership map carries a template-root offset from day one;
+  subpath PRs themselves are deferred to Phase 3 when monorepo targets
+  exist.
 
 ### C3 — monorepo of templates + chooser
 
@@ -270,6 +286,12 @@ questions move to the decision record.
 | Adopt apply flow (C1) | Per-file accepted merges land directly in the working tree; committing stays the user's act — the accept is the consent moment, `git diff` is the review surface (grill round 2, 2026-10-15) |
 | Answers-file naming (C1) | Copier-native per-template pattern: plain `.copier-answers.yml` for a first template, `.copier-answers.<template>.yml` as more coexist (grill round 2, 2026-10-15) |
 | Adopt MVP scope (C1) | Single-template runs; N-template coexistence is a later flow on the same engine/answers primitives (grill round 2, 2026-10-15) |
+| Classification ownership (C2) | Render-derived, deterministic: template-rendered paths are template-owned, everything else project-owned; cc config overrides; the template is never asked to cooperate and no work is pushed onto copier (grill round 3, 2026-10-15) |
+| Render→source mapping (C2) | Reconstructed deterministically by re-rendering with recorded answers; if that proves expensive, cc owns a cached render-map instead — never a template-maintained convention (grill round 3, 2026-10-15) |
+| Changeset shape (C2) | One changeset per file; classification clustering is presentation, not engine (grill round 3, 2026-10-15) |
+| Proposal state (C2) | cc-local state dir keyed by (project, template) identity; no in-project markers (grill round 3, 2026-10-15) |
+| PR mechanics (C2) | Two explicit commands: prepare (branch + commits in a template checkout) and publish (user's own `gh` auth); no fork management in MVP (grill round 3, 2026-10-15) |
+| Monorepo subpath (C2) | Ownership map carries a template-root offset from day one; subpath PRs deferred to Phase 3 (grill round 3, 2026-10-15) |
 
 ## References
 
