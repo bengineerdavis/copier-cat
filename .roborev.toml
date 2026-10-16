@@ -3,7 +3,7 @@ agent = 'opencode'
 review_guidelines = '''
 This is copier-cat (cc): a copier template manager. Phase 0 is complete
 (spec, principles, ADRs, glossary, harness, task store); Phase 1 is
-active — the merge-engine extraction, backlog task CC-1. The repo is
+active — the merger-registry extraction, backlog task CC-1. The repo is
 still mostly documentation, so do not flag missing code or tests where
 work is explicitly gated by open questions or by backlog tasks still
 To Do.

@@ -35,7 +35,7 @@ from new scaffolding.
 
 ## The relationship to agentic-project-template
 
-`~/code/projects/personal/agentic-project-template` (GitHub:
+`~/code/projects/personal/templates/agentic-project-template` (GitHub:
 bengineerdavis/agentic-project-template) is the **prototype** of cc's
 hardest concepts:
 
