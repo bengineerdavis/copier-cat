@@ -34,10 +34,11 @@
   explainable report.
 - Review flow and human-triggered PR creation against the template repo.
 
-## Phase 3 — monorepo + meta-template (C3)
+## Phase 3 — monorepo + chooser (C3)
 
 - Monorepo layout with per-template copier roots.
-- Choosing flow (picker or meta-template), DRY shared-data mechanism.
+- Choosing flow (the chooser: cc-native picker or a delegated flow),
+  DRY shared-data mechanism.
 - Template-authoring skill (C6): walks an agent or human through building
   a template with house conventions — questions, jinja, answers files,
   stamp tests — teaching copier concepts throughout.

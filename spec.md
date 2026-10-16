@@ -7,7 +7,7 @@ from one template; cc manages the *lifecycle around* that: bringing
 existing projects under a template (adopt), carrying project-side fixes
 back to the template so every inheriting project benefits (contribute /
 phone home), and operating a collection of templates as one monorepo with
-shared data and a choosing meta-template.
+shared data and a chooser for selecting between them.
 
 The test for every capability below: it extends the maintainer, it prefers
 deterministic machinery over AI, and it never silently destroys or
@@ -95,11 +95,11 @@ Design questions:
   monorepo means PRs target a subpath — file ownership maps must handle
   that (ties into C3).
 
-### C3 — monorepo of templates + meta-template
+### C3 — monorepo of templates + chooser
 
 One repository hosts a collection of templates; users choose among them;
-a meta-template (or cc-native flow) helps choose; data shared across the
-templates is defined once.
+a chooser flow (cc-native, or delegating through a template) helps choose;
+data shared across the templates is defined once.
 
 Design questions:
 
@@ -107,9 +107,9 @@ Design questions:
   `_subdirectory` maps onto it (each template is its own copier root) —
   every template must remain a plain, standalone-usable copier template
   regardless of monorepo hosting.
-- The choosing flow: cc-native interactive picker vs a real meta-template
-  that delegates — what does the meta-template actually render (a stub?
-  nothing? answers only)?
+- The choosing flow: a cc-native interactive picker vs a choosing flow
+  that delegates to a template — what the template renders in that case
+  (a stub? nothing? answers only)?
 - DRY shared data: copier has `!include` in `copier.yml` (glob-capable,
   documented merge semantics) and `_external_data` for reading another
   template's answers file — but conditional/variable-driven includes are
