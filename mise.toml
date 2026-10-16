@@ -1,0 +1,33 @@
+# Development harness for THIS repository (copier-cat itself).
+# copier-cat's stamped projects get what adopt generates, not this file.
+
+#:schema https://mise.jdx.dev/schema/mise.json
+
+[tools]
+uv = "latest"
+python = "3.12"
+prek = "0.5.5"
+tombi = "1.5.5"
+copier = "9.18.2"
+
+[tasks.install]
+description = "Bootstrap tools, venv, and hooks"
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+mise install uv python prek tombi copier || true
+uv sync --all-groups
+uv run prek install --force 2>/dev/null || prek install --force
+'''
+
+[tasks.test]
+description = "Unit tests"
+run = "uv run pytest tests/ -x -q"
+
+[tasks.lint]
+description = "Lint and type-check (non-mutating)"
+run = "uv run ruff check src tests && uv run pyrefly check src tests"
+
+[tasks.lint-fix]
+description = "Apply lint fixes"
+run = "uv run ruff check --fix src tests && uv run ruff format src tests"

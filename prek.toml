@@ -1,0 +1,28 @@
+#:schema https://www.schemastore.org/prek.json
+
+default_install_hook_types = ["pre-commit"]
+default_stages = ["pre-commit"]
+
+[[repos]]
+repo = "builtin"
+hooks = [
+  { id = "end-of-file-fixer" },
+  { id = "trailing-whitespace" },
+  { id = "check-yaml" },
+  { id = "check-json" },
+  { id = "check-toml" },
+  { id = "check-merge-conflict" },
+  { id = "check-added-large-files" },
+]
+
+# Ruff and pyrefly run through uv so the pin lives in pyproject.toml only —
+# one source of truth for the toolchain; no separate rev to chase.
+
+[[repos]]
+repo = "local"
+hooks = [
+  { id = "ruff-check", name = "ruff check", language = "system", entry = "uv run ruff check", types_or = ["python", "pyproject"] },
+  { id = "ruff-format", name = "ruff format", language = "system", entry = "uv run ruff format", types_or = ["python", "pyproject"] },
+  { id = "pyrefly", name = "pyrefly", language = "system", entry = "uv run pyrefly check", types_or = ["python", "pyproject"], pass_filenames = false },
+  { id = "tombi-lint", name = "tombi lint", language = "system", entry = "uv run --with tombi tombi lint --offline", types = ["toml"] },
+]
