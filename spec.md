@@ -257,7 +257,7 @@ questions move to the decision record.
 | cc ↔ apt | agentic-project-template is a regular copier template for now — not an engine owner or special consumer. Its CLI is the prototype cc's C1 engine ports from (2026-10-13, revised from an earlier full-absorb decision the same session) |
 | Binary name | `copier-cat` (2026-10-13) |
 | Upstream posture | Prototype adopt in cc, shaped to stay donatable upstream (copier#2486); no PR-first engagement (2026-10-13) |
-| Adopt merge engine (C1) | Merger registry shaped as git merge drivers with a `git merge-file` conflict-marker fallback — details and rejected options in docs/adr/0001 (2026-10-15) |
+| Adopt merger registry (C1) | Merger registry shaped as git merge drivers with a `git merge-file` conflict-marker fallback — details and rejected options in docs/adr/0001 (2026-10-15) |
 | Adopt merge base + baseline (C1) | Empty tree as the adopt-time merge base; the copier answers file as the recorded baseline for later updates — details and rejected options in docs/adr/0002 (2026-10-15) |
 
 ## References
