@@ -252,6 +252,7 @@ questions move to the decision record.
 | PR mechanics (C2) | Two explicit commands: prepare (branch + commits in a template checkout) and publish (user's own `gh` auth); no fork management in MVP (grill round 3, 2026-10-15) |
 | Monorepo subpath (C2) | Ownership map carries a template-root offset from day one; subpath PRs deferred to Phase 3 (grill round 3, 2026-10-15) |
 | Diff sourcing (C2) | Reuse copier's own update computation as a library import — one source of truth; tracks copier#2376's rewrite rather than drifting from it (grill round 3, 2026-10-15) |
+| Governance split | PRINCIPLES.md is the constitution (intent, principles, constraints, amendment rule); spec.md derives from it. Advisory panel, deliberated; principle 4 reworded Spec-driven → Layered governance; the operate-on-regular-templates invariant promoted from constraint to principle 5. Owner: bdavis (2026-10-16) |
 
 ## References
 

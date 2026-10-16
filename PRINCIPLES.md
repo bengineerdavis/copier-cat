@@ -14,7 +14,7 @@ back to the template so every inheriting project benefits (contribute /
 phone home), and operating a collection of templates as one monorepo with
 shared data and a chooser for selecting between them.
 
-The test for every capability below: it extends the maintainer, it prefers
+The test for every capability in spec.md: it extends the maintainer, it prefers
 deterministic machinery over AI, and it never silently destroys or
 silently publishes anything. These are principles, not firm rules; when
 they conflict, the conflict is recorded and resolved deliberately.
