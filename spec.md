@@ -58,12 +58,20 @@ Design questions:
   architecture for the same problem — `_skip_if_exists` on mixed
   template/user files plus a migration task that regenerates them while
   preserving `template-preserve:<name>:start/:end` marked regions
-  byte-for-byte. Evaluate marked-region preservation as a mechanism cc
-  can adopt or compose with the merger registry; it may be strictly
-  better for files with stable named regions.
+  byte-for-byte. Partially resolved 2026-10-15 (grill round 2): the
+  merger-registry interface will be designed so a marked-region provider
+  is just another merger for files with stable named regions, rather than
+  a rival mechanism; the evaluation itself is a Phase 1 study task, not a
+  decision made blind.
 - Adopt of one template vs several into one project (#1738): how do
   per-template answers files coexist (the two-answers-files pattern
-  generalizes to N)?
+  generalizes to N)? Partially resolved 2026-10-15 (grill round 2):
+  adopt ships single-template MVP, but nothing in the engine contract
+  or the answers-file naming says "the one template" — naming follows
+  copier's documented per-template pattern (plain `.copier-answers.yml`
+  first, `.copier-answers.<template>.yml` as more coexist), so
+  N-coexistence remains a flow-level design question on shared
+  primitives, not an engine change.
 - ~~**Where does cc implement first** — cc-native `adopt`, or a
   contributed upstream PR — and how does the prototype stay donatable?~~
   Resolved 2026-10-13 in the decision record (upstream posture).
@@ -259,6 +267,9 @@ questions move to the decision record.
 | Upstream posture | Prototype adopt in cc, shaped to stay donatable upstream (copier#2486); no PR-first engagement (2026-10-13) |
 | Adopt merger registry (C1) | Merger registry shaped as git merge drivers with a `git merge-file` conflict-marker fallback — details and rejected options in docs/adr/0001 (2026-10-15) |
 | Adopt merge base + baseline (C1) | Empty tree as the adopt-time merge base; the copier answers file as the recorded baseline for later updates — details and rejected options in docs/adr/0002 (2026-10-15) |
+| Adopt apply flow (C1) | Per-file accepted merges land directly in the working tree; committing stays the user's act — the accept is the consent moment, `git diff` is the review surface (grill round 2, 2026-10-15) |
+| Answers-file naming (C1) | Copier-native per-template pattern: plain `.copier-answers.yml` for a first template, `.copier-answers.<template>.yml` as more coexist (grill round 2, 2026-10-15) |
+| Adopt MVP scope (C1) | Single-template runs; N-template coexistence is a later flow on the same engine/answers primitives (grill round 2, 2026-10-15) |
 
 ## References
 

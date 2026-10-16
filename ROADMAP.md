@@ -11,10 +11,11 @@
   collections, any copier contribute-back tooling.
 - ~~Resolve the spec's open questions that gate C1 (merger registry shape,
   adopt UX, baseline establishment).~~ Resolved 2026-10-15 (spec decision
-  record; docs/adr/0001-0002; grill round 1 for per-file review), with the
-  marked-region evaluation and multi-template answers-file coexistence
-  (#1738) still open.
-- Choose stack, seed harness, adopt a task store.
+  record; docs/adr/0001-0002; grill rounds 1-2 for per-file review and the
+  apply flow), with the marked-region evaluation and multi-template
+  answers-file coexistence (#1738) still open.
+- ~~Choose stack~~ (2026-10-13); seed the harness and adopt the task store
+  (backlog-md-py, grill round 2 2026-10-15) — the next action.
 
 ## Phase 1 — adopt MVP (C1, C5, C6)
 
@@ -23,6 +24,9 @@
   marked sections) + conflict-marker fallback for unknown formats —
   shipped as a tested library API and a CLI with stable commands, exit
   codes, and JSON output.
+- Study task: evaluate copier-uv-bleeding's marked-region preservation
+  against the merger-registry interface (grill round 2); the interface is
+  being built so a marked-region provider is another merger, not a rival.
 - `adopt` flow: render → classify per file (add / identical / conflict) →
   apply with review → write answers with a valid baseline.
 - First cc skill shipped alongside (adopt/update), carrying its teaching
