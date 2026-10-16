@@ -72,6 +72,30 @@ spec decision record rows. roborev is wired in (.roborev.toml, hooks,
 agent opencode); its first reviews produced the two Low findings that
 closed the chooser wording and this read-order wiring.
 
+## Session 2026-10-15 — grill round 2
+
+All six frontier questions resolved with recommended answers:
+
+- **Apply flow**: accepted merges land in the working tree; the accept
+  is the consent moment, committing stays the user's act (spec decision
+  record).
+- **Answers-file naming**: copier-native per-template pattern (decision
+  record) — plain `.copier-answers.yml` first, `.copier-answers.<template>.yml`
+  as more coexist.
+- **Adopt MVP scope**: single-template runs; #1738 N-coexistence stays a
+  flow-level open question on shared primitives.
+- **Marked regions**: registry interface built provider-open; evaluation
+  of copier-uv-bleeding's mechanism is a Phase 1 study task, not a blind
+  pick (ROADMAP Phase 1).
+- **Task store**: backlog-md-py adopted (partial parity accepted with
+  eyes open — see the round-1 session entry's verdict).
+- **Harness shape**: full house harness (mise + prek + uv + backlog) from
+  apt — next action after this session.
+
+GLOSSARY gained per-file review and marked region (avoid-words:
+preserve markers / template-preserve). The frontier now points at C2
+(classification, state, trust) once the engine exists.
+
 ## Session 2026-10-13 — open questions resolved
 
 All four spec open questions resolved (see spec decision record):
