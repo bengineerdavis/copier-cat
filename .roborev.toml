@@ -7,13 +7,17 @@ or CI — the seed scope deliberately ships docs only.
 
 Ground rules the reviewer should enforce:
 
+- Layered governance: PRINCIPLES.md is the constitution (intent,
+  principles, constraints, amendment rule); spec.md derives from it and
+  governs capability design. A PRINCIPLES.md edit is reviewable only as
+  an explicit decision — flag any drive-by principle changes.
 - Spec discipline: ambiguity in spec.md must be marked as open
   questions with safe defaults and owners, never silently resolved.
   Do not accept invented normative behaviors.
-- AGENTS.md routes, the spec governs: normative claims belong in
-  spec.md, not AGENTS.md.
+- AGENTS.md routes, PRINCIPLES.md governs, spec.md derives: normative
+  capability claims belong in spec.md, not AGENTS.md.
 - References are evidence, not decisions: prior-art findings in the
-  References section must not drift into prescriptive rules.
+  spec's References section must not drift into prescriptive rules.
 - Commit hygiene: one logical change per commit; message sized to
   the change; paths named explicitly.
 

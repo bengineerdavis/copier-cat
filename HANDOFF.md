@@ -5,16 +5,20 @@ Handoff for the next agent/human session. Read top to bottom.
 ## Read order
 
 1. This file.
-2. `spec.md` — the draft spec: intent, principles, capability map, open
-   questions. It is deliberately *not* a full normative spec yet; inventing
-   behaviors before design would violate the ambiguity rule recorded in it.
-3. `GLOSSARY.md` — cc's canonical domain language; avoid-words there are
+2. `PRINCIPLES.md` — the constitution: intent, principles, constraints,
+   the amendment rule. Conflicts with it escalate; it is never edited as
+   a side effect of other work.
+3. `spec.md` — the draft spec, derived from the principles: capability
+   map, design questions, decision record, references. It is deliberately
+   *not* a full normative spec yet; inventing behaviors before design
+   would violate the ambiguity rule.
+4. `GLOSSARY.md` — cc's canonical domain language; avoid-words there are
    active rulings, not style notes.
-4. `docs/adr/` — capability-level decisions that carry hard-to-reverse
+5. `docs/adr/` — capability-level decisions that carry hard-to-reverse
    tradeoffs; currently ADR 0001 (merger registry shape) and ADR 0002
    (adopt merge base + recorded baseline).
-5. `ROADMAP.md` — phases.
-6. Grounding: [copier#2486](https://github.com/copier-org/copier/issues/2486)
+6. `ROADMAP.md` — phases.
+7. Grounding: [copier#2486](https://github.com/copier-org/copier/issues/2486)
    (`copier adopt` feature request — the core gap cc addresses), plus the
    related issues it cites: #955 (rebase existing project), #2005 (conflict
    markers on copy), #1738 (merge across templates). PR #2487 was an
