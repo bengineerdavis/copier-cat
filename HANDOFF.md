@@ -8,7 +8,9 @@ Handoff for the next agent/human session. Read top to bottom.
 2. `spec.md` — the draft spec: intent, principles, capability map, open
    questions. It is deliberately *not* a full normative spec yet; inventing
    behaviors before design would violate the ambiguity rule recorded in it.
-3. `ROADMAP.md` — phases.
+3. `GLOSSARY.md` — cc's canonical domain language; avoid-words there are
+   active rulings, not style notes.
+4. `ROADMAP.md` — phases.
 4. Grounding: [copier#2486](https://github.com/copier-org/copier/issues/2486)
    (`copier adopt` feature request — the core gap cc addresses), plus the
    related issues it cites: #955 (rebase existing project), #2005 (conflict
@@ -45,6 +47,20 @@ hardest concepts:
   now.
 - cc is seeded at `~/code/projects/personal/templates/copier-cat` (the
   template family moved under `templates/` on 2026-10-13).
+
+## Session 2026-10-15 — grill round 1 + roborev
+
+Grill-with-docs round 1 resolved the C1 shape (git-merge-driver-shaped
+merger registry — ADR 0001; empty-tree baseline — ADR 0002; per-file
+review), the C3 approach (chooser as the chosen flow — see the
+superseded meta-template wording), shared data via copier's sanctioned
+primitives, and harness seeding (now; backlog-md-py if parity holds —
+the parity check landed as partial-with-documented-gaps, pinned to
+upstream 1.50.1 vs 1.53.0, single maintainer, GPL-3.0 tool). Recorded
+as GLOSSARY.md and docs/adr/0001-0002. roborev is wired in
+(.roborev.toml, hooks, agent opencode); its first reviews produced the
+two Low findings that closed the chooser wording and this read-order
+wiring.
 
 ## Session 2026-10-13 — open questions resolved
 
