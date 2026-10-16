@@ -9,8 +9,9 @@
 - Read and digest copier#2486, #955, #2005, #1738, and the closed PR #2487.
 - Survey prior art: cruft's update story, existing monorepo template
   collections, any copier contribute-back tooling.
-- Resolve the spec's open questions that gate C1 (merger registry shape,
-  adopt UX, baseline establishment).
+- ~~Resolve the spec's open questions that gate C1 (merger registry shape,
+  adopt UX, baseline establishment).~~ Resolved 2026-10-15 (spec decision
+  record; docs/adr/0001-0002), with the marked-region evaluation still open.
 - Choose stack, seed harness, adopt a task store.
 
 ## Phase 1 — adopt MVP (C1, C5, C6)

@@ -50,10 +50,10 @@ updates work.
 
 Design questions:
 
-- Conflict markers (issue's proposal) vs semantic merge, or both? The
-  agentic-project-template merge engine argues for a **registry of
-  structure-aware mergers** (TOML deep-merge, YAML list merge, marked
-  sections) with conflict markers as the fallback for unknown formats.
+- ~~**Merge shape.** Conflict markers (issue's proposal) vs semantic
+  merge, or both?~~ Resolved 2026-10-15 (ADR 0001): a merger registry
+  shaped as git merge drivers, conflict-marker fallback through
+  `git merge-file`.
 - Prior art close to home: copier-uv-bleeding implements a different
   architecture for the same problem — `_skip_if_exists` on mixed
   template/user files plus a migration task that regenerates them while
@@ -64,10 +64,13 @@ Design questions:
 - Adopt of one template vs several into one project (#1738): how do
   per-template answers files coexist (the two-answers-files pattern
   generalizes to N)?
-- Where does cc implement first — cc-native `adopt`, or a contributed
-  upstream PR — and how does the prototype stay donatable?
-- Baseline establishment: empty tree, template initial version, or a
-  synthetic snapshot commit?
+- ~~**Where does cc implement first** — cc-native `adopt`, or a
+  contributed upstream PR — and how does the prototype stay donatable?~~
+  Resolved 2026-10-13 in the decision record (upstream posture).
+- ~~**Baseline establishment**: empty tree, template initial version, or
+  a synthetic snapshot commit?~~ Resolved 2026-10-15 (ADR 0002):
+  empty-tree merge base at adopt time; the recorded update baseline is
+  the copier answers file.
 
 ### C2 — contribute / phone home
 
@@ -254,6 +257,8 @@ questions move to the decision record.
 | cc ↔ apt | agentic-project-template is a regular copier template for now — not an engine owner or special consumer. Its CLI is the prototype cc's C1 engine ports from (2026-10-13, revised from an earlier full-absorb decision the same session) |
 | Binary name | `copier-cat` (2026-10-13) |
 | Upstream posture | Prototype adopt in cc, shaped to stay donatable upstream (copier#2486); no PR-first engagement (2026-10-13) |
+| Adopt merge engine (C1) | Merger registry shaped as git merge drivers with a `git merge-file` conflict-marker fallback — details and rejected options in docs/adr/0001 (2026-10-15) |
+| Adopt merge base + baseline (C1) | Empty tree as the adopt-time merge base; the copier answers file as the recorded baseline for later updates — details and rejected options in docs/adr/0002 (2026-10-15) |
 
 ## References
 
