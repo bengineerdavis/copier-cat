@@ -11,7 +11,7 @@ Handoff for the next agent/human session. Read top to bottom.
 3. `GLOSSARY.md` — cc's canonical domain language; avoid-words there are
    active rulings, not style notes.
 4. `docs/adr/` — capability-level decisions that carry hard-to-reverse
-   tradeoffs; currently ADR 0001 (merge engine shape) and ADR 0002
+   tradeoffs; currently ADR 0001 (merger registry shape) and ADR 0002
    (adopt merge base + recorded baseline).
 5. `ROADMAP.md` — phases.
 6. Grounding: [copier#2486](https://github.com/copier-org/copier/issues/2486)
