@@ -10,8 +10,11 @@ Handoff for the next agent/human session. Read top to bottom.
    behaviors before design would violate the ambiguity rule recorded in it.
 3. `GLOSSARY.md` — cc's canonical domain language; avoid-words there are
    active rulings, not style notes.
-4. `ROADMAP.md` — phases.
-4. Grounding: [copier#2486](https://github.com/copier-org/copier/issues/2486)
+4. `docs/adr/` — capability-level decisions that carry hard-to-reverse
+   tradeoffs; currently ADR 0001 (merge engine shape) and ADR 0002
+   (adopt merge base + recorded baseline).
+5. `ROADMAP.md` — phases.
+6. Grounding: [copier#2486](https://github.com/copier-org/copier/issues/2486)
    (`copier adopt` feature request — the core gap cc addresses), plus the
    related issues it cites: #955 (rebase existing project), #2005 (conflict
    markers on copy), #1738 (merge across templates). PR #2487 was an
@@ -51,16 +54,23 @@ hardest concepts:
 ## Session 2026-10-15 — grill round 1 + roborev
 
 Grill-with-docs round 1 resolved the C1 shape (git-merge-driver-shaped
-merger registry — ADR 0001; empty-tree baseline — ADR 0002; per-file
-review), the C3 approach (chooser as the chosen flow — see the
-superseded meta-template wording), shared data via copier's sanctioned
-primitives, and harness seeding (now; backlog-md-py if parity holds —
-the parity check landed as partial-with-documented-gaps, pinned to
-upstream 1.50.1 vs 1.53.0, single maintainer, GPL-3.0 tool). Recorded
-as GLOSSARY.md and docs/adr/0001-0002. roborev is wired in
-(.roborev.toml, hooks, agent opencode); its first reviews produced the
-two Low findings that closed the chooser wording and this read-order
-wiring.
+merger registry — ADR 0001; per-file review; empty-tree adopt-time merge
+base with the answers file as the recorded update baseline — ADR 0002,
+its text corrected after roborev caught the conflation), the C3 approach
+(chooser as the chosen flow — see the superseded meta-template wording),
+shared data via copier's sanctioned primitives, and harness seeding
+(now; task-store evaluation for backlog-md-py: parity is **partial** —
+CLI/MCP/file-format parity is documented and tested against upstream
+backlog.md 1.50.1, upstream is now 1.53.0 and the Python port lags only
+recent upstream conveniences (cycle-rejection in dependency graphs,
+`task list --watch`, list pagination; gaps documented in that repo's
+`docs/upstream-feature-parity.md`); caveats are single maintainer
+(rmusser01) and a GPL-3.0 tool licence. Adoption therefore stays the
+task-store decision's call, re-checking the parity doc before relying on
+upstream features). Recorded as GLOSSARY.md, docs/adr/0001-0002, and the
+spec decision record rows. roborev is wired in (.roborev.toml, hooks,
+agent opencode); its first reviews produced the two Low findings that
+closed the chooser wording and this read-order wiring.
 
 ## Session 2026-10-13 — open questions resolved
 
