@@ -27,8 +27,8 @@ Adopt MUST:
   the adopted template's current version as the recorded update
   baseline;
 - change nothing a template or project did not already produce: no
-  marker conventions, no cc residue (decision log: classification
-  boundary).
+  marker conventions, no cc residue (decision log: Classification
+  ownership, Proposal state).
 
 Gates: marked-region evaluation (task CC-2); N-template coexistence
 (draft-1).
@@ -64,19 +64,22 @@ shared data is defined once.
 
 The collection MUST keep every template a plain, standalone-usable
 copier template regardless of hosting (PRINCIPLES principle 5);
-invoke templates by local path after cloning (no subdir-addressable
-remote URL requirements); and build shared data on copier's sanctioned
-primitives (`--data` answers seeding, `!include`) rather than replacing
-them.
+invoke templates by local path after cloning (decision log: Chooser
+approach; subdir-addressable URLs stay open as a future option); and
+build shared data on copier's sanctioned primitives — a shared answers
+file seeded via `--data`, `!include` for question reuse (decision log:
+Shared data) — composing with `!include`/`_external_data` rather than
+replacing them.
 
-Gates (drafts to open as Phase 3 approaches): choosing-flow mechanics
-and what a delegating template renders; per-template vs monorepo-wide
-versioning.
+Gates (drafts to open as Phase 3 approaches): layout
+(`templates/<name>/{copier.yml,template/}` and the `_subdirectory`
+mapping); choosing-flow mechanics and what a delegating template
+renders; per-template vs collection-wide versioning.
 
 ## C4 — templating templates
 
-`cc new-template` (or a monorepo template) generates a new template
-skeleton with the house conventions (principles, harness, stamp tests)
+`cc new-template` (or a template in the collection) generates a new
+template skeleton with the house conventions (principles, harness, stamp tests)
 already wired. Gates: skeleton contents; linkage into the C3
 collection; how much derives from agentic-project-template's
 governance patterns.
