@@ -249,6 +249,10 @@ decisions). Headlines:
 
 ## Environment notes
 
+- Fresh clone bootstrap: `mise run install` (tools, venv, prek hooks);
+  then `roborev init --agent opencode` (git hooks are per-clone state —
+  `.roborev.toml` is committed, `.git/hooks/*` is not). Continuing in
+  an existing clone needs neither.
 - `uv` is the Python toolchain on this machine (mise-managed); `copier`
   9.18.2 is pinned user-wide via pipx.
 - GitHub CLI (`gh`) is authenticated as bengineerdavis.
