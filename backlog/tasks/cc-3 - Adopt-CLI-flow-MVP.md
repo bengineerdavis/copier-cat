@@ -8,7 +8,7 @@ created_date: 2026-10-16 21:06
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Render, classify per file, per-file review, apply to working tree, write answers file per ADR 0002 and the round-2 decisions.
+Render, classify per file, per-file review, apply to working tree, write answers file per backlog/decisions/decision-2 and the round-2 decisions.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

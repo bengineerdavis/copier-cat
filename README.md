@@ -8,10 +8,12 @@ First-class CLI + library API for humans and agents, with agentic skills
 for building templates and driving cc — built so that cc leaves you better
 at copier, never locked in (the graduation principle, spec C5/C6).
 
-**Status: seed / handoff.** There is no code yet by design — this repo
-carries the vision, the grounded design context, and the decision record so
-work can start from a fresh agent session. Read [`HANDOFF.md`](HANDOFF.md)
-first, then [`spec.md`](spec.md).
+**Status: Phase 1.** The governance stack and harness are seeded:
+[`PRINCIPLES.md`](PRINCIPLES.md) is the constitution, [`spec.md`](spec.md)
+carries the requirements, the [`backlog/`](backlog) store carries the
+working memory (tasks with acceptance criteria, drafts, decisions,
+evidence), and roborev reviews every commit. Work starts from a fresh
+agent session at [`HANDOFF.md`](HANDOFF.md), then task CC-1.
 
 The name: verified free on PyPI, npm, and crates.io (2026-10-12). The CLI
 binary is `copier-cat`; `cc` collides with the C compiler and is left to

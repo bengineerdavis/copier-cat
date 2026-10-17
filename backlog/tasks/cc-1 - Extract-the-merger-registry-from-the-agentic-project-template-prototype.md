@@ -8,7 +8,7 @@ created_date: 2026-10-16 21:06
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Port the merge engine behind the git-merge-driver-shaped registry per ADR 0001 (TOML deep-merge, YAML, marked sections; git merge-file fallback).
+Port the merge engine behind the git-merge-driver-shaped registry per backlog/decisions/decision-1 (TOML deep-merge, YAML, marked sections; git merge-file fallback).
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

@@ -8,10 +8,9 @@ Handoff for the next agent/human session. Read top to bottom.
 2. `PRINCIPLES.md` — the constitution: intent, principles, constraints,
    the amendment rule. Conflicts with it escalate; it is never edited as
    a side effect of other work.
-3. `spec.md` — the draft spec, derived from the principles: capability
-   map, design questions, decision record, references. It is deliberately
-   *not* a full normative spec yet; inventing behaviors before design
-   would violate the ambiguity rule.
+3. `spec.md` — requirements only: capabilities, MUSTs, and open gates
+   as store pointers. Decisions, session residue, and evidence
+   accumulating there are a bug.
 4. `GLOSSARY.md` — cc's canonical domain language; avoid-words there are
    active rulings, not style notes.
 5. `backlog/` — the working memory: tasks carry requirements as

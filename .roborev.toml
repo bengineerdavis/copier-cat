@@ -2,7 +2,7 @@
 agent = 'opencode'
 review_guidelines = '''
 This is copier-cat (cc): a copier template manager. Phase 0 is complete
-(spec, principles, ADRs, glossary, harness, task store); Phase 1 is
+(spec, principles, glossary, harness, backlog store); Phase 1 is
 active — the merger-registry extraction, backlog task CC-1. The repo is
 still mostly documentation, so do not flag missing code or tests where
 work is explicitly gated by open questions or by backlog tasks still
@@ -21,7 +21,7 @@ Ground rules the reviewer should enforce:
 - AGENTS.md routes, PRINCIPLES.md governs, spec.md derives: normative
   capability claims belong in spec.md, not AGENTS.md.
 - References are evidence, not decisions: prior-art findings in the
-  spec's References section must not drift into prescriptive rules.
+  backlog/docs/prior-art.md must not drift into prescriptive rules.
 - Commit hygiene: one logical change per commit; message sized to
   the change; paths named explicitly.
 
