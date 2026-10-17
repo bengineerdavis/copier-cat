@@ -11,7 +11,9 @@ table is the historical ledger of everything resolved during the spec
 era, including session-level and naming decisions that will not be
 re-litigated as ADRs. New decisions are created with
 `backlog-py decision create` and recorded here only if they need a
-one-line index entry.
+one-line index entry. Spec-era backfills live log-only unless they
+carry rejected options — those get a `backlog/decisions/` file, like
+decision-1/2 (the ADRs) and decision-3/4 (the C3 choices).
 
 | Decision | Choice |
 | --- | --- |
@@ -36,6 +38,6 @@ one-line index entry.
 | Diff sourcing (C2) | Reuse copier's own update computation as a library import — one source of truth; tracks copier#2376's rewrite rather than drifting from it (grill round 3, 2026-10-15) |
 | Governance split | PRINCIPLES.md is the constitution (intent, principles, constraints, amendment rule); spec.md derives from it. Advisory panel, deliberated; principle 4 reworded Spec-driven → Layered governance; the operate-on-regular-templates invariant promoted from constraint to principle 5. Owner: bdavis (2026-10-16) |
 | Backlog workflow | Full Backlog.md-style store: requirements live as task acceptance criteria and the thin requirements spec; decisions as backlog/decisions/ + this log; evidence in backlog/docs/; open questions as drafts with safe default + owner. Owner: bdavis (2026-10-17) |
-| Chooser approach (C3) | cc clones the collection and invokes templates by local path; no subdir-addressable remote URL requirements. Decided grill round 1 (2026-10-15); recorded late 2026-10-17 when the thin spec cited it without a row — subdir-addressable URLs stay open as a future option, not foreclosed. Owner: bdavis |
-| Shared data (C3) | Shared data builds on copier's sanctioned primitives: a shared answers file seeded via `--data`, `!include` for question reuse. Decided grill round 1 (2026-10-15); recorded late 2026-10-17 when the thin spec cited it without a row — `!include`/`_external_data` remain the primitives any design composes with rather than replaces. Owner: bdavis |
+| Chooser approach (C3) | cc clones the collection and invokes templates by local path — details, the open subdir-addressable-URL option, and prior-art basis in backlog/decisions/decision-3. Decided grill round 1 (2026-10-15). Owner: bdavis |
+| Shared data (C3) | Copier's sanctioned primitives: shared answers seeded via `--data`, `!include` for question reuse; compose with `!include`/`_external_data`, never replace — details in backlog/decisions/decision-4. Decided grill round 1 (2026-10-15). Owner: bdavis |
 | Constitution ledger references | Principle 4's and the amendment rule's target ('the spec's decision record') → the backlog store: `backlog/decisions/` for durable decisions, the decision log for one-line entries. The spec's decision record no longer exists; the amendment procedure is unperformable as written until this row lands. Performed through the amendment rule it amends: this row is the recorded decision; the PRINCIPLES.md edit in the same commit is its execution. Owner: bdavis (2026-10-17) |
