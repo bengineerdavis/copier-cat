@@ -8,8 +8,9 @@ escalate conflicts, and never let a diff carry a governance change.
 - `HANDOFF.md` — session provenance, read order, first-session suggestions
 - `PRINCIPLES.md` — the constitution: intent, principles, constraints,
   and the amendment rule
-- `spec.md` — draft spec; derives from the principles; capability map
-  C1–C7 with gating design questions
+- `spec.md` — requirements only: capabilities, MUSTs, and open gates
+- `backlog/` — the working memory: tasks (requirements + acceptance
+  criteria), drafts (open questions), decisions/, docs/
 - `ROADMAP.md` — phases
 
 ## Rules
@@ -18,9 +19,15 @@ escalate conflicts, and never let a diff carry a governance change.
   Conflicts with it are surfaced for a deliberate decision — never
   silently reinterpreted, and never edited as a side effect of
   implementation or session work.
-- `spec.md` derives from the principles and governs capability design;
-  ambiguous behavior stays an open question there (safe default + owner);
-  resolved questions move to its decision record.
+- `spec.md` is requirements only. Decisions live in
+  `backlog/decisions/` and the decision log (`backlog/docs/`);
+  evidence in `backlog/docs/prior-art.md`; open questions as backlog
+  drafts carrying a safe default and an owner. Anything else
+  accumulating in spec.md is a bug, not an addition.
+- The backlog store is the workflow: drive its lifecycle through the
+  `backlog-py` CLI (create/list/board/promote/cleanup), never by
+  hand-editing store frontmatter; prose edits fill the files the CLI
+  writes.
 - The harness is seeded (mise + prek.toml + uv + backlog-md-py store);
   C1 work starts from the merger-registry extraction (task CC-1), not
   from new scaffolding.

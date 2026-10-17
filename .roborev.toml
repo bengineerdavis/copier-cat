@@ -14,9 +14,10 @@ Ground rules the reviewer should enforce:
   principles, constraints, amendment rule); spec.md derives from it and
   governs capability design. A PRINCIPLES.md edit is reviewable only as
   an explicit decision — flag any drive-by principle changes.
-- Spec discipline: ambiguity in spec.md must be marked as open
-  questions with safe defaults and owners, never silently resolved.
-  Do not accept invented normative behaviors.
+- Requirements discipline: spec.md carries requirements only — flag
+  decisions, session residue, or evidence accumulating in it. Open
+  questions live as backlog drafts carrying a safe default and an
+  owner; resolved ones move to backlog/decisions/ or the decision log.
 - AGENTS.md routes, PRINCIPLES.md governs, spec.md derives: normative
   capability claims belong in spec.md, not AGENTS.md.
 - References are evidence, not decisions: prior-art findings in the
@@ -26,7 +27,7 @@ Ground rules the reviewer should enforce:
 
 What to leave alone:
 
-- Deliberately deferred work gated by open questions (spec) or by
+- Deliberately deferred work gated by backlog drafts or by
   backlog tasks still To Do (CC-2, CC-3).
 '''
 # Default model for this repo when no workflow-specific model is set.

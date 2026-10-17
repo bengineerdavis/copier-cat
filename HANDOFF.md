@@ -14,9 +14,10 @@ Handoff for the next agent/human session. Read top to bottom.
    would violate the ambiguity rule.
 4. `GLOSSARY.md` — cc's canonical domain language; avoid-words there are
    active rulings, not style notes.
-5. `docs/adr/` — capability-level decisions that carry hard-to-reverse
-   tradeoffs; currently ADR 0001 (merger registry shape) and ADR 0002
-   (adopt merge base + recorded baseline).
+5. `backlog/` — the working memory: tasks carry requirements as
+   acceptance criteria, drafts carry open questions (safe default +
+   owner in the body), `backlog/decisions/` and `backlog/docs/` carry
+   decisions and evidence.
 6. `ROADMAP.md` — phases.
 7. Grounding: [copier#2486](https://github.com/copier-org/copier/issues/2486)
    (`copier adopt` feature request — the core gap cc addresses), plus the
@@ -26,10 +27,12 @@ Handoff for the next agent/human session. Read top to bottom.
 
 ## What exists here
 
-Seeded (2026-10-15/16): spec + PRINCIPLES.md + glossary + ADRs, the
-harness (mise, prek.toml, uv, roborev reviewing every commit), and the
-backlog store with tasks CC-1..3. Phase 1 starts at CC-1, the
-merger-registry extraction from the agentic-project-template prototype
+Seeded (2026-10-15/16, store workflow 2026-10-17): PRINCIPLES.md
+(constitution), thin requirements spec, glossary, the backlog store
+(tasks CC-1..3, draft-1, decisions 1-2, decision log, prior-art doc),
+the harness (mise, prek.toml, uv, roborev reviewing every commit).
+Phase 1 starts at CC-1, the merger-registry extraction from the
+agentic-project-template prototype
 (`~/code/projects/personal/templates/agentic-project-template`), not
 from new scaffolding.
 
@@ -139,6 +142,28 @@ decision exercised by the smoke test). Task store: backlog-md-py,
 registry extraction), CC-2 (marked-region study), CC-3 (adopt CLI MVP).
 AGENTS.md's "nothing is implemented" routing rule is retired. Phase 1
 starts at CC-1.
+
+## Session 2026-10-17 — backlog workflow switch
+
+The author judged spec.md a scratch pad — a live decision ledger wearing
+a spec's clothes — and chose the full Backlog.md workflow with a thin
+requirements-only spec (advisory precedent: Backlog.md's own
+distributed-requirements model). The switch:
+
+- Store homes opened via the CLI: decision log archive, prior-art doc,
+  decisions 1-2 (from docs/adr/, now retired), draft-1 (#1738, safe
+  default + owner in the body).
+- spec.md reduced to requirements: capabilities, MUSTs distilled from
+  the decisions they derive from, gates as store pointers.
+- Routing rewired: AGENTS.md routes the store as the working memory and
+  carries the store-CLI discipline (lifecycle via backlog-py, prose in
+  files); roborev's guidelines now enforce requirements-only spec.md —
+  the guard against the ledger regrowing.
+
+Where decisions go from here: `backlog-py decision create` for durable
+choices, the log's table for one-line entries, drafts for open
+questions. Requirements gravity: task acceptance criteria gain weight
+as CC-1..3 flesh out.
 
 ## Session 2026-10-13 — open questions resolved
 

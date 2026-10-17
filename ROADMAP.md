@@ -11,7 +11,8 @@
   collections, any copier contribute-back tooling.
 - ~~Resolve the spec's open questions that gate C1 (merger registry shape,
   adopt UX, baseline establishment).~~ Resolved 2026-10-15 (spec decision
-  record; docs/adr/0001-0002; grill rounds 1-2 for per-file review and the
+  record; backlog/decisions/decision-1 and decision-2 (formerly
+  docs/adr/0001-0002); grill rounds 1-2 for per-file review and the
   apply flow), with the marked-region evaluation and multi-template
   answers-file coexistence (#1738) still open.
 - ~~Choose stack~~ (2026-10-13); ~~seed the harness and adopt the task
