@@ -32,8 +32,8 @@ they conflict, the conflict is recorded and resolved deliberately.
    that could be donated upstream rather than forked forever.
 4. **Layered governance.** This file is the constitution; spec.md derives
    from it. Ambiguity is marked, not resolved: open questions carry a
-   safe default and an owner, and resolved questions move to the spec's
-   decision record.
+   safe default and an owner, and resolved questions move to the
+   backlog store's decisions.
 5. **Operates on regular copier templates.** cc acts on copier templates
    as their own units — any conforming copier template works with cc
    without cc-specific structure. cc's conveniences (monorepo hosting,
@@ -57,8 +57,9 @@ they conflict, the conflict is recorded and resolved deliberately.
 ## Amending this document
 
 - A principle or constraint changes only by an explicit, recorded
-  decision — a decision-record row in spec.md naming the change and its
-  owner — never as an implementation side effect.
+  decision in the backlog store — `backlog/decisions/` or a
+  decision-log row naming the change and its owner — never as an
+  implementation side effect.
 - When a proposed change conflicts with this file, the conflict is
   surfaced and resolved deliberately; silent reinterpretation is a
   governance failure, not a shortcut.
