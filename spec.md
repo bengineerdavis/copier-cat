@@ -1,355 +1,113 @@
-# copier-cat (cc) — draft spec
+# copier-cat (cc) — requirements
 
-This spec derives from PRINCIPLES.md, the governing layer: intent,
-principles, and constraints live there, and a change that conflicts with
-them surfaces for a deliberate decision rather than being silently
-reinterpreted. This file records what the principles produce — the
-capability map, the design questions each capability gates on, the
-resolved decisions, and the prior-art evidence behind them.
+Derives from PRINCIPLES.md (the constitution). This file carries
+requirements only: what each capability must do and the open gates
+blocking it. Decisions live in the backlog store (`backlog/decisions/`
+and the decision log in `backlog/docs/`); evidence in
+`backlog/docs/prior-art.md`; session state in HANDOFF.md; open
+questions as backlog drafts carrying a safe default and an owner.
+Decisions, session residue, and evidence accumulating here are a bug.
 
-## Capability map
-
-Each capability states its direction and the design questions that must
-be answered before implementation. Nothing here is normative until the
-open questions resolve.
-
-### C1 — adopt
+## C1 — adopt
 
 Bring an existing project under a template without data loss, and leave
-it in a state where plain `copier update` works afterwards (a valid
-answers file with a recorded baseline).
+it a stamped project: a valid answers file with a recorded baseline, so
+plain `copier update` works afterwards. Grounded in copier#2486.
 
-Grounded in copier#2486: `copy --overwrite` destroys, `--skip`/`_skip_if_exists`
-starves the project of template improvements, and `update` requires a
-baseline that first-time adoption lacks. The issue's MVP proposes
-conflict markers with the existing file as "ours" and template output as
-"theirs" (or an empty-base three-way merge), then writing answers so
-updates work.
+Adopt MUST:
 
-Design questions:
+- render the template and classify every file (add / identical /
+  conflict);
+- resolve conflicts through the merger registry (git-merge-driver
+  shaped, `git merge-file` fallback) with an empty tree as the
+  adopt-time merge base;
+- obtain per-file review as the consent moment — accepted merges land
+  in the working tree, and cc never commits;
+- write the answers file in copier's per-template naming pattern, with
+  the adopted template's current version as the recorded update
+  baseline;
+- change nothing a template or project did not already produce: no
+  marker conventions, no cc residue (decision log: classification
+  boundary).
 
-- ~~**Merge shape.** Conflict markers (issue's proposal) vs semantic
-  merge, or both?~~ Resolved 2026-10-15 (ADR 0001): a merger registry
-  shaped as git merge drivers, conflict-marker fallback through
-  `git merge-file`.
-- Prior art close to home: copier-uv-bleeding implements a different
-  architecture for the same problem — `_skip_if_exists` on mixed
-  template/user files plus a migration task that regenerates them while
-  preserving `template-preserve:<name>:start/:end` marked regions
-  byte-for-byte. Partially resolved 2026-10-15 (grill round 2): the
-  merger-registry interface will be designed so a marked-region provider
-  is just another merger for files with stable named regions, rather than
-  a rival mechanism; the evaluation itself is a Phase 1 study task, not a
-  decision made blind.
-- Adopt of one template vs several into one project (#1738): how do
-  per-template answers files coexist (the two-answers-files pattern
-  generalizes to N)? Partially resolved 2026-10-15 (grill round 2):
-  adopt ships single-template MVP, but nothing in the engine contract
-  or the answers-file naming says "the one template" — naming follows
-  copier's documented per-template pattern (plain `.copier-answers.yml`
-  first, `.copier-answers.<template>.yml` as more coexist), so
-  N-coexistence remains a flow-level design question on shared
-  primitives, not an engine change.
-- ~~**Where does cc implement first** — cc-native `adopt`, or a
-  contributed upstream PR — and how does the prototype stay donatable?~~
-  Resolved 2026-10-13 in the decision record (upstream posture).
-- ~~**Baseline establishment**: empty tree, template initial version, or
-  a synthetic snapshot commit?~~ Resolved 2026-10-15 (ADR 0002):
-  empty-tree merge base at adopt time; the recorded update baseline is
-  the copier answers file.
+Gates: marked-region evaluation (task CC-2); N-template coexistence
+(draft-1).
 
-### C2 — contribute / phone home
+## C2 — contribute / phone home
 
-Detect changes made in stamped projects that belong in the template,
-present them for review, and push them as PRs to the template repo — so
-that after merge, every inheriting project receives them on its next
-`copier update`.
+Detect changes in stamped projects that belong in the template, present
+them for review, and prepare PRs to the template repo so every
+inheriting project receives them on its next `copier update`.
 
-Direction: copier's update already computes the exact divergence between
-a project and its template's current render; cc reuses that diff,
-classifies hunks (template-bug fix vs project-specific intent), groups
-them into candidate changesets, and walks the maintainer through review
-before anything leaves the machine.
+Phone home MUST:
 
-Design questions:
+- reuse copier's own update computation as the diff source (library
+  import; tracks copier#2376 rather than forking merge logic);
+- derive ownership from the render (template-rendered paths are
+  template-owned) with cc config overrides; never ask the template to
+  cooperate;
+- map rendered paths back to template source by re-rendering with the
+  recorded answers (cc owns a cache if that proves expensive);
+- shape changesets per file, clustering as presentation only;
+- keep proposal state cc-local, keyed by (project, template) identity;
+- publish only through the explicit two-command flow (prepare, then
+  publish with the user's own `gh` auth) — never automatically;
+- carry a template-root offset in the ownership map (subpath PRs
+  deferred to Phase 3).
 
-- ~~**Classification**: deterministic heuristics first (file ownership
-  paths, marker comments, answers-file knowledge), LLM-assisted
-  suggestions as an opt-in layer — never the decider.~~ Resolved
-  2026-10-15 (grill round 3): ownership derives deterministically from
-  the render itself — paths the template renders are template-owned,
-  paths it does not touch are project-owned, with cc config as the
-  override channel. The boundary this draws: cc computes classification
-  from artifacts copier already produces and never asks the template to
-  cooperate (no marker conventions required); LLM-assisted suggestions
-  remain opt-in and non-deciding. Any mechanism that would push work
-  onto templates or into copier is out of scope by this rule.
-- ~~**State**: where does "already proposed / already merged" live
-  without polluting projects (cc-local state dir vs project marker)?~~
-  Resolved 2026-10-15 (grill round 3): cc-local state dir keyed by a
-  stable (project, template) identity; projects carry no cc residue.
-- ~~**Trust**: PR creation is always human-triggered; scope
-  tokens/permissions to the template repo only.~~ Resolved 2026-10-15
-  (grill round 3): structurally two commands — prepare (branch + commits
-  in a template checkout) and publish (explicit, using the user's own
-  `gh` auth); no fork management in the MVP.
-- ~~**Monorepo interplay**: a template living at `templates/<name>/`
-  inside a monorepo means PRs target a subpath — file ownership maps
-  must handle that (ties into C3).~~ Resolved 2026-10-15 (grill round
-  3): the ownership map carries a template-root offset from day one;
-  subpath PRs themselves are deferred to Phase 3 when monorepo targets
-  exist.
+Gates: none — design is settled; implementation is Phase 2.
 
-### C3 — monorepo of templates + chooser
+## C3 — collection of templates + chooser
 
-One repository hosts a collection of templates; users choose among them;
-a chooser flow (cc-native, or delegating through a template) helps choose;
-data shared across the templates is defined once.
+One repository hosts a collection; a chooser flow helps users select;
+shared data is defined once.
 
-Design questions:
+The collection MUST keep every template a plain, standalone-usable
+copier template regardless of hosting (PRINCIPLES principle 5);
+invoke templates by local path after cloning (no subdir-addressable
+remote URL requirements); and build shared data on copier's sanctioned
+primitives (`--data` answers seeding, `!include`) rather than replacing
+them.
 
-- Layout: `templates/<name>/{copier.yml,template/}` and how copier's
-  `_subdirectory` maps onto it (each template is its own copier root) —
-  every template must remain a plain, standalone-usable copier template
-  regardless of monorepo hosting.
-- The choosing flow: a cc-native interactive picker vs a choosing flow
-  that delegates to a template — what the template renders in that case
-  (a stub? nothing? answers only)?
-- DRY shared data: copier has `!include` in `copier.yml` (glob-capable,
-  documented merge semantics) and `_external_data` for reading another
-  template's answers file — but conditional/variable-driven includes are
-  an unresolved ask (#1076), base-template inheritance is open (#934),
-  and no mechanism shares data across repos without vendoring (the
-  shared-config-as-submodule practice is workaround, not mechanism).
-- Versioning: per-template tags vs monorepo-wide releases; how updates
-  address a specific template inside the monorepo.
+Gates (drafts to open as Phase 3 approaches): choosing-flow mechanics
+and what a delegating template renders; per-template vs monorepo-wide
+versioning.
 
-### C4 — templating templates
+## C4 — templating templates
 
-Scaffolding new templates from a template — the meta-template idea turned
-inward: `cc new-template` (or a template in the monorepo) generates a new
-template skeleton with the house conventions (spec, harness, stamp tests)
-already wired.
+`cc new-template` (or a monorepo template) generates a new template
+skeleton with the house conventions (principles, harness, stamp tests)
+already wired. Gates: skeleton contents; linkage into the C3
+collection; how much derives from agentic-project-template's
+governance patterns.
 
-Design questions: what the skeleton contains; how it links into the C3
-monorepo; how much comes from agentic-project-template's governance
-patterns vs being cc-specific.
+## C5 — first-class CLI and API
 
-### C5 — first-class CLI and API
+The merge/diff/adopt engines are importable libraries with a stable,
+tested API; the CLI exposes the same operations with stable commands,
+stable exit codes, and machine-readable output (JSON / agent formats)
+so agents are first-class users. Gates: API stability policy; output
+contracts (a JSON schema per command result); whether skills call only
+the CLI or may use the library directly.
 
-cc is a library and a CLI, both first-class: the merge/diff/adopt engines
-are importable with a stable, tested API, and the CLI exposes the same
-operations with stable commands, stable exit codes, and machine-readable
-output (JSON / agent formats) so that agents — not just humans — are
-first-class users.
+## C6 — agentic skills, with a graduation principle
 
-Design questions:
+cc ships dotagents-installable skills for template authoring (questions,
+jinja gotchas, answers files, stamp testing) and for driving cc's
+flows. The graduation principle is a requirement, not an aspiration:
+every operation is explainable in copier terms, teaches the copier
+concepts it uses, and leaves a user who outgrows cc with nothing lost.
+Its enforcement mechanism must be able to fail a review. Gates: skill
+inventory and granularity; skill/CLI sync rule; the enforcement
+mechanism; the curated reference list of foundational templates.
 
-- API stability policy (what is public, semver from when).
-- Output contracts: a JSON schema per command result; agent-consumable
-  error and finding formats (the alint `agent` output format is prior art
-  in the maintainer's toolchain).
-- Whether skills call only the CLI (keeping one surface) or may use the
-  library directly.
+## C7 — learnings routing
 
-### C6 — agentic skills, with a graduation principle
-
-cc ships dotagents-installable skills so agents can (a) author a copier
-template well — questions, jinja gotchas, answers files, stamp testing —
-and (b) drive cc directly for adopt/update/contribute flows.
-
-**Graduation principle:** cc must leave users better at copier, not
-dependent on cc. Every cc operation is explainable in copier terms; skills
-teach the copier concepts they use; running cc's flows never produces a
-state a user cannot understand or continue with plain copier. A user who
-outgrows cc loses nothing. This is the "extend the human" principle made
-testable.
-
-Design questions:
-
-- Skill inventory and granularity: template-authoring, adopt, update,
-  contribute — one skill each or composed?
-- Where skills live (cc repo, dotagents-installable) and how they stay in
-  sync with CLI behavior (the referenced-skill-is-a-declared-dependency
-  rule from the house spec style).
-- How "explainable in copier terms" is enforced: per-command copier
-  equivalents in docs/help, an `--explain` surface, or skill-authored
-  teaching sections — pick a mechanism that can fail a review, not just an
-  intention.
-- Skill references to foundational templates and tooling: the authoring
-  and usage skills should point at the real catalog (the cc monorepo
-  templates, agentic-project-template, mise, dotagents, base project
-  templates) rather than generic advice — a curated reference list the
-  skills cite, kept in the repo where it can be reviewed and updated.
-
-### C7 — learnings routing (the virtuous knowledge cycle)
-
-Learnings made in one project routinely apply to others — the same
-failure, the same convention, the same tool discovery. cc (or a cc-borne
-skill) should close that loop: harvest learnings from a project's
-existing surfaces (experiments logs, retro reports, handoff docs,
-spec decisions), propose destinations for each (another project's spec or
-context, a central learnings area, promotion into the cc monorepo's
-shared data, or generation into a reusable skill), and act only with
-human review.
-
-Real instances that motivate this: the naming-skill watchlist handoff
-(collisions learned during one session belong in a shared reference),
-handoff documents written for one session that carry decisions other
-repos need, and the agentic layer's shrink-loop retro, which already
-produces findings that outlive their project.
-
-Design questions:
-
-- Harvest surfaces and formats: what counts as a learning, and what
-  machine-readable shape does it take (a structured record vs prose)?
-- Destination routing: per-learning destination rules, a central
-  learnings store, or both — and how destinations consent.
-- Skill generator: when a learning recurs across projects, promote it to
-  a dotagents-installable skill rather than repeating it — cc's C6
-  machinery is the natural home.
-- Relationship to C2: C2 routes *code* changes upstream to templates;
-  C7 routes *knowledge* sideways and upward. Same review discipline,
-  different artifact type.
-
-## Open questions
-
-Each open question carries a safe default until resolved. Resolved
-questions move to the decision record.
-
-- ~~**Language/stack.**~~ Resolved 2026-10-13: Python, uv-managed.
-- ~~**cc vs agentic-project-template CLI.**~~ Resolved 2026-10-13, revised
-  same session: agentic-project-template is just a regular copier
-  template for now — a managed member of cc's future template collection,
-  not a special engine owner or consumer. Its adopt-shaped CLI is the
-  prototype cc's C1 engine ports from; absorb/consume questions for its
-  CLI are moot for now (apt backlog APT-16).
-- ~~**Binary name.**~~ Resolved 2026-10-13: `copier-cat`; `cc` remains a
-  personal alias.
-- ~~**Upstream posture for adopt.**~~ Resolved 2026-10-13: prototype in
-  cc, keep it donatable.
-
-## Decision record
-
-| Decision | Choice |
-| --- | --- |
-| Name | copier-cat (cc); free on PyPI/npm/crates, unclaimed under bengineerdavis on GitHub (checked 2026-10-12) |
-| Origin | Spun out of the agentic-project-template session (2026-10-12); its CLI is the prototype of C1/C2 mechanics |
-| Seed scope | Docs only — no code or harness; the next session chooses the stack and seeds it |
-| Language/stack | Python, uv-managed (2026-10-13) — matches the maintainer's tooling and the apt merge-engine prototype that C1 ports; copier itself is Python, so C2 diff-reuse is direct library use |
-| cc ↔ apt | agentic-project-template is a regular copier template for now — not an engine owner or special consumer. Its CLI is the prototype cc's C1 engine ports from (2026-10-13, revised from an earlier full-absorb decision the same session) |
-| Binary name | `copier-cat` (2026-10-13) |
-| Upstream posture | Prototype adopt in cc, shaped to stay donatable upstream (copier#2486); no PR-first engagement (2026-10-13) |
-| Adopt merger registry (C1) | Merger registry shaped as git merge drivers with a `git merge-file` conflict-marker fallback — details and rejected options in docs/adr/0001 (2026-10-15) |
-| Adopt merge base + baseline (C1) | Empty tree as the adopt-time merge base; the copier answers file as the recorded baseline for later updates — details and rejected options in docs/adr/0002 (2026-10-15) |
-| Adopt apply flow (C1) | Per-file accepted merges land directly in the working tree; committing stays the user's act — the accept is the consent moment, `git diff` is the review surface (grill round 2, 2026-10-15) |
-| Answers-file naming (C1) | Copier-native per-template pattern: plain `.copier-answers.yml` for a first template, `.copier-answers.<template>.yml` as more coexist (grill round 2, 2026-10-15) |
-| Adopt MVP scope (C1) | Single-template runs; N-template coexistence is a later flow on the same engine/answers primitives (grill round 2, 2026-10-15) |
-| Classification ownership (C2) | Render-derived, deterministic: template-rendered paths are template-owned, everything else project-owned; cc config overrides; the template is never asked to cooperate and no work is pushed onto copier (grill round 3, 2026-10-15) |
-| Render→source mapping (C2) | Reconstructed deterministically by re-rendering with recorded answers; if that proves expensive, cc owns a cached render-map instead — never a template-maintained convention (grill round 3, 2026-10-15) |
-| Changeset shape (C2) | One changeset per file; classification clustering is presentation, not engine (grill round 3, 2026-10-15) |
-| Proposal state (C2) | cc-local state dir keyed by (project, template) identity; no in-project markers (grill round 3, 2026-10-15) |
-| PR mechanics (C2) | Two explicit commands: prepare (branch + commits in a template checkout) and publish (user's own `gh` auth); no fork management in MVP (grill round 3, 2026-10-15) |
-| Monorepo subpath (C2) | Ownership map carries a template-root offset from day one; subpath PRs deferred to Phase 3 (grill round 3, 2026-10-15) |
-| Diff sourcing (C2) | Reuse copier's own update computation as a library import — one source of truth; tracks copier#2376's rewrite rather than drifting from it (grill round 3, 2026-10-15) |
-| Governance split | PRINCIPLES.md is the constitution (intent, principles, constraints, amendment rule); spec.md derives from it. Advisory panel, deliberated; principle 4 reworded Spec-driven → Layered governance; the operate-on-regular-templates invariant promoted from constraint to principle 5. Owner: bdavis (2026-10-16) |
-
-## References
-
-Prior-art findings recorded 2026-10-13 (research session). These are
-evidence and direction, not decisions; each C1/C2/C3 design question
-resolves against them explicitly.
-
-### cruft — the closest analogue for update/adopt state and diff flow
-
-- State is a pointer file: `.cruft.json` holds template URL, pinned
-  commit, prompt answers (frozen at create time), skip globs. No diff
-  content is persisted.
-- Update = double render (old at recorded commit with old answers, new
-  at HEAD) + `git diff --no-index` patch + `git apply -3`, falling back
-  to `git apply --reject` (`*.rej` files).
-- Adoption exists minimally as `cruft link` (since 1.1.0): re-prompts
-  for variables to reconstruct context, verifies nothing, and the
-  community flow (`link` then `diff | git apply`) misses files the
-  project lacks (#256).
-- Complaint cluster maps 1:1 onto cc's design requirements: #49 (top
-  ask: better `.rej` UX), #206 (render-in-repo + editable diff), #287
-  (conflict markers harder than `.rej`), #53/#67/#181 (false success
-  after partial application), #181 (`git apply -3` needs blobs shallow
-  clones lack — breaks CI update bots), #142 (stored branch ignored),
-  #232 (new template parameters silently skipped), #256 (project-only
-  files invisible to diff; locally-deleted template files not reported).
-- Maintenance is slow (release ~annual; 2.16.0 Dec 2024).
-
-Direction this gives cc: per-file/per-hunk review beats all-or-nothing
-patch application; adopt must reconcile state with the real project
-rather than re-prompt blind; the `git apply -3` blob dependency rules
-out that mechanism for CI-targeted flows.
-
-### copier upstream signals
-
-- #2376 (open): proposal to rebuild `copier update` on `git merge`.
-  Directly affects C1's donatable shape — a conflict-marker-based adopt
-  would fight the direction of travel; a merge-shaped design composes.
-- #2487 (PR, closed 2026-04-10 unmerged, no stated reason; review asked
-  for rename to `onboard`, dropping `.rej` support because of #2376,
-  and minimal scope). Community revival attempts got no response.
-  Warning for the upstream posture: closure-without-explanation is a
-  live risk; donatability also means small, deference-shaped changes.
-- #2463 merged `copier check-update`; #2529 discussion spawned
-  natescherer/copier-action. Downstream-update automation is where
-  ecosystem energy goes.
-- #2005 (conflict markers on copy) and #1738 (multi-template merge)
-  remain open — cc's C1 generalizes both.
-- Ecosystem update tooling: fohte/copier-update-action pairs copier
-  update with mergiraf (an SMT-based merge tool — prior art for
-  structural merge); natescherer/copier-action; KyleKing's
-  copier-template-tester (stamp testing prior art for C6 skills).
-
-### Contribute-back (C2): the gap is real and unclaimed
-
-- No tool exists that detects template-worthy changes in a generated
-  project and opens PRs to the template repo. Copier tracker, cruft
-  tracker, GitHub-wide and web searches all return zero hits.
-- cruft's `diff --exit-code` is framed as contribute-back *support*
-  ("ensures any improvement to the template is always submitted
-  upstream") but submission is entirely manual.
-- copier's `update` already computes the user-modifications diff
-  internally (fresh render at recorded commit vs current project);
-  no command exports it as an artifact. That computation is the seed
-  of C2's classification input.
-- flexlate (multi-engine, git-native, 0.x) stores resolution history
-  in internal branches; syncs manual changes into its own branches so
-  they survive updates — mechanical prior art, but no upstream flow.
-
-### Monorepo of templates (C3): what exists and what doesn't
-
-- Copier's stated position: 1 template = 1 git repository (tags are
-  repo-global; update machinery depends on them). Multi-template-repo
-  requests #1078, #1279, #1571, #315 all closed pointing at docs; a
-  maintainer notes a subdir-addressable src URL "could actually work"
-  (unimplemented). #2300 (open) is destination-monorepos, a different
-  problem. Remote URLs cannot address a subdirectory template.
-- Verified multi-template repos in the wild
-  (sdsc-ordes/repository-template, UABGH-Emerging-Technologies/Templates,
-  WaylonWalker/devtainer, GoogleCloudPlatform/solutions-builder,
-  mitodl/ol-infrastructure): all (a) clone-then-local-path, (b) use a
-  custom wrapper CLI/script as the chooser, (c) give each template its
-  own answers file, (d) accept degraded versioning (repo-global tags).
-- Chosen patterns resembling cc's goals: sdsc-ordes hands template 1's
-  answers to template 2 via `--data`; UABGH delegates via `_tasks`
-  running `copier copy` on a `common/` template; worldworm layers
-  `-ext` templates with separate answers files; SS-NES meta-template
-  maintains a REGISTRY.md of derived templates (hand-maintained).
-- No copier-native chooser/meta-picker exists anywhere found — one
-  `copier.yml` asking "which stack?" then delegating onward is
-  unclaimed. Choosers are always external tools (fzf scripts, just
-  targets, bespoke CLIs). The one-template-with-toggles alternative
-  (lincc-frameworks/python-project-template) trades per-stack
-  repos/tags for a single questionnaire.
-
-Direction this gives C3: cc's monorepo + chooser is the gap everyone
-works around with custom wrappers; the price of admission is solving
-subdir-addressable URLs/tags or wrapper-based local-path flows, and
-`!include`/`_external_data` are the sanctioned sharing primitives any
-shared-data design must build on rather than replace.
+Harvest learnings from project surfaces (experiments logs, retro
+reports, handoff docs, decisions), propose destinations (another
+project's context, a central learnings area, shared data in the
+collection, or generation into a reusable skill via C6), and act only
+with human review. C2 routes code upstream; C7 routes knowledge
+sideways and upward — same review discipline, different artifact.
+Gates: harvest surfaces and record shape; destination routing and
+consent; the recurrence-to-skill promotion rule.
