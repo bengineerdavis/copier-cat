@@ -5,7 +5,11 @@ description = "Template manager for copier: adopt templates into existing projec
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
-dependencies = ["copier>=9.8"]
+dependencies = [
+    "copier>=9.8",
+    "pyyaml>=6.0.3",
+    "tomli-w>=1.2.0",
+]
 
 [dependency-groups]
 dev = ["pytest>=8", "ruff>=0.14", "pyrefly>=0.5"]
