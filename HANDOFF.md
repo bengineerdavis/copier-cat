@@ -164,6 +164,44 @@ choices, the log's table for one-line entries, drafts for open
 questions. Requirements gravity: task acceptance criteria gain weight
 as CC-1..3 flesh out.
 
+## Session 2026-10-18 — CC-1 implemented (merger registry)
+
+CC-1 fleshed out (9 acceptance criteria, store-first) then implemented:
+the merger registry library at `src/copier_cat/merge/` and the
+`copier-cat` CLI (`merge`, `mergers`) with stable exit codes and JSON
+output. 59 tests; lint and pyrefly clean. Shaped by:
+
+- decision-1: every merger is a git merge driver (base/ours/theirs →
+  merged text + conflicted flag + warnings); the fallback is plain
+  `git merge-file`.
+- decision-2: the registry never invents a base — adopt passes the
+  empty tree; fast paths: empty project file takes the render, empty
+  render leaves project content standing.
+- spec C1 (no cc residue): the marked-section merger's marker pair is a
+  constructor parameter and it ships UNREGISTERED — no default markers;
+  flows compose one for templates that use them (the provider-open
+  interface CC-2 evaluates).
+
+Ported from the prototype: TOML/YAML deep-merge (project wins, template
+fills gaps, named lists by name, plain lists union). Deliberately not
+ported: prek repo-signature dedupe, gitignore append, JSON merge —
+CC-1's scope line governs; noted in the task for when adopt meets real
+configs. Prototype re-serialization limitation carried (comments and
+formatting do not survive a merge; deterministic, not byte-preserving)
+— documented in the merger docstrings.
+
+Design notes for the next session: git's xdiff adjacency means
+adjacent-line changes conflict — the fallback's clean-merge tests
+separate edits by unchanged lines. The marked-section merger keeps
+project regions the render dropped (with a warning) and splices regions
+byte-for-byte; non-region divergence always conflicts rather than
+resolving silently. Registry fast paths fire only on the empty base —
+a non-empty base with an emptied side reaches the fallback as a
+modify/delete-style conflict. roborev findings were fixed forward
+(fast-path gating, merge-file failure detection, CLI exit-code/output
+holes). Next: CC-3 (adopt flow MVP) renders → classifies → reviews per
+file → writes the answers file.
+
 ## Session 2026-10-13 — open questions resolved
 
 All four spec open questions resolved (see spec decision record):
