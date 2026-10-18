@@ -40,6 +40,18 @@ def test_base_is_passed_through_unchanged() -> None:
     assert result.conflicted
 
 
+def test_non_empty_base_with_empty_side_reaches_the_fallback() -> None:
+    """An empty side against a non-empty base is modify/delete-style
+    divergence — surfaced as a conflict, never silently resurrected."""
+    registry = default_registry()
+    deleted_ours = registry.merge("a.toml", "[k]\nv = 1\n", "", "[k]\nv = 3\n")
+    assert deleted_ours.conflicted
+    assert deleted_ours.merger == "git-merge-file"
+    dropped_theirs = registry.merge("a.toml", "[k]\nv = 1\n", "[k]\nv = 2\n", "")
+    assert dropped_theirs.conflicted
+    assert dropped_theirs.merger == "git-merge-file"
+
+
 def test_marked_section_merger_joins_via_composition_not_default() -> None:
     registry = Registry(mergers=(TomlMerger(), MarkedSectionMerger(APT_MARKERS)))
     render = f"{APT_MARKERS.begin}\nsection\n{APT_MARKERS.end}\n"

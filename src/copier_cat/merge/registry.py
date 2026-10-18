@@ -32,9 +32,14 @@ class Registry:
         return self.fallback
 
     def merge(self, path: str, base: str, ours: str, theirs: str) -> MergeResult:
-        if not ours.strip():
+        # Fast paths fire only on the adopt shape (empty base). With a
+        # non-empty base, an empty side means a modify/delete-style
+        # divergence that must reach merger selection and the fallback —
+        # not a silent resurrection of one side.
+        empty_base = not base.strip()
+        if empty_base and not ours.strip():
             return MergeResult(text=theirs, conflicted=False)
-        if not theirs.strip():
+        if empty_base and not theirs.strip():
             return MergeResult(text=ours, conflicted=False)
         merger = self.merger_for(path, base, ours, theirs)
         return replace(merger.merge(path, base, ours, theirs), merger=merger.name)
