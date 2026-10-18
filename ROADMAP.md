@@ -25,9 +25,11 @@
   marked sections) + conflict-marker fallback for unknown formats —
   shipped as a tested library API and a CLI with stable commands, exit
   codes, and JSON output.
-- Study task: evaluate copier-uv-bleeding's marked-region preservation
+- ~~Study task: evaluate copier-uv-bleeding's marked-region preservation
   against the merger-registry interface (grill round 2); the interface is
-  being built so a marked-region provider is another merger, not a rival.
+  being built so a marked-region provider is another merger, not a rival.~~
+  Done 2026-10-18 (CC-2; decision-5: another merger provider, not a rival;
+  generalizations parked as draft-2).
 - `adopt` flow: render → classify per file (add / identical / conflict) →
   apply with review → write answers with a valid baseline.
 - First cc skill shipped alongside (adopt/update), carrying its teaching

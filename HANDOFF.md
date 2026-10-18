@@ -164,6 +164,24 @@ choices, the log's table for one-line entries, drafts for open
 questions. Requirements gravity: task acceptance criteria gain weight
 as CC-1..3 flesh out.
 
+## Session 2026-10-18 — CC-2 studied and closed (marked-region verdict)
+
+CC-2 ran as an evidence study, not a blind pick. copier-uv-bleeding's
+mechanism was read at source (PR #329 at `9a80874`, v0.41.2:
+skip-if-exists + `_tasks` regeneration with by-name
+`template-preserve:<name>:start/:end` splicing) and evaluated against
+the registry interface; evidence and pinned links live in
+backlog/docs/prior-art.md, findings in the task's notes. Verdict
+(**decision-5**): another merger provider, not a rival architecture —
+decision-1 holds. Two generalizations gate any future port (named
+markers; explicit region-body orientation — uv-bleeding's regions are
+user-owned, cc's are template-owned), parked as **draft-2** with a safe
+default. Upstream: copier#2762 (`{% ignore %}` tag, preview-leaning) owns
+update-time region preservation — cc tracks it and stays adopt-time.
+The spec's C1 marked-region gate closed in the same commit as the
+decision. CC-2/CC-3 acceptance criteria were fleshed out first (store
+requirements gravity); next: CC-3 (adopt flow MVP).
+
 ## Session 2026-10-18 — CC-1 implemented (merger registry)
 
 CC-1 fleshed out (9 acceptance criteria, store-first) then implemented:

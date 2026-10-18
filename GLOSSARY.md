@@ -41,6 +41,7 @@ _Avoid_: patch bundle, contribution set
 **Marked region**:
 A named, byte-stable section inside a generated file that the template owns; candidates for preservation across regenerations.
 _Avoid_: preserve markers, template-preserve (that name belongs to copier-uv-bleeding's mechanism)
+_Note (CC-2)_: the template owns the region boundary (the markers); who owns the region _body_ is an explicit orientation choice — copier-uv-bleeding's regions are user-owned, cc's are template-owned. Same marker shape, opposite precedence.
 
 **Template-worthy change**:
 A change made in a stamped project that belongs in the template rather than staying project-local.

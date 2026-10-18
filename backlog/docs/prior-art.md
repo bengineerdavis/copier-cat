@@ -99,3 +99,39 @@ works around with custom wrappers; the price of admission is solving
 subdir-addressable URLs/tags or wrapper-based local-path flows, and
 `!include`/`_external_data` are the sanctioned sharing primitives any
 shared-data design must build on rather than replace.
+
+### copier-uv-bleeding — marked-region preservation in mixed files (CC-2 evidence)
+
+Recorded 2026-10-18 (CC-2 study; findings in the task's implementation
+notes). Evidence, not endorsement.
+
+- detailobsessed/copier-uv-bleeding
+  [PR #329, merged 2026-07-02 at `9a80874`](https://github.com/detailobsessed/copier-uv-bleeding/pull/329)
+  (v0.41.2): `_skip_if_exists` plus a `_tasks` step
+  (`migrations/sync_marked_sections.py`) regenerating mixed files
+  (`pyproject.toml`, `prek.toml`) fresh on every update while splicing
+  `# template-preserve:<name>:start/:end` regions back byte-for-byte,
+  matched by name. Read from source, including the tool-owned scalar pass
+  and the self-terminating legacy bootstrap.
+- [docs/update.md](https://github.com/detailobsessed/copier-uv-bleeding/blob/main/docs/update.md)
+  (read 2026-10-18, unversioned page): documents the trade-off — only
+  marked regions (plus two tool-owned keys) survive an update; unmarked
+  project additions are dropped.
+- Lineage: dariusgm/templator "preserve_sections" (MIT) — the idea,
+  reimplemented with two fixes (by-name matching instead of positional;
+  never blanking an unsnapshotted region). Not a dependency.
+- copier upstream: [PR #2762](https://github.com/copier-org/copier/pull/2762)
+  (open; head `bac5e80` 2026-08-09; maintainer review 2026-08-19 leans
+  "preview" opt-in; closes
+  [#2184](https://github.com/copier-org/copier/issues/2184)): a Jinja
+  `{% ignore %}` tag omitting developer-owned regions from update-time
+  renders, after literal comment markers were rejected as
+  format-bound.
+
+Direction this gives C1: the mechanism enters cc as another composed
+merger provider (decision-1's registry holds — another merger, not a
+rival); the two required generalizations (named markers, explicit region
+orientation) are parked as a backlog draft, and update-time region
+preservation belongs to copier upstream (#2762) — track, do not rival.
+Review trigger: the template's marker mechanism changes, #2762 merges or
+ships, or cc adopts a marked-region template.

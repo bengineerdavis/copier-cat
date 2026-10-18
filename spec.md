@@ -30,8 +30,7 @@ Adopt MUST:
   marker conventions, no cc residue (decision log: Classification
   ownership, Proposal state).
 
-Gates: marked-region evaluation (task CC-2); N-template coexistence
-(draft-1).
+Gates: N-template coexistence (draft-1).
 
 ## C2 — contribute / phone home
 
