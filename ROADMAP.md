@@ -30,8 +30,12 @@
   being built so a marked-region provider is another merger, not a rival.~~
   Done 2026-10-18 (CC-2; decision-5: another merger provider, not a rival;
   generalizations parked as draft-2).
-- `adopt` flow: render → classify per file (add / identical / conflict) →
-  apply with review → write answers with a valid baseline.
+- ~~`adopt` flow: render → classify per file (add / identical / conflict) →
+  apply with review → write answers with a valid baseline.~~ Done
+  2026-10-18 (CC-3; classification is terminal over the registry's
+  empty-base result — add / identical / merge / conflict — with the
+  fourth class the clean-proposal case; the answers file is the stamp,
+  written by cc even on full rejection).
 - First cc skill shipped alongside (adopt/update), carrying its teaching
   sections — the graduation principle is exercised from the first release,
   not deferred.

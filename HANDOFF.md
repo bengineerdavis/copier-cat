@@ -164,6 +164,34 @@ choices, the log's table for one-line entries, drafts for open
 questions. Requirements gravity: task acceptance criteria gain weight
 as CC-1..3 flesh out.
 
+## Session 2026-10-18 — CC-3 implemented (adopt CLI flow MVP)
+
+The adopt flow landed as a library (`src/copier_cat/adopt.py`) plus the
+`copier-cat adopt` CLI, probed against copier 9.18's source first:
+
+- **Render at HEAD through copier itself**: `run_copy(vcs_ref="HEAD",
+  skip_tasks=True)` into a caller-owned temp dir; the worker supplies the
+  questions, adopted answers, per-template answers filename, and current
+  commit (plain-directory templates record `_src_path` only). The answers
+  filter replicates the worker's `_answers_to_remember` — underscore-private
+  API is not a dependency cc takes. Fixture lesson: `_copier_conf` carries
+  template config, not question answers.
+- **Classification is terminal over the registry's empty-base result**:
+  add (absent/empty), identical (merged == project), conflict (markers
+  carried for review), merge (clean proposal). No merge logic outside the
+  registry (DOD). The answers file is the stamp — excluded from plans,
+  written by cc even on full rejection.
+- **Consent**: interactive y/n/e per file (edit replaces the proposal);
+  `--json` refuses to apply anything without `--accept-all`/`--reject-all`
+  (agent mode has no prompt), leaving the project untouched on refusal.
+  Exit 1 whenever conflicts were presented, resolved or not; 2 on error.
+
+15 new tests over real git-backed template fixtures (74 total); mise
+lint/test clean. Committed as library then CLI (1098cab, 3008d19).
+Phase 1 remainder: the first cc skill (adopt/update teaching sections —
+the graduation principle exercised from the first release) and the
+dogfood adopt of a real template into a real personal repo.
+
 ## Session 2026-10-18 — CC-2 studied and closed (marked-region verdict)
 
 CC-2 ran as an evidence study, not a blind pick. copier-uv-bleeding's
