@@ -29,7 +29,9 @@ def git_merge_file(
     """Run `git merge-file -p` over the three inputs.
 
     Returns (merged_text, conflicted). The exit code is the conflict
-    count; negative means the tool failed and raises MergeToolError.
+    count, truncated at 127; above that range (or a negative code from a
+    signal death) means the tool itself failed and raises
+    MergeToolError, as does a missing git binary.
     """
     with tempfile.TemporaryDirectory() as tmp:
         tmp_dir = Path(tmp)
@@ -39,26 +41,29 @@ def git_merge_file(
         ours_path.write_text(ours, encoding="utf-8")
         base_path.write_text(base, encoding="utf-8")
         theirs_path.write_text(theirs, encoding="utf-8")
-        proc = subprocess.run(
-            [
-                "git",
-                "merge-file",
-                "-p",
-                "-L",
-                labels[1],
-                "-L",
-                labels[0],
-                "-L",
-                labels[2],
-                str(ours_path),
-                str(base_path),
-                str(theirs_path),
-            ],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-    if proc.returncode < 0:
+        try:
+            proc = subprocess.run(
+                [
+                    "git",
+                    "merge-file",
+                    "-p",
+                    "-L",
+                    labels[1],
+                    "-L",
+                    labels[0],
+                    "-L",
+                    labels[2],
+                    str(ours_path),
+                    str(base_path),
+                    str(theirs_path),
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+        except OSError as error:
+            raise MergeToolError(f"git merge-file could not run: {error}") from error
+    if proc.returncode < 0 or proc.returncode > 127:
         raise MergeToolError(f"git merge-file failed: {proc.stderr.strip()}")
     return proc.stdout, proc.returncode > 0
 
