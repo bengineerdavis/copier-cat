@@ -31,6 +31,13 @@ EXIT_ERROR = 2
 def _read(path: Path, what: str) -> str:
     try:
         return path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as error:
+        typer.secho(
+            f"error: {what} file {path} is not valid UTF-8: {error}",
+            fg=typer.colors.RED,
+            err=True,
+        )
+        raise typer.Exit(EXIT_ERROR) from error
     except OSError as error:
         typer.secho(
             f"error: cannot read {what} file {path}: {error}",
@@ -60,7 +67,7 @@ def merge(
         None, "--path", help="Path key for merger selection (default: theirs filename)"
     ),
     output: Path | None = typer.Option(
-        None, "--output", help="Write merged text to this file instead of stdout"
+        None, "--output", help="Write merged text to this file (combinable with --json)"
     ),
     json_output: bool = typer.Option(
         False, "--json", help="Emit a JSON result on stdout"
@@ -77,7 +84,14 @@ def merge(
     except MergeToolError as error:
         typer.secho(f"error: {error}", fg=typer.colors.RED, err=True)
         raise typer.Exit(EXIT_ERROR) from error
+    except Exception as error:  # the exit-code contract outranks traceback noise
+        typer.secho(
+            f"error: {type(error).__name__}: {error}", fg=typer.colors.RED, err=True
+        )
+        raise typer.Exit(EXIT_ERROR) from error
 
+    if output is not None:
+        _write_file(result.text, output)
     if json_output:
         typer.echo(
             json.dumps(
@@ -93,21 +107,21 @@ def merge(
         )
     else:
         _emit_warnings(result.warnings)
-        _write_text(result.text, output)
+        if output is None:
+            # Stdout carries exactly the bytes --output would write: the
+            # merged text, verbatim.
+            sys.stdout.write(result.text)
     raise typer.Exit(EXIT_CONFLICTED if result.conflicted else EXIT_CLEAN)
 
 
-def _write_text(text: str, output: Path | None) -> None:
-    if output is not None:
-        try:
-            output.write_text(text, encoding="utf-8")
-        except OSError as error:
-            typer.secho(
-                f"error: cannot write {output}: {error}", fg=typer.colors.RED, err=True
-            )
-            raise typer.Exit(EXIT_ERROR) from error
-        return
-    sys.stdout.write(text if text.endswith("\n") else text + "\n")
+def _write_file(text: str, output: Path) -> None:
+    try:
+        output.write_text(text, encoding="utf-8")
+    except OSError as error:
+        typer.secho(
+            f"error: cannot write {output}: {error}", fg=typer.colors.RED, err=True
+        )
+        raise typer.Exit(EXIT_ERROR) from error
 
 
 @app.command()

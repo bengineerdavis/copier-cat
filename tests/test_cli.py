@@ -74,6 +74,72 @@ def test_merge_output_file_writes_merged_text(sides, tmp_path) -> None:
     assert "y = 2" in out.read_text(encoding="utf-8")
 
 
+def test_json_and_output_combine(sides, tmp_path) -> None:
+    ours, theirs, _ = sides
+    ours.write_text("[a]\nx = 1\n", encoding="utf-8")
+    theirs.write_text("[a]\ny = 2\n", encoding="utf-8")
+    out = tmp_path / "merged.toml"
+    result = runner.invoke(
+        app,
+        [
+            "merge",
+            "--ours",
+            str(ours),
+            "--theirs",
+            str(theirs),
+            "--output",
+            str(out),
+            "--json",
+        ],
+    )
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert out.read_text(encoding="utf-8") == payload["text"]
+
+
+def test_stdout_bytes_match_the_json_text_field(tmp_path) -> None:
+    # Inputs without a trailing newline give a merged text without one:
+    # the verbatim contract becomes visible.
+    ours = tmp_path / "ours.txt"
+    theirs = tmp_path / "theirs.txt"
+    base = tmp_path / "base.txt"
+    base.write_text("a\nb\nc")
+    ours.write_text("A\nb\nc")
+    theirs.write_text("a\nb\nc")
+    plain = runner.invoke(
+        app,
+        ["merge", "--ours", str(ours), "--theirs", str(theirs), "--base", str(base)],
+    )
+    as_json = runner.invoke(
+        app,
+        [
+            "merge",
+            "--ours",
+            str(ours),
+            "--theirs",
+            str(theirs),
+            "--base",
+            str(base),
+            "--json",
+        ],
+    )
+    assert plain.exit_code == 0
+    payload = json.loads(as_json.output)
+    assert not payload["text"].endswith("\n")
+    assert plain.output == payload["text"]
+
+
+def test_non_utf8_input_is_a_clean_exit_2(tmp_path) -> None:
+    theirs = tmp_path / "render.txt"
+    theirs.write_bytes(b"caf\xe9 latte\n")
+    ours = tmp_path / "ours.txt"
+    ours.write_text("ours\n", encoding="utf-8")
+    result = runner.invoke(app, ["merge", "--ours", str(ours), "--theirs", str(theirs)])
+    assert result.exit_code == 2
+    assert "not valid UTF-8" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
 def test_merge_with_explicit_base_reaches_the_fallback(sides) -> None:
     ours, theirs, base = sides
     base.write_text("[a]\nx = 0\n\nz = 9\n", encoding="utf-8")
