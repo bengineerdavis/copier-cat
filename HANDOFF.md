@@ -252,6 +252,38 @@ modify/delete-style conflict. roborev findings were fixed forward
 holes). Next: CC-3 (adopt flow MVP) renders → classifies → reviews per
 file → writes the answers file.
 
+## Session 2026-10-19 — catch-up: no merged changes; the roborev gap closed
+
+Nothing to catch up on in the repo itself: origin/main sits at fffa7b8
+with local main ahead 16 / behind 0 — the CC-1..3 work is all unpushed,
+and nothing merged remotely. Upstream grounding unchanged (checked via
+gh): copier#2486 (adopt), #2376 (git-merge update rewrite), and #2762
+(ignore tag) are all still open.
+
+Siblings moved: agentic-project-template's board is through apt-18
+(isolation design+wiring done; apt-22 per-tool fragments queued;
+fragments/mise work still uncommitted in its tree);
+copier-template-copier-template recorded declined upstream
+contributions and advanced its self-update baseline; copier-mise-
+sandbox has uncommitted template work. The cc↔apt relationship is
+unchanged — apt's own handoff still names this CLI as the prototype of
+cc's adopt.
+
+The roborev review gap (jobs 82-85 dying at startup; job 93 running
+2h33m then canceled) was root-caused: the agent had been invoking an
+opencode V1 binary against the user's now-V2 config, and a transient
+mise 404 (anomalyco/opencode@2.0.32) compounded it — both healed on
+this machine; opencode v2.0.32 answers today. The five uncovered
+commits (1098cab..051e783, 0118588) were re-enqueued as jobs 97-100
+and the degraded shared daemon restarted per doctor, but the pipeline
+still churns — jobs restart rather than complete, so those five
+commits remain WITHOUT a completed review. Next session: check
+`roborev list` for their verdicts (the failed-looking 0-1s jobs
+82-85 are stale rows, not findings); if still churning, the fix is in
+roborev's global config wiring (~/.roborev/config.toml has an ignored
+`[advanced] opencode_cmd` key pointing at a dead linuxbrew path) —
+user-level, not repo state.
+
 ## Session 2026-10-13 — open questions resolved
 
 All four spec open questions resolved (see spec decision record):
