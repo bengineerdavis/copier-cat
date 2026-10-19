@@ -28,12 +28,16 @@ Handoff for the next agent/human session. Read top to bottom.
 
 Seeded (2026-10-15/16, store workflow 2026-10-17): PRINCIPLES.md
 (constitution), thin requirements spec, glossary, the backlog store
-(tasks CC-1..3, draft-1, decisions 1-2, decision log, prior-art doc),
-the harness (mise, prek.toml, uv, roborev reviewing every commit).
-Phase 1 starts at CC-1, the merger-registry extraction from the
-agentic-project-template prototype
-(`~/code/projects/personal/templates/agentic-project-template`), not
-from new scaffolding.
+(decisions 1-5, drafts 1-2, decision log, prior-art doc; tasks CC-1..3
+completed and archived under `backlog/completed/`), the harness (mise,
+prek.toml, uv, roborev reviewing every commit).
+
+Implemented (2026-10-18, tasks CC-1..3): the merger registry library
+(`src/copier_cat/merge/`), the adopt flow library
+(`src/copier_cat/adopt.py`), and the `copier-cat` CLI (`merge`,
+`mergers`, `adopt`) — 74 tests, mise lint/test clean. Phase 1's
+remainder is the first cc skill (adopt/update, C6) and the dogfood
+adopt of a real template into a real personal repo.
 
 ## The relationship to agentic-project-template
 
@@ -323,11 +327,17 @@ decisions). Headlines:
    monorepo template collections (how others host N templates in one repo).
    Record findings as spec references, not as decisions.~~ (2026-10-13,
    recorded as the spec's References section.)
-3. Prototype `adopt` first (Roadmap Phase 1, current): it is the most
+3. ~~Prototype `adopt` first (Roadmap Phase 1, current): it is the most
    grounded feature — port the apt merge engine behind the merger
    registry (task CC-1, then CC-3), dogfood by adopting a real template
-   into a real personal repo.
-4. Keep commits per commit-hygiene; keep the ambiguity discipline
+   into a real personal repo.~~ (2026-10-18, tasks CC-1..3 done: the
+   merger registry, the adopt flow, and the `copier-cat` CLI shipped;
+   the marked-region study closed as decision-5.)
+4. Finish Phase 1's remainder: ship the first cc skill (adopt/update,
+   carrying its teaching sections — the graduation principle exercised
+   from the first release) and dogfood by adopting a real template
+   into a real existing personal repo.
+5. Keep commits per commit-hygiene; keep the ambiguity discipline
    (open questions with safe defaults and owners, never guesses), and
    treat PRINCIPLES.md as the constitution its amendment rule says it is.
 
@@ -343,4 +353,6 @@ decisions). Headlines:
 - Backlog/backlog-md-py is the task-store convention in the sibling
   projects; **backlog-md-py is adopted here too** (grill round 2,
   2026-10-15 — partial parity accepted with the verdict recorded),
-  seeding the harness/backlog store is done; Phase 1 starts at task CC-1.
+  seeding the harness/backlog store is done. Tasks CC-1..3 are
+  completed and archived; Phase 1's remainder is the first cc skill
+  and the dogfood adopt.

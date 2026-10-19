@@ -20,11 +20,12 @@
 
 ## Phase 1 — adopt MVP (C1, C5, C6) (current)
 
-- Merger-registry library extracted and generalized from the
+- ~~Merger-registry library extracted and generalized from the
   agentic-project-template prototype: per-format mergers (TOML, YAML,
   marked sections) + conflict-marker fallback for unknown formats —
   shipped as a tested library API and a CLI with stable commands, exit
-  codes, and JSON output.
+  codes, and JSON output.~~ Done 2026-10-18 (CC-1; decision-1's
+  driver shape, decision-2's empty base).
 - ~~Study task: evaluate copier-uv-bleeding's marked-region preservation
   against the merger-registry interface (grill round 2); the interface is
   being built so a marked-region provider is another merger, not a rival.~~
