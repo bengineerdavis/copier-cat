@@ -40,8 +40,12 @@ backup_model = ''
 review_context_count = 0
 # Use repo review_guidelines instead of appending global review_guidelines.
 review_guidelines_supersede_global = false
-# Override the review job timeout in minutes for this repo.
-job_timeout_minutes = 0
+# Override the review job timeout in minutes for this repo. Data from the
+# first ~70 reviews: healthy single-commit jobs finish in 11s-2m48s, a
+# 4-commit range review in 6m6s; the one run-away (roborev 0.71, since
+# canceled) ran 2h33m. 15m is ~2.5x the observed worst legitimate job —
+# revisit if batched reviews (post_commit_batch_size) ever land here.
+job_timeout_minutes = 15
 # Override the post-commit hook request timeout (in seconds) for this repo. Useful for large repos where the enqueue handler's git calls are slow. 0 or negative inherits the global / platform default.
 hook_timeout_seconds = 0
 # Branches that should be skipped for automatic review in this repo.
