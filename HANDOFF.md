@@ -139,8 +139,8 @@ with one deliberate deviation the author specified: **prek's config is
 `prek.toml`** (prek 0.5.5 defaults to TOML), not the legacy
 `.pre-commit-config.yaml`. Stack: uv + Python 3.12, ruff + pyrefly via
 uv-run local prek hooks (tool pins live in pyproject.toml only), tombi
-for TOML lint, copier 9.18.2 as a real dependency (C2's diff-sourcing
-decision exercised by the smoke test). Task store: backlog-md-py,
+for TOML lint, copier >=9.8 locked at 9.19.1 in uv.lock as a real
+dependency (C2's diff-sourcing decision exercised by the smoke test). Task store: backlog-md-py,
 `backlog-py init --defaults --task-prefix cc`; seed tasks CC-1 (merger
 registry extraction), CC-2 (marked-region study), CC-3 (adopt CLI MVP).
 AGENTS.md's "nothing is implemented" routing rule is retired. Phase 1
@@ -264,25 +264,24 @@ Siblings moved: agentic-project-template's board is through apt-18
 (isolation design+wiring done; apt-22 per-tool fragments queued;
 fragments/mise work still uncommitted in its tree);
 copier-template-copier-template recorded declined upstream
-contributions and advanced its self-update baseline; copier-mise-
-sandbox has uncommitted template work. The cc↔apt relationship is
-unchanged — apt's own handoff still names this CLI as the prototype of
-cc's adopt.
+contributions and advanced its self-update baseline;
+copier-mise-sandbox has uncommitted template work. The cc↔apt
+relationship is unchanged — apt's own handoff still names this CLI as
+the prototype of cc's adopt.
 
 The roborev review gap (jobs 82-85 dying at startup; job 93 running
 2h33m then canceled) was root-caused: the agent had been invoking an
 opencode V1 binary against the user's now-V2 config, and a transient
 mise 404 (anomalyco/opencode@2.0.32) compounded it — both healed on
-this machine; opencode v2.0.32 answers today. The five uncovered
-commits (1098cab..051e783, 0118588) were re-enqueued as jobs 97-100
-and the degraded shared daemon restarted per doctor, but the pipeline
-still churns — jobs restart rather than complete, so those five
-commits remain WITHOUT a completed review. Next session: check
-`roborev list` for their verdicts (the failed-looking 0-1s jobs
-82-85 are stale rows, not findings); if still churning, the fix is in
-roborev's global config wiring (~/.roborev/config.toml has an ignored
-`[advanced] opencode_cmd` key pointing at a dead linuxbrew path) —
-user-level, not repo state.
+this machine; opencode v2.0.32 answers today, and the daemon healed on
+the roborev 0.72 upgrade (2026-10-19) — it has run without restarts or
+churn since. The five commits the gap left unreviewed — 1098cab,
+3008d19, 1efb781, 051e783, 0118588 — all have completed verdicts now:
+job 97 reviewed the e44483f..3008d19 range (covering 1098cab and
+3008d19), job 98 covered 1efb781, job 99 covered 051e783, and job 100
+covered 0118588 (verdicts F, P, P, F in that order). The 0-1s failed
+jobs 82-85 are stale rows, not findings; every failed job predates the
+0.72 heal.
 
 ## Session 2026-10-13 — open questions resolved
 
