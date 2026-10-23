@@ -298,7 +298,14 @@ def adopt(
         False, "--reject-all", help="Reject every proposal without prompting"
     ),
     json_output: bool = typer.Option(
-        False, "--json", help="Emit a JSON result on stdout"
+        False,
+        "--json",
+        help=(
+            "Emit a JSON result on stdout. Non-interactive by construction: "
+            "unanswered questions take the template's defaults (implies "
+            "--defaults), and files needing review are refused with exit 2 "
+            "unless --accept-all or --reject-all is passed"
+        ),
     ),
 ) -> None:
     """Adopt a template into an existing project (render → classify → review → stamp)."""
@@ -309,7 +316,17 @@ def adopt(
     data: dict[str, Any] = _parse_answers(answers or [])
     with tempfile.TemporaryDirectory() as tmp:
         try:
-            rendered = render(src, Path(tmp), data, defaults=defaults, trust=trust)
+            # --json is agent mode: the render must never prompt, so
+            # unanswered questions take the template's defaults
+            # (documented on the --json flag) rather than reaching
+            # copier's prompt machinery.
+            rendered = render(
+                src,
+                Path(tmp),
+                data,
+                defaults=defaults or json_output,
+                trust=trust,
+            )
         except Exception as error:  # the exit-code contract outranks traceback noise
             typer.secho(
                 f"error: rendering {src} failed: {type(error).__name__}: {error}",
@@ -328,7 +345,7 @@ def adopt(
             )
             for plan, accepted, edited in decisions:
                 if accepted:
-                    apply(plan, dst, edited=edited)
+                    apply(plan, dst, rendered=rendered, edited=edited)
             stamp(rendered, dst)
         except typer.Exit:  # consent refusals pass through as exit-2
             raise

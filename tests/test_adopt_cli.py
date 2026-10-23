@@ -158,3 +158,104 @@ def test_adopt_human_mode_reports_every_file(template, project):
     assert any(line == "identical\tmise.toml\tidentical" for line in lines)
     assert any(line == "conflict\tnotes.txt\tapplied" for line in lines)
     assert "stamped: .copier-answers.yml" in lines
+
+
+def test_adopt_binary_asset_lands_verbatim(binary_template, project):
+    # A template shipping a binary asset classifies as an add and lands
+    # the render's bytes verbatim: the run never aborts on decoding.
+    (project / "notes.txt").unlink()  # conflict-free project: exit 0
+    result = invoke(binary_template, project, "--trust", "--accept-all", "--json")
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    by_path = {entry["path"]: entry for entry in payload["files"]}
+    logo = by_path["logo.png"]
+    assert logo["classification"] == "add"
+    assert logo["applied"] is True
+    assert any("binary" in warning for warning in logo["warnings"])
+    assert logo["merger"] == ""  # the text merger never ran on binary content
+    # Byte-identical to the render: no replacement characters, no corruption.
+    assert (project / "logo.png").read_bytes() == bytes(range(256))
+
+
+def test_adopt_binary_conflict_accept_lands_render_bytes(binary_template, project):
+    # A differing binary file is a conflict; accept lands the render's
+    # bytes verbatim — the project's bytes are replaced, not merged.
+    (project / "logo.png").write_bytes(b"\x00\x01project-bytes")
+    (project / "notes.txt").unlink()
+    result = invoke(binary_template, project, "--trust", "--accept-all", "--json")
+    assert result.exit_code == 1  # a conflict was presented
+    payload = json.loads(result.output)
+    by_path = {entry["path"]: entry for entry in payload["files"]}
+    assert by_path["logo.png"]["classification"] == "conflict"
+    assert by_path["logo.png"]["applied"] is True
+    assert (project / "logo.png").read_bytes() == bytes(range(256))
+
+
+def test_adopt_binary_conflict_reject_keeps_project_bytes(binary_template, project):
+    # Reject keeps the project's bytes untouched.
+    (project / "logo.png").write_bytes(b"\x00\x01project-bytes")
+    (project / "notes.txt").unlink()
+    result = invoke(binary_template, project, "--trust", "--reject-all", "--json")
+    assert result.exit_code == 1
+    payload = json.loads(result.output)
+    by_path = {entry["path"]: entry for entry in payload["files"]}
+    assert by_path["logo.png"]["applied"] is False
+    assert (project / "logo.png").read_bytes() == b"\x00\x01project-bytes"
+
+
+def test_adopt_binary_identical_classifies_identical(binary_template, project):
+    # A project binary matching the render byte-for-byte is identical:
+    # nothing to consent to, nothing lands.
+    (project / "notes.txt").unlink()
+    (project / "logo.png").write_bytes(bytes(range(256)))
+    result = invoke(binary_template, project, "--trust", "--accept-all", "--json")
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    by_path = {entry["path"]: entry for entry in payload["files"]}
+    assert by_path["logo.png"]["classification"] == "identical"
+
+
+def test_adopt_json_implies_defaults_without_the_flag(template, project):
+    # --json is non-interactive by construction: unanswered defaultable
+    # questions take the template's defaults even without --defaults, so
+    # the JSON contract holds without any prompt machinery (spec C5).
+    (project / "notes.txt").unlink()  # conflict-free project: exit 0
+    result = runner.invoke(
+        app,
+        ["adopt", str(template), str(project), "--trust", "--accept-all", "--json"],
+    )
+    # Note: no --defaults on this invocation.
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    by_path = {entry["path"]: entry for entry in payload["files"]}
+    assert by_path["README.md"]["applied"] is True
+    record = yaml.safe_load(
+        (project / ".copier-answers.yml").read_text(encoding="utf-8")
+    )
+    assert record["project_name"] == "demo"
+
+
+def test_adopt_json_required_question_is_clean_exit_2(required_template, project):
+    # --json never prompts, and copier cannot default a required question
+    # (no default): the render fails as a clean cc-contract exit-2 error
+    # naming the question — never an interleaved prompt on the JSON
+    # stream, and never copier's TTY-less session error.
+    result = runner.invoke(
+        app,
+        [
+            "adopt",
+            str(required_template),
+            str(project),
+            "--trust",
+            "--accept-all",
+            "--json",
+        ],
+    )
+    assert result.exit_code == 2
+    assert 'Question "project_name" is required' in result.stderr
+    # No JSON on the output stream for a failed render: the only content
+    # is the error message (the runner mixes stdout and stderr).
+    assert "{" not in result.output
+    # Nothing landed, nothing stamped: the render never completed.
+    assert not (project / "README.md").exists()
+    assert not (project / ".copier-answers.yml").exists()

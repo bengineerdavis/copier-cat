@@ -23,11 +23,16 @@ private API across copier versions is not a dependency cc takes.
 
 Classification is terminal over the registry's result: a project file
 that is absent or empty is an add (the registry fast path takes the
-render); a conflicted merge is a conflict (its proposal carries
-conflict markers for review); a merged text equal to the project's is
-identical (nothing to consent to); anything else is a merge proposal.
-All merging goes through the registry — adopt carries no merge logic of
-its own (task CC-3 DOD).
+render); a conflicted merge is a conflict (its proposal carries conflict
+markers for review); a merged text equal to the project's is identical
+(nothing to consent to); anything else is a merge proposal. Binary
+content is the one carve-out: a file that is not valid UTF-8 — in the
+render or the project — never enters the registry, whose mergers are
+text-shaped. It is classified directly from existence and byte
+equality, carries a warning naming the shape, and lands verbatim: the
+template's bytes on accept, the project's bytes on reject. All merging
+goes through the registry — adopt carries no merge logic of its own
+(task CC-3 DOD).
 """
 
 from __future__ import annotations
@@ -69,7 +74,12 @@ class Rendered:
 
 @dataclass(frozen=True)
 class FilePlan:
-    """One rendered file's adopt resolution, before review."""
+    """One rendered file's adopt resolution, before review.
+
+    `binary` marks content that never enters the text merger: its
+    `current`/`proposed` strings are display text (replacement-decoded),
+    while landing copies the render's bytes verbatim.
+    """
 
     path: str
     classification: str
@@ -78,6 +88,7 @@ class FilePlan:
     warnings: tuple[str, ...]
     current: str | None
     proposed: str
+    binary: bool = False
 
 
 def render(
@@ -130,6 +141,56 @@ def render(
     )
 
 
+def _binary_plan(
+    rel: str, theirs: str, ours_bytes: bytes, theirs_bytes: bytes
+) -> FilePlan:
+    """Classify a non-UTF-8 payload without touching the text merger.
+
+    The registry is text-shaped, so binary content is resolved directly:
+    byte-identical is identical, a missing or empty project side is an
+    add, anything else is a conflict — accept lands the render's bytes
+    verbatim, reject keeps the project's. The plan's `current`/`proposed`
+    are replacement-decoded display text; landing never writes them.
+    """
+    if not ours_bytes.strip():
+        return FilePlan(
+            path=rel,
+            classification=ADD,
+            merger="",
+            conflicted=False,
+            warnings=("binary file: accept lands the template's bytes verbatim",),
+            current=None,
+            proposed=theirs,
+            binary=True,
+        )
+    if ours_bytes == theirs_bytes:
+        return FilePlan(
+            path=rel,
+            classification=IDENTICAL,
+            merger="",
+            conflicted=False,
+            warnings=(),
+            current=theirs,
+            proposed=theirs,
+            binary=True,
+        )
+    return FilePlan(
+        path=rel,
+        classification=CONFLICT,
+        merger="",
+        conflicted=True,
+        warnings=(
+            (
+                "binary file: conflicting versions — accept lands the "
+                "template's bytes verbatim, reject keeps the project's"
+            ),
+        ),
+        current=ours_bytes.decode("utf-8", errors="replace"),
+        proposed=theirs,
+        binary=True,
+    )
+
+
 def classify(
     rendered: Rendered,
     project: Path,
@@ -140,7 +201,11 @@ def classify(
     The merge base is always the empty tree: adopt passes it and the
     registry never invents one. The answers file is deliberately
     absent from the plans — it is the stamp, derived and written by cc,
-    not template-owned content under review.
+    not template-owned content under review. Content that is not valid
+    UTF-8 — in the render or the project — never reaches the registry:
+    it is classified from existence and byte equality, and its plan
+    carries `binary=True` so landing copies the render's bytes
+    verbatim.
     """
     registry = registry or default_registry()
     plans: list[FilePlan] = []
@@ -150,11 +215,21 @@ def classify(
         rel = path.as_posix()
         if rel == rendered.answers_relpath:
             continue
-        theirs = (rendered.root / path).read_text(encoding="utf-8")
+        theirs_bytes = (rendered.root / path).read_bytes()
         project_file = project / path
-        ours = (
-            project_file.read_text(encoding="utf-8") if project_file.is_file() else ""
-        )
+        ours_bytes = project_file.read_bytes() if project_file.is_file() else b""
+        try:
+            theirs = theirs_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            theirs = theirs_bytes.decode("utf-8", errors="replace")
+            plans.append(_binary_plan(rel, theirs, ours_bytes, theirs_bytes))
+            continue
+        try:
+            ours = ours_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            ours = ours_bytes.decode("utf-8", errors="replace")
+            plans.append(_binary_plan(rel, theirs, ours_bytes, theirs_bytes))
+            continue
         result = registry.merge(rel, "", ours, theirs)
         if not project_file.is_file() or not ours.strip():
             classification = ADD
@@ -178,14 +253,31 @@ def classify(
     return plans
 
 
-def apply(plan: FilePlan, project: Path, *, edited: str | None = None) -> Path:
+def apply(
+    plan: FilePlan,
+    project: Path,
+    *,
+    rendered: Rendered | None = None,
+    edited: str | None = None,
+) -> Path:
     """Land one accepted plan in the working tree; never commit.
 
     `edited` replaces the proposal when review chose to edit — the
     per-file review flow resolves conflicts there, not in the tree.
+    Binary plans land the render's bytes verbatim (a text write of
+    replacement-decoded content would corrupt them), so they require
+    the render; editing a binary plan is an explicit choice to replace
+    its bytes with the edited text.
     """
     target = project / plan.path
     target.parent.mkdir(parents=True, exist_ok=True)
+    if plan.binary and edited is None:
+        if rendered is None:
+            raise ValueError(
+                f"binary plan {plan.path} needs the render to land verbatim"
+            )
+        target.write_bytes((rendered.root / plan.path).read_bytes())
+        return target
     target.write_text(edited if edited is not None else plan.proposed, encoding="utf-8")
     return target
 
