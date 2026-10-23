@@ -29,7 +29,8 @@ escalate conflicts, and never let a diff carry a governance change.
   hand-editing store frontmatter; prose edits fill the files the CLI
   writes.
 - The harness is seeded (mise + prek.toml + uv + backlog-md-py store);
-  C1 work starts from the merger-registry extraction (task CC-1), not
-  from new scaffolding.
+  CC-1..3 are completed and archived — Phase 1's remainder is the first
+  cc skill (adopt/update, C6) and the dogfood adopt, per ROADMAP.md and
+  HANDOFF.md.
 - Grounding links live in HANDOFF.md; read the copier issues before
   designing adopt/contribute mechanics.

@@ -1,12 +1,11 @@
 # Default agent for this repo when no workflow-specific agent is set.
 agent = 'opencode'
 review_guidelines = '''
-This is copier-cat (cc): a copier template manager. Phase 0 is complete
-(spec, principles, glossary, harness, backlog store); Phase 1 is
-active — the merger-registry extraction, backlog task CC-1. The repo is
-still mostly documentation, so do not flag missing code or tests where
-work is explicitly gated by open questions or by backlog tasks still
-To Do.
+This is copier-cat (cc): a copier template manager. The harness is
+seeded and Phase 1's adopt MVP (CC-1..3: merger registry, adopt flow,
+CLI) is implemented and archived — the repo ships src/, tests/, and a
+passing suite. Phase 1's remainder is the first cc skill (adopt/update,
+C6) and the dogfood adopt.
 
 Ground rules the reviewer should enforce:
 
@@ -27,8 +26,9 @@ Ground rules the reviewer should enforce:
 
 What to leave alone:
 
-- Deliberately deferred work gated by backlog drafts or by
-  backlog tasks still To Do (CC-2, CC-3).
+- Deliberately deferred work gated by backlog drafts or open
+  questions — the repo ships code, so missing code or tests are now
+  ordinary findings, not a blanket excuse.
 '''
 # Default model for this repo when no workflow-specific model is set.
 model = ''
