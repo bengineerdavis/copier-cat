@@ -24,5 +24,7 @@ hooks = [
   { id = "ruff-check", name = "ruff check", language = "system", entry = "uv run ruff check", types_or = ["python", "pyproject"] },
   { id = "ruff-format", name = "ruff format", language = "system", entry = "uv run ruff format", types_or = ["python", "pyproject"] },
   { id = "pyrefly", name = "pyrefly", language = "system", entry = "uv run pyrefly check", types_or = ["python", "pyproject"], pass_filenames = false },
-  { id = "tombi-lint", name = "tombi lint", language = "system", entry = "uv run --with tombi tombi lint --offline", types = ["toml"] },
+  # tombi is a dev-group dependency (pyproject.toml), so `uv run` resolves
+  # the uv.lock pin — the hook's lint behavior cannot drift on a cache miss.
+  { id = "tombi-lint", name = "tombi lint", language = "system", entry = "uv run tombi lint --offline", types = ["toml"] },
 ]

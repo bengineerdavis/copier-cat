@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=8", "ruff>=0.14", "pyrefly>=0.5"]
+dev = ["pytest>=8", "ruff>=0.14", "pyrefly>=0.5", "tombi>=1.5.5,<2"]
 
 [build-system]
 requires = ["hatchling"]
