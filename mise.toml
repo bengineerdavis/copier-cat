@@ -7,6 +7,11 @@
 uv = "latest"
 python = "3.12"
 prek = "0.5.5"
+# The store CLI (AGENTS.md's workflow mandate): pinned here because the
+# store's file format was written by a specific backlog-md-py and the
+# global config carries it as "latest", which drifts. This repo-level pin
+# overrides it for this repo (review 129, finding 11).
+"pipx:backlog-md-py" = "2.1.0"
 
 # tombi and copier are deliberately absent: both are project dependencies
 # (pyproject.toml dev group / dependencies), so `uv run` resolves them from
