@@ -34,12 +34,69 @@ from .merge import MergeToolError, default_registry
 
 app = typer.Typer(
     help="copier-cat: template manager for copier.",
+    epilog=(
+        "copier-cat extends copier's lifecycle: copier renders and updates a\n"
+        "project from one template; cc brings existing projects under\n"
+        "templates (adopt), routes template-worthy fixes back upstream\n"
+        "(phone home, planned), and manages template collections. Nothing\n"
+        "cc produces requires cc: every command documents its copier-native\n"
+        "equivalent and leaves you with plain copier."
+    ),
     no_args_is_help=True,
 )
 
 EXIT_CLEAN = 0
 EXIT_CONFLICTED = 1
 EXIT_ERROR = 2
+
+# The graduation principle made visible (spec C6): every command's help
+# carries its copier-native equivalent, usage examples, and its
+# exit-code contract. The "Copier equivalent:" marker is enforced by
+# test — a new command without its teaching fails review.
+
+_MERGE_EPILOG = """\
+Copier equivalent: none — copier merges whole trees inside `copier
+update` (git-merge-based per copier#2376); this is the same machinery
+in pluggable, per-file form, usable independently of adopt. An empty
+--base is the adopt shape: the template file arrives as a fresh
+addition resolved against the project's current content.
+
+Examples:
+  copier-cat merge --ours pyproject.toml --theirs render/pyproject.toml
+  copier-cat merge --ours a.toml --theirs b.toml --base base.toml
+  copier-cat merge --ours a.toml --theirs b.toml --json
+
+Exit codes: 0 merged clean; 1 merged with conflict markers in the
+output (resolve them yourself — cc never writes the tree); 2 error.
+"""
+
+_MERGERS_EPILOG = """\
+Copier equivalent: none — copier's merge strategy is fixed inside
+`copier update`; cc's registry is pluggable per file format. Lists the
+shipped composition (format mergers plus the git merge-file fallback)
+so you can predict how adopt resolves each file.
+
+Exit codes: 0.
+"""
+
+_ADOPT_EPILOG = """\
+Copier equivalent: the middle ground copier lacks (copier#2486).
+`copier copy --overwrite` destroys project content; `--skip` and
+_skip_if_exists starve the project of template improvements; `copier
+update` needs a recorded baseline an adopted project doesn't have.
+adopt renders the template, classifies every file (add / identical /
+merge / conflict), takes your per-file consent, lands only what you
+accept, and writes the answers file — after which plain `copier
+update` works (the stamped-project guarantee).
+
+Examples:
+  copier-cat adopt ~/templates/python ~/my-project
+  copier-cat adopt ~/templates/python ~/my-project --defaults
+  copier-cat adopt gh:org/tpl ~/proj -a project_name=cc --json --accept-all
+
+Exit codes: 0 clean adopt; 1 conflicts were presented (resolved or
+not); 2 error.
+"""
 
 
 def _read(path: Path, what: str) -> str:
@@ -66,7 +123,7 @@ def _emit_warnings(warnings: tuple[str, ...]) -> None:
         typer.secho(f"warning: {warning}", fg=typer.colors.YELLOW, err=True)
 
 
-@app.command()
+@app.command(epilog=_MERGE_EPILOG)
 def merge(
     ours: Path = typer.Option(
         ..., "--ours", help="Project-side file (kept on conflicts)"
@@ -138,7 +195,7 @@ def _write_file(text: str, output: Path) -> None:
         raise typer.Exit(EXIT_ERROR) from error
 
 
-@app.command()
+@app.command(epilog=_MERGERS_EPILOG)
 def mergers(
     json_output: bool = typer.Option(
         False, "--json", help="Emit a JSON result on stdout"
@@ -271,7 +328,7 @@ def _adopt_payload(
     }
 
 
-@app.command()
+@app.command(epilog=_ADOPT_EPILOG)
 def adopt(
     src: str = typer.Argument(..., help="Template source: path or URL"),
     dst: Path = typer.Argument(

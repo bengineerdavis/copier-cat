@@ -10,6 +10,27 @@ from copier_cat.cli import app
 runner = CliRunner()
 
 
+def test_every_command_documents_its_copier_equivalent() -> None:
+    # The graduation principle (spec C6) made enforceable: each command's
+    # help carries its copier-native equivalent and exit-code contract.
+    # A commit adding a command without its teaching fails here.
+    for command in app.registered_commands:
+        # Typer leaves .name None when it derives the click name from the
+        # callback; the click default is the function name with underscores
+        # as dashes.
+        name = command.name or command.callback.__name__.replace("_", "-")
+        result = runner.invoke(app, [name, "--help"])
+        assert result.exit_code == 0, name
+        assert "Copier equivalent:" in result.output, name
+        assert "Exit codes:" in result.output, name
+
+
+def test_top_level_help_carries_the_graduation_promise() -> None:
+    result = runner.invoke(app, ["--help"])
+    assert result.exit_code == 0
+    assert "leaves you with plain copier" in result.output
+
+
 @pytest.fixture
 def sides(tmp_path):
     ours = tmp_path / "project.toml"
