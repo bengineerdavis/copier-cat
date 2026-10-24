@@ -18,7 +18,7 @@ Phase 1 study task (grill round 2): evaluate marked-region mechanism as another 
 - [x] #2 Evaluated against the merger-registry interface (decision-1): how the mechanism enters as a composed provider like MarkedSectionMerger, where its semantics differ (named markers, region-body precedence), and what a port would generalize — recorded in this task's implementation notes
 - [x] #3 Upstream signal assessed: copier#2762 ({% ignore %} tag, preview-leaning) — update-time region preservation stays copier's; cc's registry stays adopt-time; deference posture recorded
 - [x] #4 Verdict recorded as a backlog decision with pinned evidence in backlog/docs/prior-art.md and a review trigger
-- [x] #5 C1 gate closes: spec.md's marked-region gate is removed in the same commit as the decision, per the gate's own wording
+- [x] #5 C1 gate closes: spec.md's marked-region gate is removed in the same commit as the decision — this task's own closure requirement, executed on the decision log's constitution-ledger precedent (the recorded decision is the closure; the spec edit in the same commit is its execution)
 <!-- AC:END -->
 
 ## Implementation Notes

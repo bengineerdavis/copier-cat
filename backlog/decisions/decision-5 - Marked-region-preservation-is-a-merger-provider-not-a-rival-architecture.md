@@ -37,8 +37,11 @@ do not rival it; cc's registry stays adopt-time.
 
 ## Consequences
 
-The spec's C1 marked-region gate closes with this decision (the gate's
-own wording). cc's TOML merger already covers uv-bleeding's tool-owned
+The spec's C1 marked-region gate closes with this decision: the
+same-commit removal is this decision's own closure requirement,
+executed on the decision log's constitution-ledger precedent — the
+recorded decision is the closure, and the spec edit in the same commit
+is its execution. cc's TOML merger already covers uv-bleeding's tool-owned
 scalar problem structurally (project values win conflicts at adopt), so
 no scalar pass is ported; the legacy bootstrap stays template-side. If
 #2762 lands, marked-region templates get native update survival and cc's
