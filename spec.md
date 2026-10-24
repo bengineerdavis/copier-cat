@@ -100,8 +100,10 @@ flows. The graduation principle is a requirement, not an aspiration:
 every operation is explainable in copier terms, teaches the copier
 concepts it uses, and leaves a user who outgrows cc with nothing lost.
 Its enforcement mechanism must be able to fail a review. Gates: skill
-inventory and granularity; skill/CLI sync rule; the enforcement
-mechanism; the curated reference list of foundational templates.
+inventory and granularity; skill/CLI sync rule; ~~the enforcement
+mechanism~~ Done 2026-10-24 (decision-6: per-command copier equivalents
+in --help, enforced by a test); the curated reference list of
+foundational templates.
 
 ## C7 — learnings routing
 
