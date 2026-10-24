@@ -27,7 +27,11 @@ escalate conflicts, and never let a diff carry a governance change.
 - The backlog store is the workflow: drive its lifecycle through the
   `backlog-py` CLI (create/list/board/promote/cleanup), never by
   hand-editing store frontmatter; prose edits fill the files the CLI
-  writes.
+  writes. Archiving a single completed task is the established
+  exception — a pure `git mv` of the task file into `backlog/completed/`
+  (frontmatter untouched — that is the invariant this rule protects);
+  `backlog-py cleanup` remains the batch path when every Done task
+  should move at once.
 - The harness is seeded (mise + prek.toml + uv + backlog-md-py store);
   CC-1..3 are completed and archived — Phase 1's remainder is the first
   cc skill (adopt/update, C6) and the dogfood adopt, per ROADMAP.md and
