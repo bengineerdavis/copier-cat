@@ -125,6 +125,29 @@ def test_stamp_writes_the_copier_answers_convention(template, project, tmp_path)
     assert "now" not in record
 
 
+def test_jinja_answers_filename_is_expanded_and_stamped(
+    jinja_answers_template, project, tmp_path
+):
+    # copier-template-copier-template's shape: _answers_file is jinja'd
+    # under custom envops. render() must capture the expanded name —
+    # the raw name would let the answers file be reviewed as an ordinary
+    # template file and stamp to the wrong path (dogfood finding).
+    rendered = render(str(jinja_answers_template), tmp_path / "render", ANSWERS)
+    assert rendered.answers_relpath == ".copier-answers.demo.yml"
+
+    # The expanded answers file is skipped as the stamp, not reviewed.
+    plans = {plan.path: plan for plan in classify(rendered, project)}
+    assert ".copier-answers.demo.yml" not in plans
+    assert plans["README.md"].classification == ADD
+
+    # The stamp lands at the expanded path with the recorded baseline.
+    target = stamp(rendered, project)
+    assert target == project / ".copier-answers.demo.yml"
+    record = yaml.safe_load(target.read_text(encoding="utf-8"))
+    assert record["_commit"] == short_sha(jinja_answers_template)
+    assert record["project_name"] == "demo"
+
+
 def test_stamp_skips_commit_for_a_plain_directory_template(tmp_path, project):
     plain = tmp_path / "plain-tpl"
     plain.mkdir()

@@ -135,7 +135,11 @@ def render(
     return Rendered(
         src=worker.template.url,
         root=dst,
-        answers_relpath=str(worker.template.answers_relpath),
+        # worker.answers_relpath (not worker.template.answers_relpath):
+        # copier renders the template's _answers_file setting through the
+        # template's own jinja envops, so a name like
+        # ".copier-answers.<< template_name >>.yml" arrives expanded.
+        answers_relpath=str(worker.answers_relpath),
         commit=worker.template.commit,
         answers=answers,
     )

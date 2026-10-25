@@ -81,6 +81,32 @@ def required_template(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
+def jinja_answers_template(tmp_path: Path) -> Path:
+    """A template whose _answers_file is jinja'd under custom envops
+    (copier-template-copier-template's shape)."""
+    return git_template(
+        tmp_path / "tpl-jinja-answers",
+        {
+            "copier.yml": (
+                "_answers_file: .copier-answers.<< project_name >>.yml\n"
+                "_envops:\n"
+                "  block_end_string: '%>'\n"
+                "  block_start_string: '<%'\n"
+                "  variable_end_string: '>>'\n"
+                "  variable_start_string: '<<'\n"
+                "_templates_suffix: .tmpl\n"
+                "project_name:\n  type: str\n  default: demo\n"
+            ),
+            "<< _copier_conf.answers_file >>.tmpl": (
+                "# Changes here will be overwritten by Copier\n"
+                "<< _copier_answers|to_nice_yaml >>\n"
+            ),
+            "README.md.tmpl": "# << project_name >>\n",
+        },
+    )
+
+
+@pytest.fixture
 def template(tmp_path: Path) -> Path:
     """A git-backed template rendering add/identical/merge/conflict shapes."""
     return git_template(tmp_path / "tpl", TEMPLATE_FILES)
