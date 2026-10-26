@@ -82,7 +82,8 @@ class MarkedSectionMerger:
         kept = [r for r in ours_regions if r.begin_marker not in theirs_begins]
         for region in kept:
             warnings.append(
-                f"kept marked region {region.begin_marker!r}: not in the template render"
+                f"kept marked region {region.begin_marker!r}: "
+                "not in the template render"
             )
         return MergeResult(text=text, conflicted=conflicted, warnings=tuple(warnings))
 

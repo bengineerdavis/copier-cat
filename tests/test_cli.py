@@ -18,6 +18,7 @@ def test_every_command_documents_its_copier_equivalent() -> None:
         # Typer leaves .name None when it derives the click name from the
         # callback; the click default is the function name with underscores
         # as dashes.
+        assert command.callback is not None
         name = command.name or command.callback.__name__.replace("_", "-")
         result = runner.invoke(app, [name, "--help"])
         assert result.exit_code == 0, name

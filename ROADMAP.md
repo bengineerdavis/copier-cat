@@ -40,7 +40,12 @@
 - First cc skill shipped alongside (adopt/update), carrying its teaching
   sections — the graduation principle is exercised from the first release,
   not deferred.
-- Dogfood: adopt a real template into a real existing personal repo.
+- ~~Dogfood: adopt a real template into a real existing personal repo.~~
+  Done 2026-10-26: `python-project-template` adopted into cc itself
+  (2 adds, 3 TOML merges, .gitignore union; cc's source, tests, docs,
+  and store kept). Findings: jinja'd answers-filename expansion fixed
+  (bdaf190), and the TOML merger's array-concatenation produced a
+  duplicate requirement — recorded as a registry-semantics draft.
 
 ## Phase 2 — contribute / phone home MVP (C2)
 

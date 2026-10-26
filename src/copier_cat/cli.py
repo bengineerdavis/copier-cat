@@ -18,6 +18,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+import click
 import typer
 
 from .adopt import (
@@ -264,7 +265,7 @@ def _review_one(plan: FilePlan, project: Path) -> tuple[bool, str | None]:
         if choice in ("n", "no"):
             return False, None
         if choice in ("e", "edit"):
-            edited = typer.edit(plan.proposed)
+            edited = click.edit(plan.proposed)
             if edited is None:
                 return False, None
             return True, edited
@@ -365,7 +366,10 @@ def adopt(
         ),
     ),
 ) -> None:
-    """Adopt a template into an existing project (render → classify → review → stamp)."""
+    """Adopt a template into an existing project.
+
+    Render → classify → review → stamp.
+    """
     if not dst.is_dir():
         _fail(f"adopt targets an existing project directory: {dst} is not one")
     if accept_all and reject_all:

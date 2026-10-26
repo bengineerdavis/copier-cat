@@ -1,0 +1,15 @@
+# Changes here will be overwritten by Copier
+_commit: dc983ce
+_src_path: /home/bdavis/code/projects/personal/templates/python-project-template
+project_name: copier-cat
+description: 'Template manager for copier: adopt templates into existing projects,
+  phone-home PRs upstream, collections of templates with a chooser.'
+project_slug: copier_cat
+package_name: copier-cat
+cli_name: copier-cat
+author_name: Ben Davis
+author_email: bengineerdavis@gmail.com
+copyright_year: '2026'
+project_version: 0.1.0
+python_version: '3.12'
+license: MIT

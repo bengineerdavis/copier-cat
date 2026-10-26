@@ -35,9 +35,35 @@ prek.toml, uv, roborev reviewing every commit).
 Implemented (2026-10-18, tasks CC-1..3): the merger registry library
 (`src/copier_cat/merge/`), the adopt flow library
 (`src/copier_cat/adopt.py`), and the `copier-cat` CLI (`merge`,
-`mergers`, `adopt`) — 74 tests, mise lint/test clean. Phase 1's
-remainder is the first cc skill (adopt/update, C6) and the dogfood
-adopt of a real template into a real personal repo.
+`mergers`, `adopt`). CC-4 (2026-10-24) added copier-equivalent help
+texts with an enforcement test and the README CLI reference; the C6
+enforcement mechanism is decision-6.
+
+Dogfooded (2026-10-26): cc is now derived from
+`python-project-template` (the modern Python CLI base), stamped at
+`.copier-answers.copier-cat.yml`; update with
+`copier update -a .copier-answers.copier-cat.yml`. An earlier mistaken
+adopt of copier-template-copier-template was reset away unpushed. 83
+tests, prek all-files clean. Phase 1's remainder is the first cc skill
+(adopt/update, C6).
+
+## Session 2026-10-26 — python-project-template dogfood adopt
+
+Adopted `python-project-template` into cc itself: 2 adds
+(`.github/workflows/test.yml`, `CHANGELOG.md`), 3 TOML merges
+(mise.toml, prek.toml, pyproject.toml), `.gitignore` unioned. Kept cc's
+AGENTS.md, LICENSE, README.md, and all source/test files
+(src/copier_cat/__init__.py, src/copier_cat/cli.py, tests/test_cli.py)
+— the template contributes harness and conventions, not product code.
+Cleaned the TOML merges (duplicate typer constraint; remote
+ruff-pre-commit block dropped to keep the local uv-run hooks as the
+single ruff source). The template's stricter lint/type config caught a
+real bug: `typer.edit` does not exist in Typer 0.27, so the interactive
+edit path now uses `click.edit` with an explicit click dependency.
+
+Update path: `copier update -a .copier-answers.copier-cat.yml`
+(the answers filename is namespaced per the template's
+`_answers_file` convention; always pass `-a`).
 
 ## The relationship to agentic-project-template
 

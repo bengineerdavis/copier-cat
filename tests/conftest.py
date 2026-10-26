@@ -6,6 +6,7 @@ convention, and content files — rather than mocking the render.
 """
 
 import subprocess
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -28,7 +29,7 @@ TEMPLATE_FILES = {
 BINARY_PAYLOAD = bytes(range(256))
 
 
-def git_template(root: Path, files: dict[str, str | bytes]) -> Path:
+def git_template(root: Path, files: Mapping[str, str | bytes]) -> Path:
     """Build a real git-backed copier template with one commit."""
     for rel, content in files.items():
         target = root / rel
@@ -59,7 +60,7 @@ def git_template(root: Path, files: dict[str, str | bytes]) -> Path:
 @pytest.fixture
 def binary_template(tmp_path: Path) -> Path:
     """The standard template plus a binary asset (a logo)."""
-    files = dict(TEMPLATE_FILES)
+    files: dict[str, str | bytes] = dict(TEMPLATE_FILES)
     files["logo.png"] = BINARY_PAYLOAD
     return git_template(tmp_path / "tpl-bin", files)
 

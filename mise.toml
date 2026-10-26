@@ -1,32 +1,12 @@
-# Development harness for THIS repository (copier-cat itself).
-# copier-cat's stamped projects get what adopt generates, not this file.
-
-#:schema https://mise.jdx.dev/schema/mise.json
-
 [tools]
 uv = "latest"
 python = "3.12"
 prek = "0.5.5"
-# The store CLI (AGENTS.md's workflow mandate): pinned here because the
-# store's file format was written by a specific backlog-md-py and the
-# global config carries it as "latest", which drifts. This repo-level pin
-# overrides it for this repo (review 129, finding 11).
 "pipx:backlog-md-py" = "2.1.0"
-
-# tombi and copier are deliberately absent: both are project dependencies
-# (pyproject.toml dev group / dependencies), so `uv run` resolves them from
-# uv.lock — one authoritative manifest per tool (review 129, findings 4
-# and 10). mise pins here were dead: no task or hook invoked them.
 
 [tasks.install]
 description = "Bootstrap tools, venv, and hooks"
-run = '''
-#!/usr/bin/env bash
-set -euo pipefail
-mise install uv python prek || true
-uv sync --all-groups
-uv run prek install --force 2>/dev/null || prek install --force
-'''
+run = "#!/usr/bin/env bash\nset -euo pipefail\nmise install uv python prek || true\nuv sync --all-groups\nuv run prek install --force 2>/dev/null || prek install --force\n"
 
 [tasks.test]
 description = "Unit tests"
@@ -39,3 +19,23 @@ run = "uv run ruff check src tests && uv run pyrefly check src tests"
 [tasks.lint-fix]
 description = "Apply lint fixes"
 run = "uv run ruff check --fix src tests && uv run ruff format src tests"
+
+[tasks.format]
+description = "Auto-fix lint findings and format"
+run = "#!/usr/bin/env bash\nset -euo pipefail\nuv run ruff check --fix src tests\nuv run ruff format src tests\n"
+
+[tasks.format-check]
+description = "Verify formatting and lint cleanliness"
+run = "#!/usr/bin/env bash\nset -euo pipefail\nuv run ruff format --check src tests\nuv run ruff check src tests\n"
+
+[tasks.type-check]
+description = "Mypy over src"
+run = "uv run mypy src"
+
+[tasks.quality]
+description = "All code-quality gates (lint, format, types)"
+depends = [
+    "lint",
+    "format-check",
+    "type-check",
+]

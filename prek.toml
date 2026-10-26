@@ -1,30 +1,65 @@
-#:schema https://www.schemastore.org/prek.json
-
-default_install_hook_types = ["pre-commit"]
-default_stages = ["pre-commit"]
+default_install_hook_types = [
+    "pre-commit",
+]
+default_stages = [
+    "pre-commit",
+]
 
 [[repos]]
 repo = "builtin"
 hooks = [
-  { id = "end-of-file-fixer" },
-  { id = "trailing-whitespace" },
-  { id = "check-yaml" },
-  { id = "check-json" },
-  { id = "check-toml" },
-  { id = "check-merge-conflict" },
-  { id = "check-added-large-files" },
+    { id = "end-of-file-fixer" },
+    { id = "trailing-whitespace" },
+    { id = "check-yaml" },
+    { id = "check-json" },
+    { id = "check-toml" },
+    { id = "check-merge-conflict" },
+    { id = "check-added-large-files" },
 ]
-
-# Ruff and pyrefly run through uv so the pin lives in pyproject.toml only —
-# one source of truth for the toolchain; no separate rev to chase.
 
 [[repos]]
 repo = "local"
-hooks = [
-  { id = "ruff-check", name = "ruff check", language = "system", entry = "uv run ruff check", types_or = ["python", "pyproject"] },
-  { id = "ruff-format", name = "ruff format", language = "system", entry = "uv run ruff format", types_or = ["python", "pyproject"] },
-  { id = "pyrefly", name = "pyrefly", language = "system", entry = "uv run pyrefly check", types_or = ["python", "pyproject"], pass_filenames = false },
-  # tombi is a dev-group dependency (pyproject.toml), so `uv run` resolves
-  # the uv.lock pin — the hook's lint behavior cannot drift on a cache miss.
-  { id = "tombi-lint", name = "tombi lint", language = "system", entry = "uv run tombi lint --offline", types = ["toml"] },
+
+[[repos.hooks]]
+id = "ruff-check"
+name = "ruff check"
+language = "system"
+entry = "uv run ruff check"
+types_or = [
+    "python",
+    "pyproject",
 ]
+
+[[repos.hooks]]
+id = "ruff-format"
+name = "ruff format"
+language = "system"
+entry = "uv run ruff format"
+types_or = [
+    "python",
+    "pyproject",
+]
+
+[[repos.hooks]]
+id = "pyrefly"
+name = "pyrefly"
+language = "system"
+entry = "uv run pyrefly check"
+types_or = [
+    "python",
+    "pyproject",
+]
+pass_filenames = false
+
+[[repos.hooks]]
+id = "tombi-lint"
+name = "tombi lint"
+language = "system"
+entry = "uv run tombi lint --offline"
+types = [
+    "toml",
+]
+
+# The template's remote ruff-pre-commit repo is deliberately not kept:
+# the local uv-run hooks above are the one source of truth for ruff,
+# and the remote ruff-format id would collide with them.

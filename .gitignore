@@ -8,3 +8,14 @@ dist/
 /.roborev/
 
 .venv/
+# python
+*.py[cod]
+build/
+# tooling caches
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+# in-repo worktrees (one worktree per task; gitignored)
+.worktrees/
