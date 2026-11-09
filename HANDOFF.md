@@ -47,6 +47,23 @@ adopt of copier-template-copier-template was reset away unpushed. 83
 tests, prek all-files clean. Phase 1's remainder is the first cc skill
 (adopt/update, C6).
 
+## Session 2026-11-09 — composition + phone-home CLI prototype
+
+Planning artifact, not implementation. Branch `prototype/cc-composition-cli`
+(worktree `.worktrees/prototype-cc-composition-cli`), unmerged.
+
+- `prototype/cc-composition-cli.html` — throwaway in-memory demonstration of
+  composing a base with Python and agentic overlays, importing tasks through
+  quarantine, resetting workflow while preserving code/knowledge, and splitting
+  local improvements into phone-home proposals.
+- `prototype/cc-composition-cli.check.js` — drives all guided walkthroughs and
+  free-play operations; 41/41 checks pass (`node prototype/cc-composition-cli.check.js`).
+- Open question record: `backlog/drafts/draft-4 - Composition-and-phone-home-CLI-prototype.md`.
+
+Next action: review the prototype interactively, then promote draft-4 through
+cc's own wayfinding (or `/grill-with-docs` if the fog is thin). Do not implement
+production commands until those decisions land.
+
 ## Session 2026-10-26 — python-project-template dogfood adopt
 
 Adopted `python-project-template` into cc itself: 2 adds
