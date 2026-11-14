@@ -52,14 +52,33 @@
   (bdaf190), and the TOML merger's array-concatenation produced a
   duplicate requirement — recorded as a registry-semantics draft.
 
-## Phase 2 — contribute / phone home MVP (C2)
+## Phase 2 — assemble and converse (C8, C5, C6)
+
+- Settle the smallest stack-definition schema, local catalog, and CLI grammar.
+  Use `stack` for reusable configuration and `assemble` for project creation.
+- Deterministically assemble Python alone and Python plus the language-independent
+  agentic overlay: isolated Copier renders, structured TOML and gitignore
+  composition, disposable provenance, native answers files, and fast validation.
+- Provide concise default, verbose, debug, and JSON output plus an explicit
+  guided review path. Unknown commands suggest rather than auto-execute.
+- Ship the installable conversational skill over the same CLI. MCP and other
+  host adapters follow the CLI contract; they do not own composition.
+- Verify independent native updates. Add stack-wide forward-update orchestration
+  only after real ordering and attribution evidence.
+- Later: language-independent overlay deduction, standalone template generation,
+  agent-assisted adaptation, and template collections. These are not hidden in
+  the first assembly slice.
+
+## Phase 3 — contribute MVP (C2)
 
 - Diff-reuse of copier's update computation.
+- Per-chunk attribution for changes to files composed from multiple templates.
 - Deterministic classification (template-bug vs project-specific) with an
   explainable report.
-- Review flow and human-triggered PR creation against the template repo.
+- Prepare portable contribution candidates; publish only with separate explicit
+  approval through the user's own `gh` auth.
 
-## Phase 3 — monorepo + chooser (C3)
+## Phase 4 — monorepo + chooser (C3)
 
 - Monorepo layout with per-template copier roots.
 - Choosing flow (the chooser: cc-native picker or a delegated flow),
@@ -71,6 +90,6 @@
   python-cli-template, dotfile-topic-copier, agentic-project-template) as
   the first collection.
 
-## Phase 4 — templating templates (C4)
+## Phase 5 — templating templates (C4)
 
 - `new-template` scaffolding with house conventions pre-wired.
