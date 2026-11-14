@@ -3,6 +3,11 @@
 > Seed phase complete. Nothing here is committed forever; phases re-order
 > as design answers land. Current priorities live in the backlog store
 > (`backlog/tasks/`).
+>
+> The project currently uses FSL-1.1-MIT, a source-available license that
+> converts each version to MIT after two years. Whether to adopt an
+> open-source license immediately is a separate roadmap decision, not a
+> commitment made by the current licensing choice.
 
 ## Phase 0 — Ground and design (complete)
 
