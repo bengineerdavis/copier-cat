@@ -13,7 +13,7 @@ harness are seeded: [`PRINCIPLES.md`](PRINCIPLES.md) is the
 constitution, [`spec.md`](spec.md) carries the requirements, the
 [`backlog/`](backlog) store carries the working memory (tasks with
 acceptance criteria, drafts, decisions, evidence), and roborev reviews
-every commit. The adopt MVP (CC-1..3) is implemented and archived —
+every commit. The adopt MVP (CCC-1..3) is implemented and archived —
 the merge engine, adopt flow, and CLI ship with a passing test suite.
 Work continues from [`HANDOFF.md`](HANDOFF.md): the first cc skill
 (C6) and the dogfood adopt.

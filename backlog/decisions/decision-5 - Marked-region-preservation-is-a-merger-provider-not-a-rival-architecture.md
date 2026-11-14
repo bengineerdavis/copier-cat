@@ -14,7 +14,7 @@ regenerates them fresh on every update while splicing
 `# template-preserve:<name>:start/:end` regions back byte-for-byte.
 copier upstream is also moving: PR #2762 (open, preview-leaning) adds a
 Jinja `{% ignore %}` tag so developer-owned regions survive
-`copier update` natively. CC-2 (2026-10-18) evaluated the mechanism
+`copier update` natively. CCC-2 (2026-10-18) evaluated the mechanism
 against the merger-registry interface; evidence in
 backlog/docs/prior-art.md and the task's implementation notes.
 

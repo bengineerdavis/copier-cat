@@ -32,7 +32,7 @@ text-shaped. It is classified directly from existence and byte
 equality, carries a warning naming the shape, and lands verbatim: the
 template's bytes on accept, the project's bytes on reject. All merging
 goes through the registry — adopt carries no merge logic of its own
-(task CC-3 DOD).
+(task CCC-3 DOD).
 """
 
 from __future__ import annotations

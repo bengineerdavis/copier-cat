@@ -24,16 +24,16 @@
   agentic-project-template prototype: per-format mergers (TOML, YAML,
   marked sections) + conflict-marker fallback for unknown formats —
   shipped as a tested library API and a CLI with stable commands, exit
-  codes, and JSON output.~~ Done 2026-10-18 (CC-1; decision-1's
+  codes, and JSON output.~~ Done 2026-10-18 (CCC-1; decision-1's
   driver shape, decision-2's empty base).
 - ~~Study task: evaluate copier-uv-bleeding's marked-region preservation
   against the merger-registry interface (grill round 2); the interface is
   being built so a marked-region provider is another merger, not a rival.~~
-  Done 2026-10-18 (CC-2; decision-5: another merger provider, not a rival;
+  Done 2026-10-18 (CCC-2; decision-5: another merger provider, not a rival;
   generalizations parked as draft-2).
 - ~~`adopt` flow: render → classify per file (add / identical / conflict) →
   apply with review → write answers with a valid baseline.~~ Done
-  2026-10-18 (CC-3; classification is terminal over the registry's
+  2026-10-18 (CCC-3; classification is terminal over the registry's
   empty-base result — add / identical / merge / conflict — with the
   fourth class the clean-proposal case; the answers file is the stamp,
   written by cc even on full rejection).

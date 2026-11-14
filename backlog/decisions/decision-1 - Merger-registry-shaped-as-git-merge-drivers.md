@@ -29,4 +29,4 @@ registry can express the same contracts.
 Adopt's design interfaces with #2376's direction instead of fighting it,
 keeping the donatable posture (PRINCIPLES principle 3). A
 marked-region provider is just another merger (evaluated as backlog
-task CC-2), not a rival mechanism.
+task CCC-2), not a rival mechanism.

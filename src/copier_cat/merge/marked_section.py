@@ -5,7 +5,7 @@ generated file that the template owns. The marker pair is a constructor
 parameter, not a cc convention: this merger only acts on files that
 already carry markers, and cc ships no default markers (spec C1 — no cc
 residue). Flows compose an instance configured for the template in play;
-copier-uv-bleeding's mechanism would enter the same way (CC-2).
+copier-uv-bleeding's mechanism would enter the same way (CCC-2).
 
 Semantics over an empty base (decision-2), ported from the prototype's
 upsert behavior:
