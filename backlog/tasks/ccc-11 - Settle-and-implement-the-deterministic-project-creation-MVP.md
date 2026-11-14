@@ -5,7 +5,7 @@ status: To Do
 created_date: 2026-11-14 05:55
 dependencies:
 - CCC-7
-updated_date: 2026-11-14 17:03
+updated_date: 2026-11-14 18:55
 documentation:
 - DOC-9
 ---
@@ -59,6 +59,7 @@ Spec complete and published as DOC-9 (backlog/docs/cc-assembly-mvp-spec.md). App
 Tracker triage label `ready-for-agent` is NOT applied: CCC-15 documents that backlog-py has labels/priorities but no defined triage vocabulary. Resolve that vocabulary rather than inventing a tag. Spec content itself is complete and ready for /to-tickets.
 Prototype at /Users/ben.davis/code/personal/cc-assembly-ux-prototype is behavioral evidence only. Real production MVP has not been implemented. Next: /to-tickets from DOC-9 in a fresh copier-cat-rooted session, then per-ticket implementation sessions.
 Storage correction after maintainer review: DOC-9 is a feature spec, not the durable decision store. Added decision-8 (shared human/JSON command-description contract) and decision-9 (optional open-standards-compatible agent skill installation, with or without dotagents). Durable composition/assembly choices remain decision-3..7; research docs supply evidence; implementation tickets supply actionable slices. DOC-9 now points to this decision layer.
+Tracker correction 2026-11-14: the approved six implementation tickets currently live under .scratch/deterministic-project-assembly/issues/. Before implementation, reconcile them into the configured backlog-py tracker using native tasks, dependencies, labels, and orchestration claims; preserve their content and blocking edges. .scratch is not the intended Backlog adapter output. APL-26 owns the reusable reconcile/routing component. Findings and retro follow-ups are captured as native tasks rather than remaining conversation-only.
 <!-- SECTION:IMPLEMENTATION_NOTES:END -->
 
 ## Final Summary
