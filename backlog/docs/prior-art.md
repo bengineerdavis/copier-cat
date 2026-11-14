@@ -100,9 +100,9 @@ subdir-addressable URLs/tags or wrapper-based local-path flows, and
 `!include`/`_external_data` are the sanctioned sharing primitives any
 shared-data design must build on rather than replace.
 
-### copier-uv-bleeding — marked-region preservation in mixed files (CC-2 evidence)
+### copier-uv-bleeding — marked-region preservation in mixed files (CCC-2 evidence)
 
-Recorded 2026-10-18 (CC-2 study; findings in the task's implementation
+Recorded 2026-10-18 (CCC-2 study; findings in the task's implementation
 notes). Evidence, not endorsement.
 
 - detailobsessed/copier-uv-bleeding

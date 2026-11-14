@@ -2,7 +2,7 @@
 
 The engines are importable libraries; this CLI exposes the same
 operations with stable commands, stable exit codes, and JSON output.
-The merge registry surface is here from CC-1; adopt from CC-3.
+The merge registry surface is here from CCC-1; adopt from CCC-3.
 
 Exit codes: 0 merged clean, 1 merged with conflicts, 2 error. Adopt
 completes with 1 whenever any rendered file conflicted — resolved or

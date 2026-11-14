@@ -28,14 +28,14 @@ Handoff for the next agent/human session. Read top to bottom.
 
 Seeded (2026-10-15/16, store workflow 2026-10-17): PRINCIPLES.md
 (constitution), thin requirements spec, glossary, the backlog store
-(decisions 1-5, drafts 1-2, decision log, prior-art doc; tasks CC-1..3
+(decisions 1-5, drafts 1-2, decision log, prior-art doc; tasks CCC-1..3
 completed and archived under `backlog/completed/`), the harness (mise,
 prek.toml, uv, roborev reviewing every commit).
 
-Implemented (2026-10-18, tasks CC-1..3): the merger registry library
+Implemented (2026-10-18, tasks CCC-1..3): the merger registry library
 (`src/copier_cat/merge/`), the adopt flow library
 (`src/copier_cat/adopt.py`), and the `copier-cat` CLI (`merge`,
-`mergers`, `adopt`). CC-4 (2026-10-24) added copier-equivalent help
+`mergers`, `adopt`). CCC-4 (2026-10-24) added copier-equivalent help
 texts with an enforcement test and the README CLI reference; the C6
 enforcement mechanism is decision-6.
 
@@ -167,10 +167,10 @@ with one deliberate deviation the author specified: **prek's config is
 uv-run local prek hooks (tool pins live in pyproject.toml only), tombi
 for TOML lint, copier >=9.8 locked at 9.19.1 in uv.lock as a real
 dependency (C2's diff-sourcing decision exercised by the smoke test). Task store: backlog-md-py,
-`backlog-py init --defaults --task-prefix cc`; seed tasks CC-1 (merger
-registry extraction), CC-2 (marked-region study), CC-3 (adopt CLI MVP).
+`backlog-py init --defaults --task-prefix cc`; seed tasks CCC-1 (merger
+registry extraction), CCC-2 (marked-region study), CCC-3 (adopt CLI MVP).
 AGENTS.md's "nothing is implemented" routing rule is retired. Phase 1
-starts at CC-1.
+starts at CCC-1.
 
 ## Session 2026-10-17 — backlog workflow switch
 
@@ -192,9 +192,9 @@ distributed-requirements model). The switch:
 Where decisions go from here: `backlog-py decision create` for durable
 choices, the log's table for one-line entries, drafts for open
 questions. Requirements gravity: task acceptance criteria gain weight
-as CC-1..3 flesh out.
+as CCC-1..3 flesh out.
 
-## Session 2026-10-18 — CC-3 implemented (adopt CLI flow MVP)
+## Session 2026-10-18 — CCC-3 implemented (adopt CLI flow MVP)
 
 The adopt flow landed as a library (`src/copier_cat/adopt.py`) plus the
 `copier-cat adopt` CLI, probed against copier 9.18's source first:
@@ -222,9 +222,9 @@ Phase 1 remainder: the first cc skill (adopt/update teaching sections —
 the graduation principle exercised from the first release) and the
 dogfood adopt of a real template into a real personal repo.
 
-## Session 2026-10-18 — CC-2 studied and closed (marked-region verdict)
+## Session 2026-10-18 — CCC-2 studied and closed (marked-region verdict)
 
-CC-2 ran as an evidence study, not a blind pick. copier-uv-bleeding's
+CCC-2 ran as an evidence study, not a blind pick. copier-uv-bleeding's
 mechanism was read at source (PR #329 at `9a80874`, v0.41.2:
 skip-if-exists + `_tasks` regeneration with by-name
 `template-preserve:<name>:start/:end` splicing) and evaluated against
@@ -237,12 +237,12 @@ user-owned, cc's are template-owned), parked as **draft-2** with a safe
 default. Upstream: copier#2762 (`{% ignore %}` tag, preview-leaning) owns
 update-time region preservation — cc tracks it and stays adopt-time.
 The spec's C1 marked-region gate closed in the same commit as the
-decision. CC-2/CC-3 acceptance criteria were fleshed out first (store
-requirements gravity); next: CC-3 (adopt flow MVP).
+decision. CCC-2/CCC-3 acceptance criteria were fleshed out first (store
+requirements gravity); next: CCC-3 (adopt flow MVP).
 
-## Session 2026-10-18 — CC-1 implemented (merger registry)
+## Session 2026-10-18 — CCC-1 implemented (merger registry)
 
-CC-1 fleshed out (9 acceptance criteria, store-first) then implemented:
+CCC-1 fleshed out (9 acceptance criteria, store-first) then implemented:
 the merger registry library at `src/copier_cat/merge/` and the
 `copier-cat` CLI (`merge`, `mergers`) with stable exit codes and JSON
 output. 59 tests; lint and pyrefly clean. Shaped by:
@@ -256,12 +256,12 @@ output. 59 tests; lint and pyrefly clean. Shaped by:
 - spec C1 (no cc residue): the marked-section merger's marker pair is a
   constructor parameter and it ships UNREGISTERED — no default markers;
   flows compose one for templates that use them (the provider-open
-  interface CC-2 evaluates).
+  interface CCC-2 evaluates).
 
 Ported from the prototype: TOML/YAML deep-merge (project wins, template
 fills gaps, named lists by name, plain lists union). Deliberately not
 ported: prek repo-signature dedupe, gitignore append, JSON merge —
-CC-1's scope line governs; noted in the task for when adopt meets real
+CCC-1's scope line governs; noted in the task for when adopt meets real
 configs. Prototype re-serialization limitation carried (comments and
 formatting do not survive a merge; deterministic, not byte-preserving)
 — documented in the merger docstrings.
@@ -275,13 +275,13 @@ resolving silently. Registry fast paths fire only on the empty base —
 a non-empty base with an emptied side reaches the fallback as a
 modify/delete-style conflict. roborev findings were fixed forward
 (fast-path gating, merge-file failure detection, CLI exit-code/output
-holes). Next: CC-3 (adopt flow MVP) renders → classifies → reviews per
+holes). Next: CCC-3 (adopt flow MVP) renders → classifies → reviews per
 file → writes the answers file.
 
 ## Session 2026-10-19 — catch-up: no merged changes; the roborev gap closed
 
 Nothing to catch up on in the repo itself: origin/main sits at fffa7b8
-with local main ahead 16 / behind 0 — the CC-1..3 work is all unpushed,
+with local main ahead 16 / behind 0 — the CCC-1..3 work is all unpushed,
 and nothing merged remotely. Upstream grounding unchanged (checked via
 gh): copier#2486 (adopt), #2376 (git-merge update rewrite), and #2762
 (ignore tag) are all still open.
@@ -386,8 +386,8 @@ decisions). Headlines:
    recorded as the spec's References section.)
 3. ~~Prototype `adopt` first (Roadmap Phase 1, current): it is the most
    grounded feature — port the apt merge engine behind the merger
-   registry (task CC-1, then CC-3), dogfood by adopting a real template
-   into a real personal repo.~~ (2026-10-18, tasks CC-1..3 done: the
+   registry (task CCC-1, then CCC-3), dogfood by adopting a real template
+   into a real personal repo.~~ (2026-10-18, tasks CCC-1..3 done: the
    merger registry, the adopt flow, and the `copier-cat` CLI shipped;
    the marked-region study closed as decision-5.)
 4. Finish Phase 1's remainder: ship the first cc skill (adopt/update,
@@ -410,6 +410,6 @@ decisions). Headlines:
 - Backlog/backlog-md-py is the task-store convention in the sibling
   projects; **backlog-md-py is adopted here too** (grill round 2,
   2026-10-15 — partial parity accepted with the verdict recorded),
-  seeding the harness/backlog store is done. Tasks CC-1..3 are
+  seeding the harness/backlog store is done. Tasks CCC-1..3 are
   completed and archived; Phase 1's remainder is the first cc skill
   and the dogfood adopt.

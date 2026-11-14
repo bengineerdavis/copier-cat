@@ -33,7 +33,7 @@ escalate conflicts, and never let a diff carry a governance change.
   `backlog-py cleanup` remains the batch path when every Done task
   should move at once.
 - The harness is seeded (mise + prek.toml + uv + backlog-md-py store);
-  CC-1..3 are completed and archived — Phase 1's remainder is the first
+  CCC-1..3 are completed and archived — Phase 1's remainder is the first
   cc skill (adopt/update, C6) and the dogfood adopt, per ROADMAP.md and
   HANDOFF.md.
 - Grounding links live in HANDOFF.md; read the copier issues before

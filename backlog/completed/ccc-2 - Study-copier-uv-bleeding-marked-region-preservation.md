@@ -1,5 +1,5 @@
 ---
-id: CC-2
+id: CCC-2
 title: Study copier-uv-bleeding marked-region preservation
 status: Done
 created_date: 2026-10-16 21:06
@@ -37,7 +37,7 @@ VERDICT: another merger provider, not a rival architecture — ROADMAP's framing
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
-Studied at source (PR #329, 9a80874, v0.41.2): skip-if-exists + _tasks regeneration splicing by-name template-preserve regions; tool-owned scalar pass; legacy bootstrap; unmarked content dropped by design. Verdict (decision-5): another merger provider, not a rival — decision-1 holds; cc composes it like MarkedSectionMerger and never ships default markers. Two generalizations gate a port (named markers, explicit region orientation — inverted body precedence vs cc's template-owned regions); parked as draft-2. cc's TomlMerger already covers the tool-owned scalar case structurally. Update-time preservation belongs to copier upstream: #2762 moved from comment markers to a Jinja {% ignore %} tag, preview-leaning — cc tracks it, registry stays adopt-time. Evidence pinned in backlog/docs/prior-art.md; spec C1 gate closed with the decision. Next: CC-3.
+Studied at source (PR #329, 9a80874, v0.41.2): skip-if-exists + _tasks regeneration splicing by-name template-preserve regions; tool-owned scalar pass; legacy bootstrap; unmarked content dropped by design. Verdict (decision-5): another merger provider, not a rival — decision-1 holds; cc composes it like MarkedSectionMerger and never ships default markers. Two generalizations gate a port (named markers, explicit region orientation — inverted body precedence vs cc's template-owned regions); parked as draft-2. cc's TomlMerger already covers the tool-owned scalar case structurally. Update-time preservation belongs to copier upstream: #2762 moved from comment markers to a Jinja {% ignore %} tag, preview-leaning — cc tracks it, registry stays adopt-time. Evidence pinned in backlog/docs/prior-art.md; spec C1 gate closed with the decision. Next: CCC-3.
 <!-- SECTION:FINAL_SUMMARY:END -->
 ## Definition of Done
 <!-- DOD:BEGIN -->

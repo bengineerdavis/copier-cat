@@ -1,5 +1,5 @@
 ---
-id: CC-3
+id: CCC-3
 title: Adopt CLI flow MVP
 status: Done
 created_date: 2026-10-16 21:06
@@ -19,7 +19,7 @@ Render, classify per file, per-file review, apply to working tree, write answers
 - [x] #3 Per-file review is the consent moment: every file is accepted, rejected, or edited individually; accepted merges land in the working tree and cc never commits (grill round 2)
 - [x] #4 The answers file is written in copier's per-template naming — plain .copier-answers.yml for a first template — with the adopted template's current version as the recorded update baseline (decision-2, grill round 2)
 - [x] #5 Single-template scope: the flow works for one template per project; N-template coexistence stays on draft-1's safe default
-- [x] #6 Stable CLI contract: copier-cat adopt with stable exit codes (0 clean, 1 conflicted, 2 error) and a --json output mode (spec C5; same contract as CC-1)
+- [x] #6 Stable CLI contract: copier-cat adopt with stable exit codes (0 clean, 1 conflicted, 2 error) and a --json output mode (spec C5; same contract as CCC-1)
 - [x] #7 Tests cover render, classify, review, apply, and answers end to end plus the CLI contract; mise run lint and mise run test pass
 <!-- AC:END -->
 
@@ -42,5 +42,5 @@ Implemented src/copier_cat/adopt.py (render at HEAD through copier itself, class
 ## Definition of Done
 <!-- DOD:BEGIN -->
 - [x] #1 All acceptance criteria checked
-- [x] #2 No adopt-specific merge logic outside the registry; flows compose mergers the way CC-1's docstring prescribes
+- [x] #2 No adopt-specific merge logic outside the registry; flows compose mergers the way CCC-1's docstring prescribes
 <!-- DOD:END -->

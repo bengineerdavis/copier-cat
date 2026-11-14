@@ -2,7 +2,7 @@
 agent = 'opencode'
 review_guidelines = '''
 This is copier-cat (cc): a copier template manager. The harness is
-seeded and Phase 1's adopt MVP (CC-1..3: merger registry, adopt flow,
+seeded and Phase 1's adopt MVP (CCC-1..3: merger registry, adopt flow,
 CLI) is implemented and archived — the repo ships src/, tests/, and a
 passing suite. Phase 1's remainder is the first cc skill (adopt/update,
 C6) and the dogfood adopt.

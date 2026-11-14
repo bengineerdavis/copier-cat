@@ -1,5 +1,5 @@
 ---
-id: CC-4
+id: CCC-4
 title: CLI reference and copier-equivalent help texts
 status: Done
 created_date: 2026-10-24 21:18
