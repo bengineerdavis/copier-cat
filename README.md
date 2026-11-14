@@ -2,7 +2,7 @@
 
 A template manager for [copier](https://copier.readthedocs.io): adopt
 templates into existing projects without data loss, push project fixes back
-upstream as reviewable PRs ("phone home"), and run a whole collection of
+upstream as reviewable PRs through `contribute`, and run a whole collection of
 templates as one monorepo with a chooser for picking between them.
 First-class CLI + library API for humans and agents, with agentic skills
 for building templates and driving cc — built so that cc leaves you better
@@ -29,6 +29,13 @@ stable commands, stable exit codes, machine-readable JSON. Every
 command's `--help` carries its copier-native equivalent, examples, and
 exit-code contract — the graduation principle (spec C6) made
 enforceable: nothing cc produces requires cc.
+
+Help is a first-class interface for humans and agents. It names operands,
+explains effects and write/approval scope, and uses copy-safe placeholders
+such as `example-project` and `example-stack`. A destination is not a stack
+name; JSON output is not consent. The proposed `help --json` and
+`COMMAND --help --json` discovery contract is being designed through CCC-17;
+it is not shipped yet.
 
 | Command | What it does | Copier equivalent |
 | --- | --- | --- |

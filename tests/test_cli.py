@@ -13,6 +13,8 @@ runner = CliRunner()
 def test_every_command_documents_its_copier_equivalent() -> None:
     # The graduation principle (spec C6) made enforceable: each command's
     # help carries its copier-native equivalent and exit-code contract.
+    # CCC-17 extends this gate to human/agent usability: named operands,
+    # effects, consent, copy-safe examples, and machine-readable discovery.
     # A commit adding a command without its teaching fails here.
     for command in app.registered_commands:
         # Typer leaves .name None when it derives the click name from the

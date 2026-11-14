@@ -30,6 +30,16 @@ command), and the README CLI-reference section mirrors it for the repo
 surface. No separate `--explain` surface is built — the help is the
 explain surface.
 
+Extension accepted 2026-11-14: help is a first-class human-and-agent
+usability contract, not just a copier-equivalent epilog. Human help names
+operands (`DESTINATION` versus `STACK`), explains effects and write/approval
+scope, and uses harmless placeholders such as `example-project` and
+`example-stack` with explicit read-only/write annotations. Agent discovery
+uses versioned `help --json` and command-specific `COMMAND --help --json`,
+covering operations, operands, options, outputs, errors, and consent. These
+forms are discovery-only and do not trigger init. Tests must enforce the
+expanded contract rather than merely match prose.
+
 ## Consequences
 
 The enforcement test (tests/test_cli.py) is the C6 gate's teeth: a new
