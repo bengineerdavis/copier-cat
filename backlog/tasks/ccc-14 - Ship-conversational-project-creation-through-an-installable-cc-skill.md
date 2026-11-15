@@ -5,7 +5,7 @@ status: To Do
 created_date: 2026-11-14 05:55
 dependencies:
 - CCC-11
-updated_date: 2026-11-14 17:03
+updated_date: 2026-11-15 06:22
 ---
 
 ## Description
@@ -47,7 +47,7 @@ Interaction direction confirmed 2026-11-14 through Q29 and the CLI feedback:
 - One-command assembly is the ordinary path. `--guided` explicitly walks resolve, answers, compose, validate, and assemble with real answers/review; it is not decorative staging. `--staged` is only a prototype compatibility alias, not the preferred public name.
 - Unknown commands fail without writes and suggest rather than execute corrections. `ccc recipie` must not become an unconfirmed ./recipie project. `assemble NAME` is the explicit literal-name escape.
 - Default output is concise; -v adds resolved plan/composition/validation evidence; --debug logs diagnostics to stderr; --json emits one machine-readable result on stdout with prompts separate.
-- Synthetic UX prototype: /Users/ben.davis/code/personal/cc-assembly-ux-prototype/prototype.py. Twelve routing/output/guidance cases passed, including typo rejection and JSON fail-closed behavior. It is not production code and did not run Copier or project validation.
+- Synthetic UX prototype preserved on `prototype/cc-assembly-ux` at `bf924fd`. Twelve routing/output/guidance cases passed in the original exploratory run, including typo rejection and JSON fail-closed behavior. It is not production code and did not run Copier or project validation.
 - Naming settled: `ccc` is the local CLI alias; `copier-cat` is the product/package/registry identity. Evidence in backlog/docs/cli-short-name.md. No name transfer is needed.
 - No implicit default stack. Bare interactive assembly opens fuzzy stack selection. JSON, --yes, and other noninteractive paths require an explicit stack. Ambiguous matches require confirmation and can cancel without writes.
 - If no suitable stack exists, guided setup accepts a Copier-compatible source and requests separate approval before downloading for isolated inspection. The prototype simulates, never performs, that download.
@@ -58,6 +58,7 @@ Later review: CCC-17, mapped in backlog/docs/cli-workflow-review.md. Maintainer 
 Guided UX requirement from first-use feedback (CCC-17): dynamic human-readable questions sourced from template metadata, not raw JSON answer maps or hard-coded Python-specific prompts. Individual values or a well-formatted form are both acceptable; validate inputs and provide defaults/explanations. Ordinary assembly stays concise and does not impose an unnecessary interview. The installable skill must use the same deterministic answer metadata/validation and consent operations as the CLI.
 Research complete: backlog/docs/agentic-init-research.md. Recommendation: ccc init layers preferences plus separate opt-in dotagents skill installation. For maintainer OpenCode, user/global scope is useful default but never implicit; dotagents defaults global so cc must show scope/source/skill/exact command and refresh/removal before approval. Use --project for repo-local evaluation. Never force-reset or directly edit managed OpenCode config. Actual shipped skill/source remains implementation prerequisite; local path source may dogfood.
 MCP setup is separate later opt-in after CCC-17/CCC-5, not bundled with skill or telemetry consent. Init/help must be idempotent and plain CLI works when declined. Primary evidence: installed dotagents 3.4.0 help + official README; official OpenCode skills/MCP docs; backlog-py 2.2.0 integration/help precedent. No installation/config changes made.
+Assembly UX evidence preserved on prototype/cc-assembly-ux at bf924fd: https://github.com/bengineerdavis/copier-cat/tree/prototype/cc-assembly-ux/prototype/cc-assembly-ux. Its README records the simulated boundary and the two annotation-only corrections required by pyrefly. The evidence branch adds read-only smoke checks; the historical interaction-run claims above remain historical rather than a claim that the original tests were recovered.
 <!-- SECTION:IMPLEMENTATION_NOTES:END -->
 
 ## Final Summary

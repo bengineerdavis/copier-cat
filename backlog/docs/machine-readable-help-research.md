@@ -79,8 +79,8 @@ actual help was inspected on 2026-11-14. No general CLI-help JSON surface was
 asserted from its CLI alone. backlog-py is useful as a CLI/skills/MCP ownership
 example, not as evidence that terminal prose is machine-parseable.
 
-The existing copier-cat prototype at
-`/Users/ben.davis/code/personal/cc-assembly-ux-prototype/help_contract.py`
+The preserved copier-cat prototype's
+[`help_contract.py`](https://github.com/bengineerdavis/copier-cat/blob/bf924fd/prototype/cc-assembly-ux/help_contract.py)
 contains a command, named destination, option effects, structured examples,
 exit codes, and approval scope. It is synthetic and not a production contract.
 

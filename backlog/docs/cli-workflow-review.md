@@ -14,8 +14,8 @@ parallel agent-only product.
 
 ## Current status
 
-The design and prototype are exploratory, not a released CLI. The prototype is
-`/Users/ben.davis/code/personal/cc-assembly-ux-prototype/prototype.py`.
+The design and prototype are exploratory, not a released CLI. The preserved
+prototype is [`prototype.py` on `prototype/cc-assembly-ux`](https://github.com/bengineerdavis/copier-cat/blob/bf924fd/prototype/cc-assembly-ux/prototype.py).
 It simulates rendering, configuration writes, downloads, and project tests.
 
 A 2026-11-14 smoke run passed 17 configured/automation cases, including init,
@@ -86,7 +86,7 @@ Human help remains the teaching surface per decision-6; agent help must not
 require parsing terminal-formatted prose. Tests must enforce both surfaces.
 
 The prototype implements illustrative `help --json` and `assemble --help --json`
-surfaces in `/Users/ben.davis/code/personal/cc-assembly-ux-prototype/help_contract.py`.
+surfaces in the preserved [`help_contract.py`](https://github.com/bengineerdavis/copier-cat/blob/bf924fd/prototype/cc-assembly-ux/help_contract.py).
 Its human help names `DESTINATION` and `STACK`, and its examples use
 `example-project` and `example-stack`. Focused checks verified help without
 config/init/writes and read-only `--dry-run`/`--json` previews. Production help
