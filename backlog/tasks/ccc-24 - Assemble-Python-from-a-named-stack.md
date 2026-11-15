@@ -7,7 +7,8 @@ labels:
 - ready-for-agent
 parent_task_id: CCC-11
 references:
-- backlog/docs/cc-assembly-mvp-spec.md
+- backlog/docs/assembly-original-implementation-tickets.md
+updated_date: 2026-11-15 06:29
 ---
 
 ## Description
@@ -28,7 +29,7 @@ Constraints:
 - JSON alone is a safe preview; --yes approves only the displayed new-destination write. Cancellation leaves no approved destination.
 - Do not introduce the conversational skill, stack-wide update orchestration, or a second composition implementation.
 
-Agreed with the maintainer 2026-11-14: convert the approved first .scratch issue into the native Backlog implementation queue.
+Agreed with the maintainer 2026-11-14: convert the approved first DOC-10 original ticket into the native Backlog implementation queue.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -44,7 +45,8 @@ Agreed with the maintainer 2026-11-14: convert the approved first .scratch issue
 ## Implementation Notes
 
 <!-- SECTION:IMPLEMENTATION_NOTES:BEGIN -->
-
+Original approved ticket text is preserved verbatim in DOC-10 (backlog/docs/assembly-original-implementation-tickets.md). This native task is the active implementation queue; the archived ticket is audit evidence, not a second queue.
+DOC-10 also records the original .scratch-to-native task mapping. The external .scratch queue was retired after the archive and native tasks were published.
 <!-- SECTION:IMPLEMENTATION_NOTES:END -->
 
 ## Final Summary

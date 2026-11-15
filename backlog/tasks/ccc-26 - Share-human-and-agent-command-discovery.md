@@ -9,8 +9,8 @@ labels:
 - ready-for-agent
 parent_task_id: CCC-17
 references:
-- backlog/docs/machine-readable-help-research.md
-- backlog/docs/cli-workflow-review.md
+- backlog/docs/assembly-original-implementation-tickets.md
+updated_date: 2026-11-15 06:29
 ---
 
 ## Description
@@ -30,7 +30,7 @@ Constraints:
 - JSON alone previews; JSON with explicit approval authorizes only the displayed new-destination write.
 - MCP and terminal-prose parsing are not prerequisites.
 
-Agreed with the maintainer 2026-11-14: convert the approved third .scratch issue into the native Backlog implementation queue.
+Agreed with the maintainer 2026-11-14: convert the approved third DOC-10 original ticket into the native Backlog implementation queue.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -46,7 +46,8 @@ Agreed with the maintainer 2026-11-14: convert the approved third .scratch issue
 ## Implementation Notes
 
 <!-- SECTION:IMPLEMENTATION_NOTES:BEGIN -->
-
+Original approved ticket text is preserved verbatim in DOC-10 (backlog/docs/assembly-original-implementation-tickets.md). This native task is the active implementation queue; the archived ticket is audit evidence, not a second queue.
+DOC-10 also records the original .scratch-to-native task mapping. The external .scratch queue was retired after the archive and native tasks were published.
 <!-- SECTION:IMPLEMENTATION_NOTES:END -->
 
 ## Final Summary

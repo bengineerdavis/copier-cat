@@ -8,6 +8,9 @@ dependencies:
 labels:
 - ready-for-agent
 parent_task_id: CCC-11
+references:
+- backlog/docs/assembly-original-implementation-tickets.md
+updated_date: 2026-11-15 06:29
 ---
 
 ## Description
@@ -27,7 +30,7 @@ Constraints:
 - Preserve DOC-9 and decisions 5 through 7. Do not require or inherit from Python for the agentic overlay.
 - Do not introduce automatic stack-wide update orchestration.
 
-Agreed with the maintainer 2026-11-14: convert the approved second .scratch issue into the native Backlog implementation queue.
+Agreed with the maintainer 2026-11-14: convert the approved second DOC-10 original ticket into the native Backlog implementation queue.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -43,7 +46,8 @@ Agreed with the maintainer 2026-11-14: convert the approved second .scratch issu
 ## Implementation Notes
 
 <!-- SECTION:IMPLEMENTATION_NOTES:BEGIN -->
-
+Original approved ticket text is preserved verbatim in DOC-10 (backlog/docs/assembly-original-implementation-tickets.md). This native task is the active implementation queue; the archived ticket is audit evidence, not a second queue.
+DOC-10 also records the original .scratch-to-native task mapping. The external .scratch queue was retired after the archive and native tasks were published.
 <!-- SECTION:IMPLEMENTATION_NOTES:END -->
 
 ## Final Summary

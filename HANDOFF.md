@@ -28,7 +28,9 @@ Handoff for the next agent/human session. Read top to bottom.
 
 Start with **CCC-24**, the first usable Python-assembly vertical slice. The
 approved requirements are in DOC-9 (`backlog/docs/cc-assembly-mvp-spec.md`),
-and the native implementation queue is in `backlog/tasks/`. CCC-29 is an
+and the native implementation queue is in `backlog/tasks/`. DOC-10
+(`backlog/docs/assembly-original-implementation-tickets.md`) preserves the
+original ticket text and native-task mapping as audit evidence. CCC-29 is an
 independent distribution-design task outside the assembly MVP.
 
 The synthetic assembly UX evidence is preserved at commit `bf924fd` on
