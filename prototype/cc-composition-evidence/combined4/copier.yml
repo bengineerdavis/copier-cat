@@ -1,0 +1,10 @@
+_subdirectory: template
+_answers_file: .copier-answers.combined.yml
+
+python_version:
+  type: str
+  default: "3.12"
+
+layers:
+  - base
+  - layer

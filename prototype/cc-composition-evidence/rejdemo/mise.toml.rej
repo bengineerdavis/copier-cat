@@ -1,0 +1,7 @@
+diff a/mise.toml b/mise.toml	(rejected hunks)
+@@ -2,4 +2,4 @@
+ python = "3.12"
+ 
+ [tasks.test]
+-run = "pytest --strict-markers"
++run = "pytest -vv  # MY LOCAL EDIT"

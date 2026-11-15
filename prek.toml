@@ -8,11 +8,12 @@ default_stages = [
 [[repos]]
 repo = "builtin"
 hooks = [
-    { id = "end-of-file-fixer" },
-    { id = "trailing-whitespace" },
+    # Historical probe outputs include deliberately invalid TOML and rejected hunks.
+    { id = "end-of-file-fixer", exclude = "^prototype/cc-composition-evidence/" },
+    { id = "trailing-whitespace", exclude = "^prototype/cc-composition-evidence/" },
     { id = "check-yaml" },
     { id = "check-json" },
-    { id = "check-toml" },
+    { id = "check-toml", exclude = "^prototype/cc-composition-evidence/" },
     { id = "check-merge-conflict" },
     { id = "check-added-large-files" },
 ]
@@ -56,6 +57,7 @@ id = "tombi-lint"
 name = "tombi lint"
 language = "system"
 entry = "uv run tombi lint --offline"
+exclude = "^prototype/cc-composition-evidence/"
 types = [
     "toml",
 ]

@@ -1,0 +1,15 @@
+[tools]
+
+python = "3.12"
+
+roborev = "latest"
+
+
+
+[tasks.review]
+run = "roborev status"
+
+
+[tasks.test]
+run = "pytest"
+

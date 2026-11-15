@@ -1,0 +1,9 @@
+[tools]
+python = "{{ python_version }}"
+roborev = "latest"
+
+[tasks.test]
+run = "pytest"
+
+[tasks.review]
+run = "roborev status"

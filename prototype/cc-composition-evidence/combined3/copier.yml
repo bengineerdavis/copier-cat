@@ -1,0 +1,18 @@
+_subdirectory: template
+_answers_file: .copier-answers.combined.yml
+
+project_name:
+  type: str
+  default: demo
+
+python_version:
+  type: str
+  default: "3.12"
+
+reviewer:
+  type: str
+  default: roborev
+
+layers:
+  - base
+  - layer

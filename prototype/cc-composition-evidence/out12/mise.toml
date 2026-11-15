@@ -1,0 +1,13 @@
+[tools]
+
+python = "3.13"
+
+
+
+[tasks.review]
+run = "roborev status"
+
+
+[tasks.test]
+run = "pytest"
+

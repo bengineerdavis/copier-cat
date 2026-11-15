@@ -1,0 +1,5 @@
+# Changes here will be managed by Copier; NEVER EDIT MANUALLY
+_commit: v0.3.0
+_src_path: /example/base
+project_name: demo
+python_version: '3.12'

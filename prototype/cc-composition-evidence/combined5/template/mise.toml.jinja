@@ -1,0 +1,9 @@
+[tools]
+{% for k, v in tools | dictsort %}
+{{ k }} = "{{ v }}"
+{% endfor %}
+{% for name, cmd in tasks | dictsort %}
+
+[tasks.{{ name }}]
+run = "{{ cmd }}"
+{% endfor %}

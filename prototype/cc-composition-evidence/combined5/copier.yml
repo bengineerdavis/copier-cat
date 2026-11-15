@@ -1,0 +1,18 @@
+_subdirectory: template
+_answers_file: .copier-answers.combined.yml
+
+python_version:
+  type: str
+  default: "3.12"
+
+tools:
+  type: yaml
+  default:
+    python: "3.12"
+    roborev: latest
+
+tasks:
+  type: yaml
+  default:
+    test: pytest
+    review: roborev status

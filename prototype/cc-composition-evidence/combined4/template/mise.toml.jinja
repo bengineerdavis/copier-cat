@@ -1,0 +1,13 @@
+{%- set stack = namespace(tools={}, tasks={}) -%}
+{%- for layer in layers -%}
+{%- include "fragments/" ~ layer ~ ".toml.jinja" -%}
+{%- endfor -%}
+[tools]
+{% for k, v in stack.tools | dictsort %}
+{{ k }} = "{{ v }}"
+{% endfor %}
+{% for name, cmd in stack.tasks | dictsort %}
+
+[tasks.{{ name }}]
+run = "{{ cmd }}"
+{% endfor %}
