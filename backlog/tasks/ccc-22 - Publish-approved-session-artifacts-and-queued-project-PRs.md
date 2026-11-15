@@ -1,9 +1,9 @@
 ---
 id: CCC-22
 title: Publish approved session artifacts and queued project PRs
-status: To Do
+status: Done
 created_date: 2026-11-14 19:00
-updated_date: 2026-11-15 06:42
+updated_date: 2026-11-15 15:38
 ---
 
 ## Description
@@ -30,10 +30,10 @@ Agreed with the maintainer 2026-11-14: the handoff must account for the PRs and 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The publication inventory accounts for every session-created artifact and its intended owner without discarding other sessions’ work
-- [ ] #2 Approved copier-cat records and prototype evidence are published in focused PRs with their contents and scope verified
-- [ ] #3 The handoff names merged PRs, remaining unmerged artifacts, downstream owners, and completed cleanup
-- [ ] #4 backlog-py board shows this publication task with its full description and acceptance criteria
+- [x] #1 The publication inventory accounts for every session-created artifact and its intended owner without discarding other sessions’ work
+- [x] #2 Approved copier-cat records and prototype evidence are published in focused PRs with their contents and scope verified
+- [x] #3 The handoff names merged PRs, remaining unmerged artifacts, downstream owners, and completed cleanup
+- [x] #4 backlog-py board shows this publication task with its full description and acceptance criteria
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -43,12 +43,17 @@ Publication scope approved 2026-11-14: the first records-only PR contains CCC-11
 Artifact preservation 2026-11-14: the testkit specification moved unchanged from .worktrees/copier-testkit-spec/.spec-testkit.md to the standalone copier-testkit project as docs/SPEC.md. Published privately at https://github.com/bengineerdavis/copier-testkit (initial commit e067c93). Scaffold verification: 3 tests, Ruff, formatting, and pyrefly passed. TASK-1 records the template-prefix and agentic-source provenance issues. The old copier-testkit-spec branch is contained in main and has no task-specific commits; its worktree and local branch are safe to remove after this preservation link is published.
 Assembly UX evidence published 2026-11-14 on prototype/cc-assembly-ux at bf924fd. The older prototype/cc-composition-cli branch remains separate. Earlier cc-stack-probe experiments under ~/code/try are separate exploratory artifacts, not included in this evidence publication. The external UX source directory is superseded after main links to the branch; the original ticket archive in DOC-10 and CCC-23 local task remain untouched.
 Older cc-stack-probe experiments preserved on prototype/cc-composition-evidence at 5d0d5ad, with 34 source/output artifacts and an evidence README. Nested Git metadata and caches were excluded; one local template source was normalized to a harmless placeholder. The handoff and CCC-24/CCC-25 link to this evidence branch. The external probe directory is superseded after this publication.
+Publication completed through focused PRs: copier-cat #7 (session records), #8 (standalone testkit preservation link), #9 (native implementation queue), #10 (UX evidence links), #11 (DOC-10 original-ticket archive), #12 (CCC-23), and #13 (composition-evidence links). Parent records merged in #18, #19, #20, and #21. Library APL-26 and APL-27 merged separately in #5 and #6; combined #4 was closed unmerged. Testkit TASK-2 merged in its PR #1.
+
+Preserved evidence lives on prototype/cc-assembly-ux at bf924fd and prototype/cc-composition-evidence at 5d0d5ad; the older prototype/cc-composition-cli remains separate. External UX/probe directories, duplicate queues, and completed publication worktrees were removed. The standalone private copier-testkit repository retains its original spec.
+
+Remaining work belongs to native Backlog tasks: CCC-24–CCC-29 for the assembly path, CCC-30 for the adopt/update teaching skill, and parent-template tasks including APT-52. Other sessions’ dirty files, divergent parent main, APT-32 conflict, and unrelated worktrees were left to their owners.
 <!-- SECTION:IMPLEMENTATION_NOTES:END -->
 
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
-
+Published all approved session artifacts into their owning repositories, converted the six .scratch issues into native Backlog tasks, preserved prototype evidence on dedicated branches, and cleaned the completed publication worktrees. No other sessions’ files or divergent parent state were discarded.
 <!-- SECTION:FINAL_SUMMARY:END -->
 
 ## Definition of Done

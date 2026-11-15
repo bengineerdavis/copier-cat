@@ -44,7 +44,7 @@
   written by cc even on full rejection).
 - First cc skill shipped alongside (adopt/update), carrying its teaching
   sections — the graduation principle is exercised from the first release,
-  not deferred.
+  not deferred. Tracked as CCC-30.
 - ~~Dogfood: adopt a real template into a real existing personal repo.~~
   Done 2026-10-26: `python-project-template` adopted into cc itself
   (2 adds, 3 TOML merges, .gitignore union; cc's source, tests, docs,

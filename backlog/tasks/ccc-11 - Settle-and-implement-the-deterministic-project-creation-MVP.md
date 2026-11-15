@@ -25,7 +25,7 @@ Ship:
 
 Constraints:
 
-- Review before building: read PRINCIPLES.md, spec.md, GLOSSARY.md, HANDOFF.md, ROADMAP.md, the existing src/tests, and CCC-5 through CCC-10. Run the existing test suite and inspect the current repository state before editing.
+- Review before building: read PRINCIPLES.md, spec.md, GLOSSARY.md, ROADMAP.md, the existing src/tests, and CCC-5 through CCC-10. Run the existing test suite and inspect the current repository state before editing. DOC-11 preserves historical session provenance; it is not an active instruction source.
 - The MVP is deterministic composition plus an agent-callable CLI. Do not block it on autonomous natural-language planning, MCP, meta-template slots, universal semantic compatibility, or generating arbitrary new templates.
 - Copier owns rendering and updates. cc owns the recipe, plan, discovery, structured composition, and reporting. Templates remain independently renderable and updatable.
 - The agentic overlay must not require or inherit from Python; test at least one language-independent contribution contract that can later serve TypeScript or Rust.

@@ -8,15 +8,22 @@ First-class CLI + library API for humans and agents, with agentic skills
 for building templates and driving cc — built so that cc leaves you better
 at copier, never locked in (the graduation principle, spec C5/C6).
 
-**Status: Phase 1, adopt MVP complete.** The governance stack and
-harness are seeded: [`PRINCIPLES.md`](PRINCIPLES.md) is the
-constitution, [`spec.md`](spec.md) carries the requirements, the
-[`backlog/`](backlog) store carries the working memory (tasks with
-acceptance criteria, drafts, decisions, evidence), and roborev reviews
-every commit. The adopt MVP (CCC-1..3) is implemented and archived —
-the merge engine, adopt flow, and CLI ship with a passing test suite.
-Work continues from [`HANDOFF.md`](HANDOFF.md): the first cc skill
-(C6) and the dogfood adopt.
+**Status: adopt MVP complete; deterministic assembly in progress.** The
+governance stack and harness are seeded: [`PRINCIPLES.md`](PRINCIPLES.md)
+is the constitution, [`spec.md`](spec.md) carries the requirements, and
+roborev reviews every commit. The adopt MVP (CCC-1..3) is implemented and
+archived. The merge engine, adopt flow, and CLI ship with a passing test
+suite.
+
+The [`backlog/`](backlog) store carries current work. Start with CCC-24
+for the first Python-assembly slice and DOC-9 for its requirements.
+CCC-30 owns the adopt/update teaching skill. The completed dogfood adopt
+stamped this project with `python-project-template`; update it with
+`copier update -a .copier-answers.copier-cat.yml`.
+
+For historical provenance, see DOC-11
+(`backlog/docs/seed-and-implementation-session-handoff.md`). It is not an
+active instruction source.
 
 The name: verified free on PyPI, npm, and crates.io (2026-10-12). The CLI
 binary is `copier-cat`; `cc` collides with the C compiler and is left to
@@ -67,5 +74,8 @@ copier-cat merge --ours pyproject.toml --theirs render/pyproject.toml
 ```
 
 Origin: spun out of
-[`agentic-project-template`](https://github.com/bengineerdavis/agentic-project-template)
-— see HANDOFF.md for the relationship.
+[`agentic-project-template`](https://github.com/bengineerdavis/agentic-project-template).
+Its CLI supplied the original deterministic merge-engine prototype. cc
+generalizes that work behind its merger registry. The agentic template is
+an ordinary Copier template and a future assembly member, not an engine
+owner or special consumer. See DOC-11 for the historical relationship.
