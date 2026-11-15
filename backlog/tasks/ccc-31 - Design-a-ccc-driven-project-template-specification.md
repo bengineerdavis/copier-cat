@@ -7,7 +7,8 @@ references:
 - backlog/docs/cc-assembly-mvp-spec.md
 - GLOSSARY.md
 - https://github.com/bengineerdavis/agentic-project-template/tree/main
-updated_date: 2026-11-15 16:16
+- https://github.com/bengineerdavis/agentic-project-template/blob/main/backlog/tasks/apt-53%20-%20Refactor-the-agentic-template-into-readable-project-template-artifacts.md
+updated_date: 2026-11-15 16:29
 ---
 
 ## Description
@@ -48,6 +49,11 @@ Agreed with the maintainer 2026-11-15: capture the research project now so the n
 Research routing: use deep-research and review-best-practices for evidence, then grill-with-docs and domain-modeling for maintainer decisions and vocabulary. The eventual specification may lead to a declarative ccc manifest, generation/validation conventions, or a hybrid; that representation is an open design decision. Safe research default: define required behavior and interfaces independently of representation before selecting a mechanism. Owner: maintainer through the documented grilling workflow.
 
 Origin evidence: copier-cat main through c16c279de6a4d1a4d4bd40f97bb2671897c048a8. This research is deliberately independent of CCC-24 through CCC-29 and must not delay their first usable assembly workflow.
+Research inputs added 2026-11-15: agentic-template artifact ownership belongs in a fresh refactor discussion, not silently in the assembly MVP. APT-53 captures that discussion and the imperative-template/alint investigation: https://github.com/bengineerdavis/agentic-project-template/blob/main/backlog/tasks/apt-53%20-%20Refactor-the-agentic-template-into-readable-project-template-artifacts.md. The research should give that discussion shared vocabulary and evidence, not prescribe its result.
+
+Reusable case-study resources: copier-cat DOC-9; prototype/cc-assembly-ux at bf924fd; prototype/cc-composition-evidence at 5d0d5ad; the original stamping/readability observations through c16c279de6a4d1a4d4bd40f97bb2671897c048a8. APL-26 also records a worktree-claim reconciliation lesson from this project for the agentic backlog-workflow adapter.
+
+Glossary review inputs: compare artifact ownership, stamped artifact, provenance, rendering runner, composition runner, template interface, declarative specification, composition data, imperative composition, merge intent, and compatibility contract against existing terms. Reuse established community vocabulary where it fits. Do not introduce a term merely to rename an existing one; the grilling and domain-modeling phase owns final definitions.
 <!-- SECTION:IMPLEMENTATION_NOTES:END -->
 
 ## Final Summary
