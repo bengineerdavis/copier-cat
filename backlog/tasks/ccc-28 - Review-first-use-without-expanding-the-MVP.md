@@ -9,7 +9,8 @@ labels:
 - ready-for-agent
 parent_task_id: CCC-17
 references:
-- backlog/docs/cli-workflow-review.md
+- backlog/docs/assembly-original-implementation-tickets.md
+updated_date: 2026-11-15 06:29
 ---
 
 ## Description
@@ -28,7 +29,7 @@ Constraints:
 - Follow CCC-17 and CCC-15. Prototype behavior alone is not production evidence.
 - Do not reopen the whole design or bundle deferred ideas into the MVP.
 
-Agreed with the maintainer 2026-11-14: convert the approved fifth .scratch issue into the native Backlog implementation queue.
+Agreed with the maintainer 2026-11-14: convert the approved fifth DOC-10 original ticket into the native Backlog implementation queue.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -43,7 +44,8 @@ Agreed with the maintainer 2026-11-14: convert the approved fifth .scratch issue
 ## Implementation Notes
 
 <!-- SECTION:IMPLEMENTATION_NOTES:BEGIN -->
-
+Original approved ticket text is preserved verbatim in DOC-10 (backlog/docs/assembly-original-implementation-tickets.md). This native task is the active implementation queue; the archived ticket is audit evidence, not a second queue.
+DOC-10 also records the original .scratch-to-native task mapping. The external .scratch queue was retired after the archive and native tasks were published.
 <!-- SECTION:IMPLEMENTATION_NOTES:END -->
 
 ## Final Summary

@@ -10,8 +10,8 @@ labels:
 - ready-for-agent
 parent_task_id: CCC-14
 references:
-- backlog/docs/agentic-init-research.md
-- backlog/docs/cli-workflow-review.md
+- backlog/docs/assembly-original-implementation-tickets.md
+updated_date: 2026-11-15 06:29
 ---
 
 ## Description
@@ -32,7 +32,7 @@ Constraints:
 - Never implicitly select global scope or reset existing declarations.
 - MCP, telemetry, hosted bug reporting, and source-template changes require separate later consent.
 
-Agreed with the maintainer 2026-11-14: convert the approved fourth .scratch issue into the native Backlog implementation queue.
+Agreed with the maintainer 2026-11-14: convert the approved fourth DOC-10 original ticket into the native Backlog implementation queue.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -48,7 +48,8 @@ Agreed with the maintainer 2026-11-14: convert the approved fourth .scratch issu
 ## Implementation Notes
 
 <!-- SECTION:IMPLEMENTATION_NOTES:BEGIN -->
-
+Original approved ticket text is preserved verbatim in DOC-10 (backlog/docs/assembly-original-implementation-tickets.md). This native task is the active implementation queue; the archived ticket is audit evidence, not a second queue.
+DOC-10 also records the original .scratch-to-native task mapping. The external .scratch queue was retired after the archive and native tasks were published.
 <!-- SECTION:IMPLEMENTATION_NOTES:END -->
 
 ## Final Summary

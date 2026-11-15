@@ -5,7 +5,7 @@ status: To Do
 created_date: 2026-11-14 05:55
 dependencies:
 - CCC-7
-updated_date: 2026-11-15 06:22
+updated_date: 2026-11-15 06:30
 documentation:
 - DOC-9
 ---
@@ -59,10 +59,10 @@ Spec complete and published as DOC-9 (backlog/docs/cc-assembly-mvp-spec.md). App
 Tracker triage label `ready-for-agent` is NOT applied: CCC-15 documents that backlog-py has labels/priorities but no defined triage vocabulary. Resolve that vocabulary rather than inventing a tag. Spec content itself is complete and ready for /to-tickets.
 Prototype preserved on `prototype/cc-assembly-ux` at `bf924fd` as behavioral evidence only. Real production MVP has not been implemented. Start at CCC-24 from DOC-9 and the native implementation queue.
 Storage correction after maintainer review: DOC-9 is a feature spec, not the durable decision store. Added decision-8 (shared human/JSON command-description contract) and decision-9 (optional open-standards-compatible agent skill installation, with or without dotagents). Durable composition/assembly choices remain decision-3..7; research docs supply evidence; implementation tickets supply actionable slices. DOC-9 now points to this decision layer.
-Tracker correction 2026-11-14: the approved six implementation tickets currently live under .scratch/deterministic-project-assembly/issues/. Before implementation, reconcile them into the configured backlog-py tracker using native tasks, dependencies, labels, and orchestration claims; preserve their content and blocking edges. .scratch is not the intended Backlog adapter output. APL-26 owns the reusable reconcile/routing component. Findings and retro follow-ups are captured as native tasks rather than remaining conversation-only.
-Native implementation queue created 2026-11-14: CCC-24 (Python assembly), CCC-25 (independent overlay; depends on CCC-24), CCC-26 (shared discovery; depends on CCC-24), CCC-27 (optional conversational skill; depends on CCC-25 and CCC-26), CCC-28 (first-use review; depends on CCC-25), and CCC-29 (workflow distribution; outside the assembly MVP). All six carry the ready-for-agent triage label. The immediate frontier is CCC-24 and CCC-29.
+Tracker reconciliation 2026-11-14: the approved implementation tickets use native Backlog tasks, dependencies, labels, and orchestration claims. CCC-24 is Python assembly; CCC-25 (independent overlay) and CCC-26 (shared discovery) depend on CCC-24; CCC-27 (optional conversational skill) depends on CCC-25 and CCC-26; CCC-28 (first-use review) depends on CCC-25; CCC-29 (workflow distribution) is outside the assembly MVP. All six carry the ready-for-agent triage label. The immediate frontier is CCC-24 and CCC-29.
 
-The approved .scratch/deterministic-project-assembly/issues/ files are superseded as the implementation queue. Preserve them as uncommitted local history until their six native tasks are merged, then remove the duplicate queue through a separately approved cleanup. Do not implement from both systems.
+DOC-10 (backlog/docs/assembly-original-implementation-tickets.md) preserves the six original ticket files verbatim, their blocking graph, and the native-task mapping. It is audit evidence, not another queue. APL-26 owns the reusable reconcile/routing component. Use native Backlog for implementation and orchestration.
+
 Assembly UX evidence preserved on prototype/cc-assembly-ux at bf924fd: https://github.com/bengineerdavis/copier-cat/tree/prototype/cc-assembly-ux/prototype/cc-assembly-ux. It is synthetic, not production implementation. Production starts at CCC-24; shared discovery belongs to CCC-26 and the optional skill to CCC-27. The external workspace directory is no longer required.
 <!-- SECTION:IMPLEMENTATION_NOTES:END -->
 
