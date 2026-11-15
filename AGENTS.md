@@ -5,13 +5,15 @@ escalate conflicts, and never let a diff carry a governance change.
 
 ## Read first
 
-- `HANDOFF.md` — session provenance, read order, first-session suggestions
 - `PRINCIPLES.md` — the constitution: intent, principles, constraints,
   and the amendment rule
 - `spec.md` — requirements only: capabilities, MUSTs, and open gates
 - `backlog/` — the working memory: tasks (requirements + acceptance
   criteria), drafts (open questions), decisions/, docs/
 - `ROADMAP.md` — phases
+- `backlog/docs/prior-art.md` — research and upstream grounding
+- `backlog/docs/seed-and-implementation-session-handoff.md` — historical
+  session provenance, not active instructions
 
 ## Rules
 
@@ -32,9 +34,15 @@ escalate conflicts, and never let a diff carry a governance change.
   (frontmatter untouched — that is the invariant this rule protects);
   `backlog-py cleanup` remains the batch path when every Done task
   should move at once.
-- The harness is seeded (mise + prek.toml + uv + backlog-md-py store);
-  CCC-1..3 are completed and archived — Phase 1's remainder is the first
-  cc skill (adopt/update, C6) and the dogfood adopt, per ROADMAP.md and
-  HANDOFF.md.
-- Grounding links live in HANDOFF.md; read the copier issues before
-  designing adopt/contribute mechanics.
+- The harness is seeded (mise + prek.toml + uv + backlog-md-py store).
+  CCC-1..3 are completed and archived. CCC-30 owns the adopt/update
+  teaching skill; the dogfood adopt is complete. Start current work from
+  the native Backlog queue and DOC-9 for the assembly MVP.
+- Read the upstream grounding in `backlog/docs/prior-art.md` before
+  designing adopt/contribute mechanics. The initial adopt grounding is
+  [copier#2486](https://github.com/copier-org/copier/issues/2486), with
+  #955, #2005, #1738, and the closed implementation PR #2487.
+- Fresh clones use `mise run install`, then `roborev init --agent opencode`.
+  Hooks are per-clone state; continuing an existing clone needs neither.
+  Update this stamped project with
+  `copier update -a .copier-answers.copier-cat.yml`.

@@ -1,3 +1,25 @@
+---
+type: history
+tags:
+- history
+- provenance
+id: DOC-11
+title: Seed and implementation-session handoff archive
+---
+
+# Seed and implementation-session handoff archive
+
+This document preserves the original root `HANDOFF.md` as historical evidence.
+It is not an active instruction source. Some paths, version claims, task states,
+and suggested next actions below describe the repository at earlier dates.
+
+Current work lives in native Backlog tasks. DOC-9 defines the deterministic
+assembly MVP. CCC-30 owns the remaining adopt/update teaching skill from the
+original roadmap. PRINCIPLES.md, spec.md, GLOSSARY.md, and ROADMAP.md retain
+their established roles.
+
+## Original handoff text
+
 # HANDOFF — copier-cat seed (2026-10-12)
 
 Handoff for the next agent/human session. Read top to bottom.

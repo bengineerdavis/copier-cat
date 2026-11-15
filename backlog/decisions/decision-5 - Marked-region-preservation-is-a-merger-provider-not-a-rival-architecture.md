@@ -8,7 +8,7 @@ status: accepted
 ## Context
 
 copier-uv-bleeding (detailobsessed, PR #329 at `9a80874`, v0.41.2)
-implements the alternative C1 architecture HANDOFF flagged:
+implements the alternative C1 architecture DOC-11 flagged:
 `_skip_if_exists` on mixed files plus a `_tasks` migration that
 regenerates them fresh on every update while splicing
 `# template-preserve:<name>:start/:end` regions back byte-for-byte.

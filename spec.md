@@ -4,7 +4,7 @@ Derives from PRINCIPLES.md (the constitution). This file carries
 requirements only: what each capability must do and the open gates
 blocking it. Decisions live in the backlog store (`backlog/decisions/`
 and the decision log in `backlog/docs/`); evidence in
-`backlog/docs/prior-art.md`; session state in HANDOFF.md; open
+`backlog/docs/prior-art.md`; current work in native Backlog tasks; open
 questions as backlog drafts carrying a safe default and an owner.
 Decisions, session residue, and evidence accumulating here are a bug.
 
