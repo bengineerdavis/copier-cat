@@ -10,7 +10,7 @@ labels:
 parent_task_id: CCC-11
 references:
 - backlog/docs/assembly-original-implementation-tickets.md
-updated_date: 2026-11-15 06:29
+updated_date: 2026-11-15 06:42
 ---
 
 ## Description
@@ -48,6 +48,7 @@ Agreed with the maintainer 2026-11-14: convert the approved second DOC-10 origin
 <!-- SECTION:IMPLEMENTATION_NOTES:BEGIN -->
 Original approved ticket text is preserved verbatim in DOC-10 (backlog/docs/assembly-original-implementation-tickets.md). This native task is the active implementation queue; the archived ticket is audit evidence, not a second queue.
 DOC-10 also records the original .scratch-to-native task mapping. The external .scratch queue was retired after the archive and native tasks were published.
+Composition experiment evidence preserved on prototype/cc-composition-evidence at 5d0d5ad: https://github.com/bengineerdavis/copier-cat/tree/prototype/cc-composition-evidence/prototype/cc-composition-evidence. Its combined5 fixture demonstrates structured TOML composition and its rejected-hunk artifact demonstrates why update conflicts must remain visible. Use the existing composition engine for production behavior.
 <!-- SECTION:IMPLEMENTATION_NOTES:END -->
 
 ## Final Summary
