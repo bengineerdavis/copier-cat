@@ -40,6 +40,13 @@ checks. It does not invoke Copier or validate a generated project; production
 behavior remains unimplemented. The older HTML/JS prototype remains on
 `prototype/cc-composition-cli`.
 
+The Copier composition experiments are preserved at commit `5d0d5ad` on
+[`prototype/cc-composition-evidence`](https://github.com/bengineerdavis/copier-cat/tree/prototype/cc-composition-evidence/prototype/cc-composition-evidence).
+Their README records the nine measured findings: whole-mapping `--data`
+replacement, structured-data composition, native-render extraction boundaries,
+and visible `.rej` failure handling. These are experimental fixtures, not
+production assembly behavior.
+
 ## What exists here
 
 Seeded (2026-10-15/16, store workflow 2026-10-17): PRINCIPLES.md
