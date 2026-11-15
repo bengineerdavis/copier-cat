@@ -84,9 +84,9 @@ Q24-Q28 maintainer responses 2026-11-14:
 - Q28 accepted: validation must be strong and very fast.
 - Prototype boundary: demonstrate CLI/catalog interaction, provenance, preview cleanup, and validation UX with synthetic data; do not implement a competing renderer or production composition engine.
 Prototype evidence 2026-11-14:
-- Location: /Users/ben.davis/code/personal/cc-assembly-ux-prototype/prototype.py (throwaway, outside cc production source; no Git branch or commit created).
-- Run interactively: python3 /Users/ben.davis/code/personal/cc-assembly-ux-prototype/prototype.py
-- Main flow without questions: python3 /Users/ben.davis/code/personal/cc-assembly-ux-prototype/prototype.py --demo cc
+- Location: `prototype/cc-assembly-ux/prototype.py` on the `prototype/cc-assembly-ux` evidence branch at `bf924fd` (synthetic evidence, outside cc production source).
+- Run interactively from that branch: python3 prototype/cc-assembly-ux/prototype.py
+- See the branch-local README for the simulated interface and read-only checks.
 - Compares cc research, cc assemble research, and copier-cat assemble python-agentic research; shows a resolved plan, consent scope, simulated validation, disposable .copier-cat-stack.yml evidence, preview cleanup, and optional configuration capture.
 - Verified all three --demo styles, cancellation with no destination writes and preview cleanup, and retained-preview state. It uses synthetic data only: no Copier execution, project writes, measured performance, or generated-project tests.
 - CCC-16 created for deterministic gitignore generation/composition research informed by https://github.com/toptal/gitignore.io.
@@ -101,7 +101,7 @@ Prototype feedback 2026-11-14:
 - Environment fact: `command -v cc` resolves to /usr/bin/cc (Apple clang 21.0.0); do not assume the short alias cc is available. Revisit the alias through the naming skill rather than silently claiming cc.
 - Prototype is being revised around terse output and these workflows; recipe and output-schema decisions remain provisional until maintainer review.
 Prototype verdict and interaction decisions 2026-11-14:
-- Revised prototype: /Users/ben.davis/code/personal/cc-assembly-ux-prototype/prototype.py. It is synthetic UX code, not an implementation or measured validation.
+- Revised prototype: `prototype/cc-assembly-ux/prototype.py` on the `prototype/cc-assembly-ux` evidence branch at `bf924fd`. It is synthetic UX code, not an implementation or measured validation.
 - Default: three concise result lines. Verbose: resolved templates/answers/composition/evidence/update detail. Debug: logging diagnostics on stderr. JSON: one structured result on stdout. Prompt and diagnostics stay separate from JSON.
 - Direct project form and direct recipe form accepted in principle: ccc research and ccc python-agentic research. Explicit assemble is also available: ccc assemble research. `ccc` is a prototype alias candidate only, not approved naming.
 - One-command assembly covers all stages; --staged optionally exposes resolve/preview/compose/validate/assemble without making ordinary users invoke five commands.

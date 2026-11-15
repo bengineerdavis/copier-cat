@@ -24,6 +24,20 @@ Handoff for the next agent/human session. Read top to bottom.
    markers on copy), #1738 (merge across templates). PR #2487 was an
    implementation attempt that was closed; worth reading before designing.
 
+## Current implementation entry point
+
+Start with **CCC-24**, the first usable Python-assembly vertical slice. The
+approved requirements are in DOC-9 (`backlog/docs/cc-assembly-mvp-spec.md`),
+and the native implementation queue is in `backlog/tasks/`. CCC-29 is an
+independent distribution-design task outside the assembly MVP.
+
+The synthetic assembly UX evidence is preserved at commit `bf924fd` on
+[`prototype/cc-assembly-ux`](https://github.com/bengineerdavis/copier-cat/tree/prototype/cc-assembly-ux/prototype/cc-assembly-ux).
+Its README explains how to run its simulated interface and read-only smoke
+checks. It does not invoke Copier or validate a generated project; production
+behavior remains unimplemented. The older HTML/JS prototype remains on
+`prototype/cc-composition-cli`.
+
 ## What exists here
 
 Seeded (2026-10-15/16, store workflow 2026-10-17): PRINCIPLES.md

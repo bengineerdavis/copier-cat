@@ -6,7 +6,7 @@ created_date: 2026-11-14 15:56
 dependencies:
 - CCC-14
 - CCC-5
-updated_date: 2026-11-14 17:03
+updated_date: 2026-11-15 06:22
 ---
 
 ## Description
@@ -40,7 +40,7 @@ Constraints:
 ## Implementation Notes
 
 <!-- SECTION:IMPLEMENTATION_NOTES:BEGIN -->
-Review entry: backlog/docs/cli-workflow-review.md. Prototype: /Users/ben.davis/code/personal/cc-assembly-ux-prototype/prototype.py.
+Review entry: backlog/docs/cli-workflow-review.md. Prototype: `prototype/cc-assembly-ux/prototype.py` on the `prototype/cc-assembly-ux` evidence branch at `bf924fd`.
 Maintainer direction: come back later, walk through CLI against desired human workflows, tune it through real use, then derive agent workflows/skills/MCP inspired by backlog-py/backlog.md.
 Do not treat the prototype as production. Before init work 15 simulated interaction cases passed; current first-run/config edits have not completed a final verification. Prototype does not inspect real config existence.
 Proposed init behavior: ccc init; interactive first-run setup when no config; built-in defaults work after skipping; JSON/--yes never prompt; no implicit stack; existing/corrupt config must not be overwritten. These are requirements for review, not verified implementation.
@@ -53,7 +53,7 @@ CCC-18 owns first-class bug reporting separate from general telemetry: human-fri
 Remaining interaction details should be resolved with maintainer feedback during implementation rather than more throwaway tuning.
 Maintainer first-class concern 2026-11-14: help usability for humans and machines. Decision-6 extended: help remains the teaching surface, now with named operands, effects, copy-safe examples, and versioned help --json / COMMAND --help --json discovery. The contract must distinguish DESTINATION from STACK and read-only preview from explicit write approval.
 Proposed example: copier-cat assemble example-project --stack example-stack --dry-run means plan creation of new project directory ./example-project using named stack example-stack; no files written. --json alone is read-only; --json --yes approves only the displayed new-destination write. Help never triggers init or project/config writes.
-Prototype help updated to use these terms and examples. Proposed illustrative schema: cc-assembly-ux-prototype/help_contract.py. Production help --json remains unimplemented; tests must enforce behavior/schema, not just prose. CCC-11 MVP should include this help contract for assemble, stack list/show, init, and top-level help rather than postpone operand clarity.
+Prototype help updated to use these terms and examples. Proposed illustrative schema: `prototype/cc-assembly-ux/help_contract.py` on the evidence branch. Production help --json remains unimplemented; tests must enforce behavior/schema, not just prose. CCC-11 MVP should include this help contract for assemble, stack list/show, init, and top-level help rather than postpone operand clarity.
 Prototype help surfaces now exist: human ccc --help and ccc assemble --help; machine ccc help --json and ccc assemble --help --json. Focused checks verify no config/init/writes, single DESTINATION operand, --stack STACK, example-project/example-stack copy-safe examples, read-only --dry-run/--json behavior, and JSON destination=null/approved=false. Machine schema is illustrative only. CCC-11 owns production schema and test coverage for the MVP commands; CCC-17 should test whether humans and agents can actually use them.
 Research spike authorized 2026-11-14 before implementation. Requirement 1: agents must discover copier-cat operations, operands, options, descriptions, examples, side effects, errors, and approval scope without parsing terminal-formatted prose; a machine-help candidate that cannot carry examples/descriptions in a stable versioned structure is disqualified. Requirement 2: ccc init should enable the maintainer's agent workflows with minimal explicit reversible setup while CLI-only use remains intact and MCP stays optional; an approach requiring hidden global changes or non-idempotent installation is disqualified.
 Use two focused primary-source research spikes rather than a broad deep-research program. Reports: backlog/docs/machine-readable-help-research.md and backlog/docs/agentic-init-research.md. Each must recommend one MVP path, cite primary sources, verify relevant installed surfaces, record rejected options, and separate MVP from later work. Prototype changes may follow only where they clarify the existing help example; no production implementation or global agent configuration changes.
@@ -62,6 +62,7 @@ Two focused research reports completed in-session after delegated spikes returne
 - backlog/docs/agentic-init-research.md: init offers separate explicit dotagents skill installation with visible scope/source/command; MCP later and separately. No direct global OpenCode edits.
 Prototype now returns catalog from help --json and focused contract from assemble --help --json. Both contain descriptions, usage, per-option effects, and structured examples. Focused checks verify catalog/focused parity and no initialization.
 Research verification complete. Reports saved and prototype focused checks passed. Evidence boundary: backlog-py support is its installed CLI surfaces (2.2.0), not an asserted internal architecture. dotagents 3.4.0 installed help and official README support skills/MCP/scope/install/remove surfaces; OpenCode official docs support skill discovery and explicit MCP setup. No configuration changes or production implementation. Next: finish CCC-15 consolidation, then to-spec/to-tickets for the single usable assemble workflow.
+Assembly UX evidence preserved on prototype/cc-assembly-ux at bf924fd: https://github.com/bengineerdavis/copier-cat/tree/prototype/cc-assembly-ux/prototype/cc-assembly-ux. Use the branch-local README and read-only smoke suite instead of external workspace paths. Production behavior remains unimplemented.
 <!-- SECTION:IMPLEMENTATION_NOTES:END -->
 
 ## Final Summary
