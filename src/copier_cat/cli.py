@@ -31,6 +31,8 @@ from .adopt import (
     render,
     stamp,
 )
+from .assemble import AssemblyError, load_catalog, questions_for, resolve_answers
+from .assemble import assemble as assemble_project
 from .merge import MergeToolError, default_registry
 
 app = typer.Typer(
@@ -431,6 +433,191 @@ def adopt(
                 typer.secho(f"warning: {warning}", fg=typer.colors.YELLOW, err=True)
         typer.echo(f"stamped: {rendered.answers_relpath}")
     raise typer.Exit(EXIT_CONFLICTED if conflicted else EXIT_CLEAN)
+
+
+_ASSEMBLE_EPILOG = """\
+Copier equivalent: `copier copy TEMPLATE DESTINATION` renders one
+ordinary template. cc resolves that template from a named local stack,
+previews and validates it in isolation, and writes only after approval.
+Plain `copier update -a ANSWERS_FILE` continues the resulting project;
+the disposable .copier-cat-stack.yml provenance is not required.
+
+Examples:
+  copier-cat assemble example-project --stack python --catalog catalog.yml
+  copier-cat assemble example-project --stack python --dry-run --json
+  copier-cat assemble example-project --stack python --yes
+
+DESTINATION is the new project directory, not a stack name. --dry-run and
+--json without --yes never write the destination. --yes approves only the
+displayed new-destination write; it does not authorize source changes,
+publication, telemetry, agent installation, or updates to an existing project.
+
+Exit codes: 0 preview or approved assembly; 1 validation failure; 2 error.
+"""
+
+_STACK_EPILOG = """\
+Copier equivalent: `copier copy` accepts a template source directly.
+The local catalog gives that source a reusable identity, role, ref, and
+answers without depending on another project's answers file.
+
+Exit codes: 0 inspection; 2 unknown stack or catalog error.
+"""
+
+
+def _assembly_failure(error: AssemblyError, json_output: bool) -> None:
+    if json_output:
+        typer.echo(
+            json.dumps({"status": "error", "stage": error.stage, "error": str(error)})
+        )
+    else:
+        typer.secho(f"error: {error.stage}: {error}", fg=typer.colors.RED, err=True)
+    raise typer.Exit(EXIT_CONFLICTED if error.stage == "validation" else EXIT_ERROR)
+
+
+def _assembly_payload(plan: Any, *, wrote: bool) -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "status": "assembled" if wrote else "preview",
+        "stack": plan.stack.name,
+        "destination": str(plan.destination),
+        "answers": plan.answers,
+        "answers_file": plan.rendered.answers_relpath,
+        "native_update": plan.update_command,
+        "provenance": ".copier-cat-stack.yml",
+        "validation": list(plan.checks),
+        "preview": str(plan.preview) if plan.retained else None,
+        "preview_cleanup": f"rm -rf {plan.preview.parent}"
+        if plan.retained
+        else "automatic",
+        "approved_write": str(plan.destination) if wrote else None,
+    }
+
+
+@app.command(epilog=_ASSEMBLE_EPILOG)
+def assemble(
+    destination: Path = typer.Argument(..., help="New project directory to create"),
+    stack: str = typer.Option(..., "--stack", help="Named stack in the local catalog"),
+    catalog: Path = typer.Option(
+        Path("catalog.yml"), "--catalog", help="Local YAML template and stack catalog"
+    ),
+    answers: list[str] | None = typer.Option(
+        None, "--answers", "-a", help="Answer as QUESTION=ANSWER (repeatable)"
+    ),
+    guided: bool = typer.Option(
+        False, "--guided", help="Review human-readable template questions interactively"
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Render and validate without writing the destination"
+    ),
+    retain_preview: bool = typer.Option(
+        False, "--retain-preview", help="Retain the isolated preview and report cleanup"
+    ),
+    yes: bool = typer.Option(
+        False, "--yes", help="Approve only the displayed new-destination write"
+    ),
+    json_output: bool = typer.Option(
+        False, "--json", help="Emit one structured preview or assembly result"
+    ),
+) -> None:
+    """Assemble a real Python project from a named local stack."""
+    try:
+        selected = load_catalog(catalog, stack)
+        overrides = _parse_answers(answers or [])
+        interactive = not json_output and not dry_run and not yes
+        resolved = resolve_answers(
+            selected.members[0],
+            overrides,
+            interactive=interactive,
+            guided=guided,
+            input_fn=typer.prompt,
+        )
+        if interactive and not guided:
+            typer.echo(f"Destination: {destination}")
+            typer.echo(f"Stack: {stack}")
+            if not typer.confirm("Render and validate this preview?", default=True):
+                typer.echo("Cancelled; no destination written.")
+                raise typer.Exit(EXIT_CLEAN)
+        write = yes and not dry_run
+        if yes and dry_run:
+            raise AssemblyError("approval", "--dry-run cannot be combined with --yes")
+        plan = assemble_project(
+            selected,
+            destination,
+            resolved,
+            write=write,
+            retain_preview=retain_preview,
+        )
+        if interactive and not write:
+            typer.echo("Validation passed; no destination written.")
+            if typer.confirm(f"Create {destination}?", default=False):
+                plan = assemble_project(
+                    selected,
+                    destination,
+                    resolved,
+                    write=True,
+                    retain_preview=retain_preview,
+                )
+                write = True
+            else:
+                typer.echo("Cancelled; no destination written.")
+        if json_output:
+            typer.echo(json.dumps(_assembly_payload(plan, wrote=write), indent=2))
+        else:
+            typer.echo(
+                f"{'Created' if write else 'Preview validated'}: {destination} "
+                f"({stack}); {len(plan.checks)} checks passed"
+            )
+            if write:
+                typer.echo(f"Next: cd {destination} && {plan.update_command}")
+            if plan.retained:
+                typer.echo(
+                    f"Preview: {plan.preview}; cleanup: rm -rf {plan.preview.parent}"
+                )
+    except AssemblyError as error:
+        _assembly_failure(error, json_output)
+
+
+stack_app = typer.Typer(
+    help="Inspect the local template and stack catalog.", epilog=_STACK_EPILOG
+)
+app.add_typer(stack_app, name="stack")
+
+
+@stack_app.command("list")
+def stack_list(catalog: Path = typer.Option(Path("catalog.yml"), "--catalog")) -> None:
+    """List named stacks in the local catalog."""
+    import yaml
+
+    try:
+        raw = yaml.safe_load(catalog.read_text(encoding="utf-8")) or {}
+        for name in raw.get("stacks", {}):
+            typer.echo(name)
+    except (OSError, yaml.YAMLError, AttributeError) as error:
+        _fail(f"catalog: {error}")
+
+
+@stack_app.command("show")
+def stack_show(
+    name: str = typer.Argument(..., help="Named stack to inspect"),
+    catalog: Path = typer.Option(Path("catalog.yml"), "--catalog"),
+) -> None:
+    """Show a stack's independent template source, role, ref, and answers."""
+    try:
+        selected = load_catalog(catalog, name)
+        member = selected.members[0]
+        typer.echo(f"Stack: {name}")
+        typer.echo(f"Template: {member.name} ({member.role})")
+        typer.echo(f"Source: {member.source}")
+        typer.echo(f"Ref: {member.ref or 'default'}")
+        for question in questions_for(member):
+            default = (
+                "required" if question.required else f"default: {question.default}"
+            )
+            typer.echo(f"  {question.label} ({question.name}; {default})")
+            if question.help:
+                typer.echo(f"    {question.help}")
+    except AssemblyError as error:
+        _assembly_failure(error, False)
 
 
 if __name__ == "__main__":
