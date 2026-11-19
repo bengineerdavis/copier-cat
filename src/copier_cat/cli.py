@@ -31,7 +31,7 @@ from .adopt import (
     render,
     stamp,
 )
-from .assemble import AssemblyError, load_catalog, questions_for, resolve_answers
+from .assemble import AssemblyError, load_catalog, questions_for, resolve_stack_answers
 from .assemble import assemble as assemble_project
 from .merge import MergeToolError, default_registry
 
@@ -483,6 +483,7 @@ def _assembly_payload(plan: Any, *, wrote: bool) -> dict[str, Any]:
         "answers": plan.answers,
         "answers_file": plan.rendered.answers_relpath,
         "native_update": plan.update_command,
+        "native_updates": list(plan.update_commands),
         "provenance": ".copier-cat-stack.yml",
         "validation": list(plan.checks),
         "preview": str(plan.preview) if plan.retained else None,
@@ -524,8 +525,8 @@ def assemble(
         selected = load_catalog(catalog, stack)
         overrides = _parse_answers(answers or [])
         interactive = not json_output and not dry_run and not yes
-        resolved = resolve_answers(
-            selected.members[0],
+        resolved = resolve_stack_answers(
+            selected,
             overrides,
             interactive=interactive,
             guided=guided,
@@ -568,7 +569,9 @@ def assemble(
                 f"({stack}); {len(plan.checks)} checks passed"
             )
             if write:
-                typer.echo(f"Next: cd {destination} && {plan.update_command}")
+                typer.echo(f"Next: cd {destination}")
+                for command in plan.update_commands:
+                    typer.echo(f"  {command}")
             if plan.retained:
                 typer.echo(
                     f"Preview: {plan.preview}; cleanup: rm -rf {plan.preview.parent}"
@@ -604,18 +607,20 @@ def stack_show(
     """Show a stack's independent template source, role, ref, and answers."""
     try:
         selected = load_catalog(catalog, name)
-        member = selected.members[0]
         typer.echo(f"Stack: {name}")
-        typer.echo(f"Template: {member.name} ({member.role})")
-        typer.echo(f"Source: {member.source}")
-        typer.echo(f"Ref: {member.ref or 'default'}")
-        for question in questions_for(member):
-            default = (
-                "required" if question.required else f"default: {question.default}"
-            )
-            typer.echo(f"  {question.label} ({question.name}; {default})")
-            if question.help:
-                typer.echo(f"    {question.help}")
+        for member in selected.members:
+            typer.echo(f"Template: {member.name} ({member.role})")
+            typer.echo(f"Source: {member.source}")
+            typer.echo(f"Ref: {member.ref or 'default'}")
+            if member.capabilities:
+                typer.echo(f"Capabilities: {', '.join(member.capabilities)}")
+            for question in questions_for(member):
+                default = (
+                    "required" if question.required else f"default: {question.default}"
+                )
+                typer.echo(f"  {question.label} ({question.name}; {default})")
+                if question.help:
+                    typer.echo(f"    {question.help}")
     except AssemblyError as error:
         _assembly_failure(error, False)
 

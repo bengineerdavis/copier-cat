@@ -23,46 +23,6 @@ def json_payload(result) -> dict:
 
 
 @pytest.fixture
-def destination(tmp_path: Path) -> Path:
-    return tmp_path / "example-project"
-
-
-@pytest.fixture
-def python_template(tmp_path: Path) -> Path:
-    return git_template(
-        tmp_path / "python-template",
-        {
-            "copier.yml": (
-                "project_name:\n"
-                "  type: str\n"
-                "  label: Project name\n"
-                "  help: Human-readable project name\n"
-                "  default: Example project\n"
-                "package_name:\n"
-                "  type: str\n"
-                "  label: Python package\n"
-                "  default: example_package\n"
-            ),
-            "{{ _copier_conf.answers_file }}.jinja": (
-                "# Changes here will be overwritten by Copier\n"
-                "{{ _copier_answers|to_nice_yaml }}\n"
-            ),
-            "README.md.jinja": "# {{ project_name }}\n",
-            "pyproject.toml.jinja": (
-                '[project]\nname = "{{ package_name }}"\nversion = "0.1.0"\n'
-                'dependencies = []\n\n[dependency-groups]\ndev = ["pytest>=8"]\n'
-            ),
-            "tests/test_project.py.jinja": (
-                "from pathlib import Path\n\n"
-                "def test_project_readme():\n"
-                "    assert Path('README.md').is_file()\n"
-            ),
-            "src/{{ package_name }}/__init__.py": '"""Example package."""\n',
-        },
-    )
-
-
-@pytest.fixture
 def catalog(tmp_path: Path, python_template: Path) -> Path:
     path = tmp_path / "catalog.yml"
     path.write_text(
@@ -109,7 +69,7 @@ def test_json_preview_is_real_read_only_render_and_native_update(
     assert payload["status"] == "preview"
     assert payload["destination"] == str(destination)
     assert payload["approved_write"] is None
-    assert "native Copier update succeeded" in payload["validation"]
+    assert "native Copier update succeeded: python" in payload["validation"]
     assert "generated project tests passed" in payload["validation"]
     assert not destination.exists()
     assert payload["preview"] is None
@@ -138,6 +98,24 @@ def test_yes_writes_only_displayed_destination_with_native_evidence(
     provenance = yaml.safe_load((destination / ".copier-cat-stack.yml").read_text())
     assert provenance["stack"] == "python"
     assert provenance["templates"][0]["role"] == "base"
+    # Copier updates require a clean Git-tracked project; create that user-side
+    # baseline here rather than making assembly commit to the destination.
+    subprocess.run(["git", "init", "-q", "."], cwd=destination, check=True)
+    subprocess.run(["git", "add", "-A"], cwd=destination, check=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.email=tests@example.com",
+            "-c",
+            "user.name=tests",
+            "commit",
+            "-qm",
+            "assembled project",
+        ],
+        cwd=destination,
+        check=True,
+    )
     update = subprocess.run(
         [
             sys.executable,
@@ -332,7 +310,7 @@ def test_catalog_and_template_errors_are_structured(catalog: Path, destination: 
         ],
     )
     assert multi.exit_code == 2
-    assert "multi-template" in json.loads(multi.output)["error"]
+    assert "unknown template 'agentic'" in json.loads(multi.output)["error"]
 
 
 def test_stack_inspection_uses_template_metadata(catalog: Path):

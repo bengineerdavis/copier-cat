@@ -124,3 +124,45 @@ def project(tmp_path: Path) -> Path:
     (root / "notes.txt").write_text("project note\n")
     (root / "keep.txt").write_text("project only\n")
     return root
+
+
+@pytest.fixture
+def destination(tmp_path: Path) -> Path:
+    return tmp_path / "example-project"
+
+
+@pytest.fixture
+def python_template(tmp_path: Path) -> Path:
+    return git_template(
+        tmp_path / "python-template",
+        {
+            "copier.yml": (
+                "project_name:\n"
+                "  type: str\n"
+                "  label: Project name\n"
+                "  help: Human-readable project name\n"
+                "  default: Example project\n"
+                "package_name:\n"
+                "  type: str\n"
+                "  label: Python package\n"
+                "  default: example_package\n"
+            ),
+            "{{ _copier_conf.answers_file }}.jinja": (
+                "# Changes here will be overwritten by Copier\n"
+                "{{ _copier_answers|to_nice_yaml }}\n"
+            ),
+            "README.md.jinja": "# {{ project_name }}\n",
+            "pyproject.toml.jinja": (
+                '[project]\nname = "{{ package_name }}"\nversion = "0.1.0"\n'
+                'dependencies = []\n\n[dependency-groups]\ndev = ["pytest>=8"]\n'
+            ),
+            "tests/test_project.py.jinja": (
+                "from pathlib import Path\n\n"
+                "def test_project_readme():\n"
+                "    assert Path('README.md').is_file()\n"
+            ),
+            "src/{{ package_name }}/__init__.py": '"""Example package."""\n',
+            "mise.toml.jinja": '[tools]\npython = "3.12"\n',
+            ".gitignore": ".python-version\n.shared-cache/\n",
+        },
+    )

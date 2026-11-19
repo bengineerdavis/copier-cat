@@ -1,8 +1,8 @@
-"""Assemble one independent Copier template from a named local stack.
+"""Assemble independent Copier templates from a named local stack.
 
-Copier owns rendering and native updates. This module owns catalog resolution,
-answer planning, isolated previews, validation, and narrowly scoped writes.
-Multi-template structured composition belongs to CCC-25, not this slice.
+Copier owns rendering and native per-template updates. This module owns catalog
+resolution, answer planning, isolated previews, structured composition,
+validation, and narrowly scoped writes.
 """
 
 from __future__ import annotations
@@ -43,6 +43,7 @@ class Member:
     ref: str | None = None
     answers: dict[str, Any] = field(default_factory=dict)
     trust: bool = False
+    capabilities: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -74,8 +75,9 @@ class AssemblyPlan:
     destination: Path
     preview: Path
     rendered: Rendered
-    answers: dict[str, Any]
+    answers: dict[str, dict[str, Any]]
     update_command: str
+    update_commands: tuple[str, ...]
     checks: tuple[str, ...]
     retained: bool
 
@@ -109,12 +111,8 @@ def load_catalog(path: Path, stack_name: str) -> Stack:
         raise AssemblyError(
             "catalog", f"stack {stack_name!r} must name at least one template"
         )
-    if len(names) != 1:
-        raise AssemblyError(
-            "catalog",
-            "this Python-only slice accepts one template; multi-template composition "
-            "is tracked separately",
-        )
+    if len(set(names)) != len(names):
+        raise AssemblyError("catalog", "a stack cannot repeat a template")
     members: list[Member] = []
     for name in names:
         if name not in templates:
@@ -127,17 +125,80 @@ def load_catalog(path: Path, stack_name: str) -> Stack:
         if ref is not None and not isinstance(ref, str):
             raise AssemblyError("catalog", f"template {name!r} ref must be a string")
         answers = _mapping(data.get("answers", {}), f"template {name!r} answers")
+        capabilities = data.get("capabilities", [])
+        if not isinstance(capabilities, list) or not all(
+            isinstance(capability, str) for capability in capabilities
+        ):
+            raise AssemblyError(
+                "catalog", f"template {name!r} capabilities must be strings"
+            )
+        if role := str(data.get("role", "base")):
+            if role == "base" and any(member.role == "base" for member in members):
+                raise AssemblyError("catalog", "a stack may have only one base")
+        if role == "overlay" and not capabilities:
+            raise AssemblyError(
+                "catalog",
+                f"overlay {name!r} must declare capabilities, not a Python dependency",
+            )
         members.append(
             Member(
                 name=name,
-                role=str(data.get("role", "base")),
+                role=role,
                 source=source,
                 ref=ref,
                 answers=answers,
                 trust=bool(data.get("trust", False)),
+                capabilities=tuple(capabilities),
             )
         )
     return Stack(name=stack_name, members=tuple(members))
+
+
+def resolve_stack_answers(
+    stack: Stack,
+    overrides: dict[str, Any],
+    *,
+    interactive: bool,
+    guided: bool,
+    input_fn: Any,
+) -> dict[str, dict[str, Any]]:
+    """Resolve each template's answers; multi-template overrides are member-scoped."""
+    questions = {member.name: questions_for(member) for member in stack.members}
+    resolved: dict[str, dict[str, Any]] = {}
+    for member in stack.members:
+        member_overrides = dict(overrides)
+        if len(stack.members) > 1:
+            member_overrides = {}
+            for key, value in overrides.items():
+                member_name, separator, question = key.partition(".")
+                if separator and member_name == member.name:
+                    member_overrides[question] = value
+                elif not separator and any(
+                    question.name == key for question in questions[member.name]
+                ):
+                    member_overrides[key] = value
+        resolved[member.name] = resolve_answers(
+            member,
+            member_overrides,
+            interactive=interactive,
+            guided=guided,
+            input_fn=input_fn,
+        )
+    if len(stack.members) > 1:
+        known = {
+            f"{member.name}.{question.name}"
+            for member in stack.members
+            for question in questions[member.name]
+        }
+        known.update(
+            question.name
+            for member_questions in questions.values()
+            for question in member_questions
+        )
+        unknown = sorted(set(overrides) - known)
+        if unknown:
+            raise AssemblyError("answers", f"unknown answer(s): {', '.join(unknown)}")
+    return resolved
 
 
 def questions_for(member: Member) -> tuple[Question, ...]:
@@ -311,8 +372,99 @@ def _validate(
     )
 
 
-def _write_provenance(destination: Path, stack: Stack, answers: dict[str, Any]) -> None:
-    member = stack.members[0]
+def _gitignore_lines(text: str) -> list[str]:
+    """Retain ordered rules and comments; deduplicate only exact lines."""
+    lines = text.splitlines()
+    if text.endswith("\n"):
+        return lines
+    return lines
+
+
+def _compose_members(
+    stack: Stack,
+    renders: list[tuple[Member, Rendered, Path]],
+    destination: Path,
+) -> list[tuple[Member, Rendered, Path]]:
+    """Compose disjoint files and explicit shared structures into one preview."""
+    destination.mkdir()
+    seen: dict[str, Member] = {}
+    answers: dict[str, Path] = {}
+    for member, rendered, source in renders:
+        if rendered.answers_relpath in answers:
+            raise AssemblyError(
+                "composition",
+                f"templates {answers[rendered.answers_relpath].parent.name} and "
+                f"{member.name} share answers file {rendered.answers_relpath}; "
+                "declare a distinct native answers file for each template",
+            )
+        answers[rendered.answers_relpath] = destination / rendered.answers_relpath
+        answers_target = destination / rendered.answers_relpath
+        answers_target.parent.mkdir(parents=True, exist_ok=True)
+        native_answers = source / rendered.answers_relpath
+        if not native_answers.is_file():
+            # Copier does not require a template to stamp its answers file.
+            # Adopt already owns the sanctioned native record format.
+            from .adopt import stamp
+
+            stamp(rendered, source)
+        shutil.copy2(native_answers, answers_target)
+        for path in sorted(source.rglob("*")):
+            if path.is_dir():
+                continue
+            relative = path.relative_to(source).as_posix()
+            if relative == rendered.answers_relpath:
+                continue
+            target = destination / relative
+            if relative not in seen:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(path, target)
+                seen[relative] = member
+                continue
+            first = seen[relative]
+            if relative == ".gitignore":
+                lines = _gitignore_lines(target.read_text(encoding="utf-8"))
+                for line in _gitignore_lines(path.read_text(encoding="utf-8")):
+                    if line not in lines:
+                        lines.append(line)
+                target.write_text("\n".join(lines) + "\n", encoding="utf-8")
+                continue
+            if relative.endswith(".toml"):
+                result = default_registry().merge(
+                    relative,
+                    "",
+                    target.read_text(encoding="utf-8"),
+                    path.read_text(encoding="utf-8"),
+                )
+                if result.merger != "toml":
+                    raise AssemblyError(
+                        "composition",
+                        f"cannot parse shared TOML {relative} from {member.name}",
+                    )
+                target.write_text(result.text, encoding="utf-8")
+                continue
+            raise AssemblyError(
+                "composition",
+                f"unsupported shared file {relative}: {first.name} and "
+                f"{member.name} both contribute it; identical or text/binary "
+                "files are not concatenated or silently selected",
+            )
+    return renders
+
+
+def _native_update_commands(
+    renders: list[tuple[Member, Rendered, Path]],
+) -> tuple[str, ...]:
+    return tuple(
+        f"copier update --defaults -a {rendered.answers_relpath}"
+        for _, rendered, _ in renders
+    )
+
+
+def _write_provenance(
+    destination: Path,
+    stack: Stack,
+    answers: dict[str, dict[str, Any]],
+) -> None:
     record = {
         "stack": stack.name,
         "templates": [
@@ -321,8 +473,10 @@ def _write_provenance(destination: Path, stack: Stack, answers: dict[str, Any]) 
                 "role": member.role,
                 "source": member.source,
                 "ref": member.ref,
-                "answers": answers,
+                "capabilities": list(member.capabilities),
+                "answers": answers[member.name],
             }
+            for member in stack.members
         ],
     }
     (destination / PROVENANCE_FILE).write_text(
@@ -332,10 +486,98 @@ def _write_provenance(destination: Path, stack: Stack, answers: dict[str, Any]) 
     )
 
 
+def _validate_members(
+    destination: Path,
+    renders: list[tuple[Member, Rendered, Path]],
+    run_tests: bool,
+    environment: Path,
+) -> tuple[str, ...]:
+    checks = ("rendered output exists", "disjoint template files composed")
+    for _, rendered, _ in renders:
+        checks += _validate(destination, rendered, False, environment)
+    checks += tuple(
+        f"native answers verified: {rendered.answers_relpath}"
+        for _, rendered, _ in renders
+    )
+    tests_ran = _run_project_tests(destination, environment) if run_tests else False
+    return (
+        *checks,
+        "generated project tests passed"
+        if tests_ran
+        else "no generated test suite declared",
+    )
+
+
+def _check_native_update(
+    member: Member,
+    rendered: Rendered,
+    source: Path,
+    preview: Path,
+) -> None:
+    """Verify one ordinary Copier update without rewriting the composed preview."""
+    update_root = preview / f"update-{member.name}"
+    shutil.copytree(source, update_root)
+    subprocess.run(
+        ["git", "init", "-q", str(update_root.resolve())],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "add", "-A"],
+        cwd=update_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=copier-cat preview",
+            "-c",
+            "user.email=preview@localhost.invalid",
+            "commit",
+            "-qm",
+            f"Initial {member.name} project",
+        ],
+        cwd=update_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    with contextlib.redirect_stdout(os.sys.stderr):
+        update = copier.run_update(
+            update_root,
+            defaults=True,
+            quiet=True,
+            overwrite=True,
+            skip_tasks=True,
+            answers_file=rendered.answers_relpath,
+            vcs_ref=member.ref,
+        )
+    if update.answers_relpath != Path(rendered.answers_relpath):
+        raise AssemblyError(
+            "validation", f"native update used the wrong answers file for {member.name}"
+        )
+    status = subprocess.run(
+        ["git", "status", "--porcelain"],
+        cwd=update_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    if status.stdout:
+        raise AssemblyError(
+            "validation",
+            f"native update left changes for {member.name}: {status.stdout}",
+        )
+
+
 def assemble(
     stack: Stack,
     destination: Path,
-    answers: dict[str, Any],
+    answers: dict[str, dict[str, Any]],
     *,
     write: bool,
     retain_preview: bool,
@@ -343,81 +585,37 @@ def assemble(
 ) -> AssemblyPlan:
     """Render and validate in isolation; copy only after explicit write approval."""
     _assert_new_destination(destination)
-    member = stack.members[0]
     temporary = tempfile.TemporaryDirectory(prefix="copier-cat-assemble-")
     preview = Path(temporary.name).resolve()
     try:
         try:
-            with contextlib.redirect_stdout(os.sys.stderr):
-                rendered = render(
-                    member.source,
-                    preview / "render",
-                    answers,
-                    defaults=True,
-                    trust=member.trust,
-                    vcs_ref=member.ref or "HEAD",
-                )
-            # The selected ref belongs to this recipe, not another project's
-            # answers file. Local templates default to their current HEAD.
-            # Copier's run_copy already wrote the native answers file; do not
-            # re-stamp it with a different format, or native update would
-            # rewrite it and leave the project dirty.
+            renders: list[tuple[Member, Rendered, Path]] = []
+            for member in stack.members:
+                member_preview = preview / f"render-{member.name}"
+                with contextlib.redirect_stdout(os.sys.stderr):
+                    render_source = member.source
+                    source_path = Path(render_source)
+                    if source_path.is_dir():
+                        # Copier resolves short commits only for its recognized
+                        # Git URL path, not its local-directory shortcut.
+                        render_source = f"git+{source_path.resolve()}"
+                    rendered = render(
+                        render_source,
+                        member_preview,
+                        answers[member.name],
+                        defaults=True,
+                        trust=member.trust,
+                        vcs_ref=member.ref or "HEAD",
+                    )
+                renders.append((member, rendered, member_preview))
+            _compose_members(stack, renders, preview / "render")
             _write_provenance(preview / "render", stack, answers)
-            checks = _validate(
-                preview / "render", rendered, run_tests, preview / "test-env"
+            checks = _validate_members(
+                preview / "render", renders, run_tests, preview / "test-env"
             )
-            # Copier's native update contract requires a Git-tracked
-            # subproject. Initialize the generated project in isolation;
-            # no commit or remote operation is performed by cc.
-            subprocess.run(
-                ["git", "init", "-q", str((preview / "render").resolve())],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-            # The validation environment lives outside the generated project,
-            # preserving a clean baseline for independent native Copier updates.
-            subprocess.run(
-                ["git", "add", "-A"],
-                cwd=preview / "render",
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-            subprocess.run(
-                [
-                    "git",
-                    "-c",
-                    "user.name=copier-cat preview",
-                    "-c",
-                    "user.email=preview@localhost.invalid",
-                    "commit",
-                    "-qm",
-                    "Initial generated project",
-                ],
-                cwd=preview / "render",
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-            # Prove the recorded native update path before reporting it.
-            with contextlib.redirect_stdout(os.sys.stderr):
-                update = copier.run_update(
-                    preview / "render",
-                    defaults=True,
-                    quiet=True,
-                    overwrite=True,
-                    skip_tasks=True,
-                    answers_file=rendered.answers_relpath,
-                    # Validate the native update machinery without moving a
-                    # pinned assembly to the template's latest version.
-                    vcs_ref=member.ref,
-                )
-            if update.answers_relpath != Path(rendered.answers_relpath):
-                raise AssemblyError(
-                    "validation", "native update used the wrong answers file"
-                )
-            checks += ("native Copier update succeeded",)
+            for member, rendered, source in renders:
+                _check_native_update(member, rendered, source, preview)
+                checks += (f"native Copier update succeeded: {member.name}",)
         except AssemblyError:
             raise
         except Exception as error:
@@ -434,13 +632,15 @@ def assemble(
             final_preview = retained_path
         if write:
             shutil.copytree(final_preview, destination)
+        commands = _native_update_commands(renders)
         return AssemblyPlan(
             stack=stack,
             destination=destination,
             preview=final_preview,
-            rendered=rendered,
+            rendered=renders[0][1],
             answers=answers,
-            update_command=f"copier update --defaults -a {rendered.answers_relpath}",
+            update_command=commands[0],
+            update_commands=commands,
             checks=checks,
             retained=retain_preview,
         )
