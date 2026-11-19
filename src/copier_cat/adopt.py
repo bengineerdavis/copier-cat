@@ -98,6 +98,7 @@ def render(
     *,
     defaults: bool = False,
     trust: bool = False,
+    vcs_ref: str = "HEAD",
 ) -> Rendered:
     """Render the template at its current version into `dst`.
 
@@ -118,7 +119,7 @@ def render(
         quiet=True,
         unsafe=trust,
         skip_tasks=True,
-        vcs_ref="HEAD",
+        vcs_ref=vcs_ref,
     )
     # The answers filter mirrors copier's worker `_answers_to_remember`:
     # only questions the template actually asks, never injected jinja
