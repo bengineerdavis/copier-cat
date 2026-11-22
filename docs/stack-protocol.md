@@ -23,8 +23,8 @@ semantics. None of them commits, pushes, or opens a pull request.
 | `validate` | Resolved plan, rendered preview | Preview only | None beyond preview creation |
 | `preview` | Same as validate, plus composition | Preview only | Never writes the destination |
 | `apply` | Approved plan | Exactly the approved write scope | Explicit, at the moment of the write |
-| `diff` | Stamp record, current resolved inputs | Nothing | None |
-| `upgrade` | Stamp record, stack definition | One subproject | Explicit, project scope only |
+| `diff` | Stack artifact, current resolved inputs | Nothing | None |
+| `upgrade` | Stack artifact's definition and application sections | One subproject | Explicit, project scope only |
 | `inspect` | Definitions, records, reports | Nothing | None |
 
 `resolve`, `validate`, `preview`, `diff`, and `inspect` are read-only with

@@ -53,7 +53,7 @@ decision-7, whose accepted body is left intact.
    Version changes are stack edits. Predictable version incrementation policy
    is an open question, not settled here.
 5. **The specification is vendor-neutral by construction.** The stack
-   specification defines sources, refs, answers, and stamp records
+   specification defines sources, refs, answers, and application state
    against an abstract runner, confining runner-specific keys to a
    `runner` object. Copier is the only implemented runner; Cookiecutter,
    cruft, and other ecosystems' template libraries are motivations for the

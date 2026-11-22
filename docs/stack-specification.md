@@ -15,7 +15,9 @@ The specification exists so that a stack is an inspectable artifact rather
 than something hidden in a session, an agent prompt, or a tool's memory.
 Two properties matter more than any field:
 
-- A stack definition is **reusable input**, not residue a project must carry.
+- A stack definition is **reusable input**, stored in the subproject's
+  `<stack name>.stack.yml` alongside its own application state. A catalog may
+  additionally hold reusable definitions; no separate stamp file is required.
 - A stamped project remains understandable and updatable **without `ccc`**.
 
 Non-goals for this version: template inheritance, a competing renderer, an
@@ -35,7 +37,7 @@ Three rules keep the seam honest:
    promoted to a top-level field. A stack definition with no Copier-specific
    keys must remain meaningful to a reader who has never used Copier.
 2. The neutral terms are **source**, **ref**, **answers**, and
-   **stamp record**. Copier's `_src_path`, `_commit`, answers file,
+   **application state**. Copier's `_src_path`, `_commit`, answers file,
    and update command are one runner's *projection* of those terms.
 3. A runner may decline an operation it cannot express. Unsupported is a
    reported outcome, never a silent downgrade.
@@ -47,8 +49,16 @@ implementation.
 
 ## Artifacts
 
-Three artifacts, versioned independently, specified together in this one
-document so that an extracted stack specification carries all three with it.
+Two artifacts, versioned independently, specified together in this one
+document so that an extracted stack specification carries both with it:
+
+- **`<stack name>.stack.yml`** — the project-local stack artifact. Its
+  `definition` section says what was requested; its `application` section
+  records what was applied to this subproject. The two sections share a file,
+  not a lifetime or an editing policy.
+- **Resolution report** — review evidence for composition and conflicts.
+  Copier's native per-template answers files remain separate and authoritative
+  for native updates.
 
 ```mermaid
 flowchart LR
@@ -57,7 +67,7 @@ flowchart LR
         T2["Project template<br/>agentic overlay"]
     end
 
-    subgraph defn["Stack definition — in the catalog"]
+    subgraph defn["Reusable definition"]
         D["members, ordered<br/>ref · role · answers"]
     end
 
@@ -67,15 +77,16 @@ flowchart LR
     D -->|"resolve + render + compose"| R["Resolution report<br/>contributions · precedence · conflicts"]
 
     subgraph sub["Subproject A"]
-        S1["Stamp record A<br/>resolved refs · answers · native paths"]
+        S1["python-agentic.stack.yml<br/>definition · application"]
         F1["Rendered files"]
         N1["Answers files, per member"]
     end
 
     subgraph sub2["Subproject B"]
-        S2["Stamp record B"]
+        S2["python-agentic.stack.yml<br/>its own application state"]
     end
 
+    D -->|"stored as the definition section"| S1
     R --> S1
     R --> S2
     S1 --> F1
@@ -84,13 +95,29 @@ flowchart LR
     N1 -->|"copier update -a, no ccc needed"| T1
 ```
 
-One definition, many stamp records. The native answers files — not the stamp
-record — are what keep plain Copier updates working after `ccc` is removed.
+One definition can be applied to many subprojects, each with its own
+application state. Native answers files keep plain Copier updates working
+after `ccc` is removed.
 
-### Stack definition
+### `<stack name>.stack.yml`
 
-The complete, ordered input for applying templates. One template is a valid
-one-member stack and needs no composition-specific configuration.
+One project-local file holds the stack definition and the application state.
+A reusable catalog may also contain definitions, but importing one does not
+create a second application-state file. The per-template answers files remain
+separate because Copier owns their format and native update lifecycle.
+
+For a named stack, the filename is its stable stack name plus `.stack.yml`.
+An anonymous one-template stack uses its member id, so applying template
+`python` writes `python.stack.yml`. Applying several anonymous stacks to one
+subproject must not overwrite an existing stack artifact: the operation stops
+for an explicit stack name. Existing `*.stack.yml` files are never silently
+replaced.
+
+#### Definition section
+
+The `definition` section contains the complete, ordered input for applying
+templates. One template is a valid one-member stack and needs no
+composition-specific configuration.
 
 | Field | Required | Meaning |
 | --- | --- | --- |
@@ -114,23 +141,22 @@ Each member carries:
 A stack definition never contains another project's answers. Fresh
 application does not depend on the state of any previously stamped project.
 
-### Stamp record
+#### Application section
 
-What was actually applied to one subproject. Where the definition is what
-was *asked for*, the stamp record is what *happened*.
+The `application` section records what was actually applied to this
+subproject. Where the definition is what was *asked for*, application state
+is what *happened*.
 
-One definition yields **many** stamp records: several subprojects can share
-a definition and diverge, because each resolved its refs at a different
-time and answered its questions differently. That one-to-many relationship
-is why they are separate artifacts in one document rather than one merged
-artifact. They also have different owners and lifetimes: the definition
-lives in the catalog and is edited as reusable intent, while the stamp
-record lives in the subproject and is never edited in place.
+Several subprojects can share a definition and diverge, because each resolved
+its refs at a different time and answered its questions differently. The
+application state is therefore per-project even though it shares a file with
+the definition. Reusable definition edits are reviewed separately from
+application-state updates. Application state is append-only at the record
+level: a corrected state supersedes its predecessor rather than silently
+rewriting it (principle 7).
 
-This is the artifact that
-makes no-op detection, interrupted-run recovery, and later upgrades
-possible, and it is the record that principle 7 forbids silently rewriting:
-a corrected record supersedes the one it replaces.
+Application state makes no-op detection, interrupted-run recovery, and later
+upgrades possible.
 
 | Field | Meaning |
 | --- | --- |
@@ -147,9 +173,10 @@ a corrected record supersedes the one it replaces.
 records which members were applied so the next run can resume instead of
 re-applying them (principle 6).
 
-The stamp record is disposable. Deleting it must not impair any
-member's native update lifecycle, because `native` points at files the
-runner itself owns.
+The stack artifact is disposable. Deleting it must not impair any member's
+native update lifecycle, because `application.native` points at answers files
+the runner itself owns. Removing it loses orchestration history, not native
+updates.
 
 ### Resolution report
 
@@ -162,8 +189,8 @@ could run without `ccc`. It is not required for plain runner use.
 
 A run is a no-op when the resolved inputs are unchanged. Resolved inputs are
 the tuple of source, resolved ref or content digest, answers, ordering, and
-composition options for every member, compared against the application
-record.
+composition options for every member, compared against the `application`
+section.
 
 Two tiers, cheapest first:
 

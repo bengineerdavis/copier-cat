@@ -24,11 +24,11 @@ a specific command is named.
 | `ccc copy` | **Designed, not built** — replaces `assemble`; refuses existing destinations ([decision-11](backlog/decisions/decision-11%20-%20Copy-names-new-project-creation-assemble-is-retired-as-a-CLI-verb.md), [CCC-37](backlog/tasks/ccc-37%20-%20Migrate-the-CLI-verb-from-assemble-to-copy.md)) |
 | `ccc upgrade` | **Designed, not built** |
 | `ccc stack new`, `ccc stack edit` | **Designed, not built** |
-| Multi-member stack composition | In progress ([CCC-25](backlog/tasks/)) |
+| Multi-member stack composition | In progress ([CCC-25](backlog/tasks/ccc-25%20-%20Compose-the-independent-agentic-overlay.md)) |
 | Stack specification and protocol | Draft, unverified — [specification](docs/stack-specification.md), [protocol](docs/stack-protocol.md) |
-| No-lock-in boundary promises | Requirements under test, not yet demonstrated ([CCC-38](backlog/tasks/ccc-38%20-%20Prove-the-no-lock-in-boundary-on-dummy-projects.md)) |
-| Idempotent re-runs | Principle, not yet enforced by tests ([CCC-35](backlog/tasks/)) |
-| Reset, backup, quarantine, restore | Requirements being specified ([CCC-34](backlog/tasks/)) |
+| No-lock-in boundary promises | Requirements under test ([CCC-38](backlog/tasks/ccc-38%20-%20Prove-the-no-lock-in-boundary-on-dummy-projects.md)) |
+| Idempotent re-runs | Principle, not yet enforced by tests ([CCC-35 on the idempotency branch](https://github.com/bengineerdavis/copier-cat/blob/docs/idempotency-immutability-principle/backlog/tasks/ccc-35%20-%20Test-that-repeated-operations-converge.md)) |
+| Reset, backup, quarantine, restore | Requirements being specified ([CCC-34 on the idempotency branch](https://github.com/bengineerdavis/copier-cat/blob/docs/idempotency-immutability-principle/backlog/tasks/ccc-34%20-%20Specify-reset-with-restorable-backup-and-quarantine.md)) |
 | `ccc contribute` | Designed, not built (Phase 3) |
 
 ## Phase 0 — Ground and design (complete)

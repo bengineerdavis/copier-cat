@@ -95,9 +95,10 @@ An ordered composition of project templates that can produce a subproject.
 Not template inheritance.
 
 **Stack definition**:
-The reusable, ordered input — what was *asked for*. Lives in the catalog, not
-in the subproject.
-→ [definition](docs/stack-specification.md#stack-definition)
+The reusable, ordered input — what was *asked for*. Stored in the `definition`
+section of the subproject's `<stack name>.stack.yml`; a catalog may also hold
+reusable definitions.
+→ [definition](docs/stack-specification.md#stack-namestackyml)
 
 **Member**:
 One entry in a stack: an ordered reference to a project template, with its
@@ -117,12 +118,13 @@ never by itself evidence of incompatibility.
 The foundation; a project shape that may presuppose a foundation; and an
 additive, cross-cutting concern independent of a particular language base.
 
-**Stamp record**:
+**Application state**:
 The per-subproject record of what was *actually applied* — resolved sources,
 refs or content digests, answers, composition rules, and native update paths.
-One definition yields many stamp records. Lives in the subproject at
-`.copier-cat-stack.yml`, disposable without impairing native updates.
-→ [stamp record](docs/stack-specification.md#stamp-record)
+Stored in the `application` section of the same `<stack name>.stack.yml` as
+its definition; not a second stamp file. One definition yields many
+application states. Disposable without impairing native updates.
+→ [application state](docs/stack-specification.md#application-section)
 
 **Composition**:
 Combining identified contributions from independently rendered templates into
@@ -167,7 +169,8 @@ extracted.
 
 **Stamped project**:
 A subproject with a valid answers file and a recorded baseline, so plain
-`copier update` works on it. A stamp record is what makes a project stamped.
+`copier update` works on it. The per-template answers file is the native
+baseline; the stack artifact records stack-level application state.
 _Avoid_: managed project, template-ed project
 
 **Adopt**:
