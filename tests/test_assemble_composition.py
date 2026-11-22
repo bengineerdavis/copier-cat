@@ -26,6 +26,148 @@ def answers_record(name: str) -> tuple[str, str]:
     )
 
 
+def git_commit_all(path: Path, message: str) -> None:
+    subprocess.run(["git", "add", "-A"], cwd=path, check=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.email=tests@example.com",
+            "-c",
+            "user.name=tests",
+            "commit",
+            "-qm",
+            message,
+        ],
+        cwd=path,
+        check=True,
+    )
+
+
+def native_update(
+    project: Path, answers_file: str, *extra: str
+) -> subprocess.CompletedProcess:
+    """Use Copier as the user would after copier-cat is gone."""
+    return subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "copier",
+            "update",
+            "--defaults",
+            "--skip-tasks",
+            "-a",
+            answers_file,
+            *extra,
+        ],
+        cwd=project,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def test_extended_stack_native_updates_survive_stack_artifact_removal(
+    composed_catalog: Path,
+    destination: Path,
+    python_template: Path,
+    agentic_template: Path,
+):
+    """Both members of a stack extension remain updatable without ccc."""
+    first = assemble(composed_catalog, destination, "--yes", "--json", stack="python")
+    assert first.exit_code == 0, first.output + first.stderr
+    subprocess.run(["git", "init", "-q", "."], cwd=destination, check=True)
+    git_commit_all(destination, "python stack")
+
+    # Current assembly only creates new destinations. Extend the project with
+    # the actual single-template adopt command, never a synthetic stack stamp.
+    catalog = yaml.safe_load(composed_catalog.read_text())
+    agentic_source = catalog["templates"]["agentic"]["source"]
+    extended = runner.invoke(
+        app,
+        [
+            "adopt",
+            agentic_source,
+            str(destination),
+            "--defaults",
+            "--accept-all",
+            "--json",
+        ],
+    )
+    assert extended.exit_code == 1, extended.output + extended.stderr
+    payload = json.loads(extended.stdout_bytes)
+    conflict = next(file for file in payload["files"] if file["conflicted"])
+    assert conflict["path"] == ".gitignore"
+    assert "<<<<<<<" in (destination / ".gitignore").read_text()
+    # Adopt's conflict exit is a stop for review, not an unsafe failure.
+    (destination / ".gitignore").write_text(
+        ".python-version\n.shared-cache/\n.agents/\n"
+    )
+    git_commit_all(destination, "extend with agentic overlay; review gitignore")
+    (destination / "project-owned.txt").write_text("keep this local file\n")
+    git_commit_all(destination, "local project work")
+
+    (destination / "python.stack.yml").unlink()
+    git_commit_all(destination, "remove disposable stack artifact")
+    update = native_update(destination, ".agentic-answers.yml")
+    assert update.returncode == 0, update.stdout + update.stderr
+    assert (destination / "AGENTS.md").read_text().startswith("# Example project")
+    assert (destination / "project-owned.txt").read_text() == "keep this local file\n"
+
+    update = native_update(destination, ".copier-answers.yml")
+    assert update.returncode == 0, update.stdout + update.stderr
+    assert (destination / "project-owned.txt").read_text() == "keep this local file\n"
+
+    # Upgrade both source templates after the stack artifact is gone. Plain
+    # Copier must discover and apply both new versions without ccc assistance.
+    (python_template / "README.md.jinja").write_text(
+        "# Example project\nPython template v2\n"
+    )
+    git_commit_all(python_template, "python template v2")
+    subprocess.run(["git", "tag", "v1.1.0"], cwd=python_template, check=True)
+    (agentic_template / "AGENTS.md.jinja").write_text(
+        "# Example project\nUse backlog prefix demo.\nAgentic template v2\n"
+    )
+    git_commit_all(agentic_template, "agentic template v2")
+    subprocess.run(["git", "tag", "v1.1.0"], cwd=agentic_template, check=True)
+    for answers_file in [".agentic-answers.yml", ".copier-answers.yml"]:
+        upgraded = native_update(destination, answers_file)
+        assert upgraded.returncode == 0, upgraded.stdout + upgraded.stderr
+        # A real version change rewrites the native baseline and output. Copier
+        # requires that reviewed work to be committed or stashed before the
+        # next member's update; removing ccc does not remove that Git boundary.
+        git_commit_all(destination, f"native upgrade: {answers_file}")
+    assert (destination / "README.md").read_text() == (
+        "# Example project\nPython template v2\n"
+    )
+    assert (destination / "AGENTS.md").read_text().endswith("Agentic template v2\n")
+    assert (destination / "project-owned.txt").read_text() == "keep this local file\n"
+
+    # Neither template's native update may rewrite its answers file when the
+    # inputs have not changed: Copier refuses subsequent updates on dirty trees.
+    clean = subprocess.run(
+        ["git", "status", "--porcelain"],
+        cwd=destination,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert clean.stdout == ""
+    for answers_file in [".agentic-answers.yml", ".copier-answers.yml"]:
+        repeat = native_update(destination, answers_file)
+        assert repeat.returncode == 0, repeat.stdout + repeat.stderr
+    assert (
+        subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=destination,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+        == ""
+    )
+
+
 @pytest.fixture
 def agentic_template(tmp_path: Path) -> Path:
     return git_template(
@@ -63,6 +205,7 @@ def composed_catalog(
         "    capabilities: [agent-guidance, backlog-workflow]\n"
         f"    source: {agentic_template}\n"
         "stacks:\n"
+        "  python:\n    templates: [python]\n"
         "  agentic-python:\n    templates: [python, agentic]\n"
         "  agentic-alone:\n    templates: [agentic]\n",
         encoding="utf-8",
@@ -144,8 +287,8 @@ def test_agentic_overlay_composes_and_updates_independently(
         f"native Copier update succeeded: {name}" in payload["validation"]
         for name in ["python", "agentic"]
     )
-    provenance = yaml.safe_load((destination / ".copier-cat-stack.yml").read_text())
-    assert provenance["templates"][1]["capabilities"] == [
+    artifact = yaml.safe_load((destination / "agentic-python.stack.yml").read_text())
+    assert artifact["definition"]["members"][1]["capabilities"] == [
         "agent-guidance",
         "backlog-workflow",
     ]

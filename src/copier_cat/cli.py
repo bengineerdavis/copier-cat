@@ -31,7 +31,13 @@ from .adopt import (
     render,
     stamp,
 )
-from .assemble import AssemblyError, load_catalog, questions_for, resolve_stack_answers
+from .assemble import (
+    AssemblyError,
+    load_catalog,
+    questions_for,
+    resolve_stack_answers,
+    stack_artifact_name,
+)
 from .assemble import assemble as assemble_project
 from .merge import MergeToolError, default_registry
 
@@ -440,7 +446,7 @@ Copier equivalent: `copier copy TEMPLATE DESTINATION` renders one
 ordinary template. cc resolves that template from a named local stack,
 previews and validates it in isolation, and writes only after approval.
 Plain `copier update -a ANSWERS_FILE` continues the resulting project;
-the disposable .copier-cat-stack.yml provenance is not required.
+the disposable <stack name>.stack.yml artifact is not required.
 
 Examples:
   copier-cat assemble example-project --stack python --catalog catalog.yml
@@ -484,7 +490,7 @@ def _assembly_payload(plan: Any, *, wrote: bool) -> dict[str, Any]:
         "answers_file": plan.rendered.answers_relpath,
         "native_update": plan.update_command,
         "native_updates": list(plan.update_commands),
-        "provenance": ".copier-cat-stack.yml",
+        "stack_artifact": stack_artifact_name(plan.stack.name),
         "validation": list(plan.checks),
         "preview": str(plan.preview) if plan.retained else None,
         "preview_cleanup": f"rm -rf {plan.preview.parent}"

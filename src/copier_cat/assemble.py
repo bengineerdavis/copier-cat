@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import contextlib
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -22,7 +23,17 @@ import yaml
 from .adopt import Rendered, render
 from .merge import default_registry
 
-PROVENANCE_FILE = ".copier-cat-stack.yml"
+
+def stack_artifact_name(stack_name: str) -> str:
+    """Return one safe project-local artifact name, or reject the stack name."""
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", stack_name) or stack_name in {
+        ".",
+        "..",
+    }:
+        raise AssemblyError(
+            "catalog", f"stack name is not a safe artifact filename: {stack_name!r}"
+        )
+    return f"{stack_name}.stack.yml"
 
 
 class AssemblyError(Exception):
@@ -329,7 +340,11 @@ def _run_project_tests(destination: Path, environment: Path) -> bool:
 
 
 def _validate(
-    destination: Path, rendered: Rendered, run_tests: bool, environment: Path
+    destination: Path,
+    rendered: Rendered,
+    run_tests: bool,
+    environment: Path,
+    stack_artifact: Path | None = None,
 ) -> tuple[str, ...]:
     answers_file = destination / rendered.answers_relpath
     if not answers_file.is_file():
@@ -343,10 +358,9 @@ def _validate(
         raise AssemblyError(
             "validation", "native answers source does not match the catalog"
         )
-    provenance = destination / PROVENANCE_FILE
-    if not provenance.is_file():
+    if stack_artifact is not None and not stack_artifact.is_file():
         raise AssemblyError(
-            "validation", f"missing disposable provenance: {provenance}"
+            "validation", f"missing disposable stack artifact: {stack_artifact}"
         )
     if list(destination.rglob("*.rej")):
         raise AssemblyError("validation", "Copier left rejected update hunks (.rej)")
@@ -363,7 +377,7 @@ def _validate(
     return (
         "rendered output exists",
         "native answers source verified",
-        "disposable provenance present",
+        "disposable stack artifact present",
         "no rejected Copier hunks",
         "TOML parse validation passed",
         "generated project tests passed"
@@ -460,28 +474,57 @@ def _native_update_commands(
     )
 
 
-def _write_provenance(
+def _write_stack_artifact(
     destination: Path,
     stack: Stack,
+    renders: list[tuple[Member, Rendered, Path]],
     answers: dict[str, dict[str, Any]],
+    *,
+    status: str,
 ) -> None:
+    """Write the definition and this application's state in one stack file.
+
+    The application members point at native Copier answers files, not a second
+    stamp record. The preview file becomes the approved project's artifact only
+    after the already-authorized destination write.
+    """
     record = {
-        "stack": stack.name,
-        "templates": [
-            {
-                "name": member.name,
-                "role": member.role,
-                "source": member.source,
-                "ref": member.ref,
-                "capabilities": list(member.capabilities),
-                "answers": answers[member.name],
-            }
-            for member in stack.members
-        ],
+        "schema_version": 1,
+        "definition": {
+            "name": stack.name,
+            "members": [
+                {
+                    "id": member.name,
+                    "role": member.role,
+                    "source": member.source,
+                    "ref": member.ref,
+                    "capabilities": list(member.capabilities),
+                }
+                for member in stack.members
+            ],
+        },
+        "application": {
+            "status": status,
+            "members": [
+                {
+                    "id": member.name,
+                    "source": rendered.src,
+                    "ref": rendered.commit,
+                    "answers": answers[member.name],
+                    "native": {
+                        "answers_file": rendered.answers_relpath,
+                        "update_command": (
+                            f"copier update --defaults -a {rendered.answers_relpath}"
+                        ),
+                    },
+                }
+                for member, rendered, _ in renders
+            ],
+        },
     }
-    (destination / PROVENANCE_FILE).write_text(
-        "# Disposable assembly evidence; native Copier updates do not depend on "
-        "this file.\n" + yaml.safe_dump(record, sort_keys=False),
+    (destination / stack_artifact_name(stack.name)).write_text(
+        "# Stack definition and application state. Native Copier updates do not "
+        "depend on this file.\n" + yaml.safe_dump(record, sort_keys=False),
         encoding="utf-8",
     )
 
@@ -491,10 +534,11 @@ def _validate_members(
     renders: list[tuple[Member, Rendered, Path]],
     run_tests: bool,
     environment: Path,
+    stack_artifact: Path,
 ) -> tuple[str, ...]:
     checks = ("rendered output exists", "disjoint template files composed")
     for _, rendered, _ in renders:
-        checks += _validate(destination, rendered, False, environment)
+        checks += _validate(destination, rendered, False, environment, stack_artifact)
     checks += tuple(
         f"native answers verified: {rendered.answers_relpath}"
         for _, rendered, _ in renders
@@ -609,9 +653,15 @@ def assemble(
                     )
                 renders.append((member, rendered, member_preview))
             _compose_members(stack, renders, preview / "render")
-            _write_provenance(preview / "render", stack, answers)
+            _write_stack_artifact(
+                preview / "render", stack, renders, answers, status="preview"
+            )
             checks = _validate_members(
-                preview / "render", renders, run_tests, preview / "test-env"
+                preview / "render",
+                renders,
+                run_tests,
+                preview / "test-env",
+                preview / "render" / stack_artifact_name(stack.name),
             )
             for member, rendered, source in renders:
                 _check_native_update(member, rendered, source, preview)
@@ -631,6 +681,9 @@ def assemble(
             shutil.copytree(final_preview, retained_path)
             final_preview = retained_path
         if write:
+            _write_stack_artifact(
+                final_preview, stack, renders, answers, status="applied"
+            )
             shutil.copytree(final_preview, destination)
         commands = _native_update_commands(renders)
         return AssemblyPlan(

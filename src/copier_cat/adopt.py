@@ -37,6 +37,7 @@ goes through the registry — adopt carries no merge logic of its own
 
 from __future__ import annotations
 
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -288,19 +289,26 @@ def apply(
 
 
 def stamp(rendered: Rendered, project: Path) -> Path:
-    """Write the answers file: the recorded baseline for future updates.
+    """Preserve the answers file Copier rendered as the update baseline.
 
-    `_commit` first (when the template has one), `_src_path` second, the
-    adopted answers after — copier's own answers-file order, so plain
-    `copier update` finds the baseline it expects.
+    A template may customize its answers-file Jinja, including its comments,
+    indentation, and whitespace. Reserializing the answers with our own YAML
+    settings can make an otherwise unchanged native update leave a dirty file;
+    Copier then refuses the next update. The native render is authoritative.
+    Templates that do not render an answers file get the conventional fallback.
     """
+    target = project / rendered.answers_relpath
+    target.parent.mkdir(parents=True, exist_ok=True)
+    native = rendered.root / rendered.answers_relpath
+    if native.is_file():
+        shutil.copyfile(native, target)
+        return target
+
     record: dict[str, Any] = {}
     if rendered.commit is not None:
         record["_commit"] = rendered.commit
     record["_src_path"] = rendered.src
     record.update(rendered.answers)
-    target = project / rendered.answers_relpath
-    target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(
         ANSWERS_HEADER
         + yaml.safe_dump(record, sort_keys=False, default_flow_style=False),

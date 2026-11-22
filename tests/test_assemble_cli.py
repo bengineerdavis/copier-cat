@@ -95,9 +95,10 @@ def test_yes_writes_only_displayed_destination_with_native_evidence(
     assert record["_src_path"]
     assert record["_commit"]
     assert record["package_name"] == "example_package"
-    provenance = yaml.safe_load((destination / ".copier-cat-stack.yml").read_text())
-    assert provenance["stack"] == "python"
-    assert provenance["templates"][0]["role"] == "base"
+    artifact = yaml.safe_load((destination / "python.stack.yml").read_text())
+    assert artifact["definition"]["name"] == "python"
+    assert artifact["definition"]["members"][0]["role"] == "base"
+    assert artifact["application"]["status"] == "applied"
     # Copier updates require a clean Git-tracked project; create that user-side
     # baseline here rather than making assembly commit to the destination.
     subprocess.run(["git", "init", "-q", "."], cwd=destination, check=True)
@@ -311,6 +312,28 @@ def test_catalog_and_template_errors_are_structured(catalog: Path, destination: 
     )
     assert multi.exit_code == 2
     assert "unknown template 'agentic'" in json.loads(multi.output)["error"]
+
+
+def test_stack_artifact_name_cannot_escape_the_destination(catalog: Path):
+    catalog.write_text(
+        catalog.read_text().replace("stacks:\n  python:\n", "stacks:\n  ../outside:\n")
+    )
+    result = runner.invoke(
+        app,
+        [
+            "assemble",
+            "example-project",
+            "--stack",
+            "../outside",
+            "--catalog",
+            str(catalog),
+            "--yes",
+            "--json",
+        ],
+    )
+    assert result.exit_code == 2
+    assert json_payload(result)["stage"] == "catalog"
+    assert not Path("../outside.stack.yml").exists()
 
 
 def test_stack_inspection_uses_template_metadata(catalog: Path):
