@@ -9,6 +9,19 @@ right and this file is stale.
 `copier-cat` is the package and full executable name. `ccc` is its built-in
 alias. `cc` is never used — that is the system C compiler.
 
+> **Read this first: what exists today.** This document describes the target
+> design, and some commands below are **not built yet**. Shipped today:
+> `adopt`, `assemble`, `merge`, `mergers`, `stack list`, `stack show`.
+> **Designed, not built:** `copy`, `upgrade`, `stack new`, `stack edit`.
+> The shipped new-project command is still `ccc assemble`; `copy` is its
+> planned replacement ([decision-11](../backlog/decisions/decision-11%20-%20Copy-names-new-project-creation-assemble-is-retired-as-a-CLI-verb.md)).
+> [ROADMAP.md](../ROADMAP.md) is the authoritative shipped-versus-planned
+> surface, and the migration is tracked in
+> [Migrate the CLI verb from assemble to copy](../backlog/tasks/ccc-37%20-%20Migrate-the-CLI-verb-from-assemble-to-copy.md).
+> The promises in "What still works if you stop using `ccc`" are requirements
+> under test, not yet demonstrated — that evidence is
+> [Prove the no-lock-in boundary on dummy projects](../backlog/tasks/ccc-38%20-%20Prove-the-no-lock-in-boundary-on-dummy-projects.md).
+
 ## The one-paragraph version
 
 Copier renders a project from one template and updates it afterwards.

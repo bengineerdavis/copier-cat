@@ -9,6 +9,28 @@
 > open-source license immediately is a separate roadmap decision, not a
 > commitment made by the current licensing choice.
 
+## What is shipped today
+
+The authoritative shipped-versus-planned surface. Documentation links here
+rather than inventing its own status claims; inline status belongs only where
+a specific command is named.
+
+| Command or capability | Status |
+| --- | --- |
+| `ccc merge`, `ccc mergers` | Shipped |
+| `ccc adopt` | Shipped (single template) |
+| `ccc assemble` | Shipped (single-member named stacks) |
+| `ccc stack list`, `ccc stack show` | Shipped |
+| `ccc copy` | **Designed, not built** — replaces `assemble`; refuses existing destinations ([decision-11](backlog/decisions/decision-11%20-%20Copy-names-new-project-creation-assemble-is-retired-as-a-CLI-verb.md), [CCC-37](backlog/tasks/ccc-37%20-%20Migrate-the-CLI-verb-from-assemble-to-copy.md)) |
+| `ccc upgrade` | **Designed, not built** |
+| `ccc stack new`, `ccc stack edit` | **Designed, not built** |
+| Multi-member stack composition | In progress ([CCC-25](backlog/tasks/)) |
+| Stack specification and protocol | Draft, unverified — [specification](docs/stack-specification.md), [protocol](docs/stack-protocol.md) |
+| No-lock-in boundary promises | Requirements under test, not yet demonstrated ([CCC-38](backlog/tasks/ccc-38%20-%20Prove-the-no-lock-in-boundary-on-dummy-projects.md)) |
+| Idempotent re-runs | Principle, not yet enforced by tests ([CCC-35](backlog/tasks/)) |
+| Reset, backup, quarantine, restore | Requirements being specified ([CCC-34](backlog/tasks/)) |
+| `ccc contribute` | Designed, not built (Phase 3) |
+
 ## Phase 0 — Ground and design (complete)
 
 - Read and digest copier#2486, #955, #2005, #1738, and the closed PR #2487.
@@ -55,7 +77,8 @@
 ## Phase 2 — assemble and converse (C8, C5, C6)
 
 - Settle the smallest stack-definition schema, local catalog, and CLI grammar.
-  Use `stack` for reusable configuration and `assemble` for project creation.
+  Use `stack` for reusable configuration and `copy` for project creation
+  (decision-11, 2026-11-22: `assemble` is retired as the CLI verb).
 - Deterministically assemble Python alone and Python plus the language-independent
   agentic overlay: isolated Copier renders, structured TOML and gitignore
   composition, disposable provenance, native answers files, and fast validation.

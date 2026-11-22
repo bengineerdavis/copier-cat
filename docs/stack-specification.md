@@ -35,7 +35,7 @@ Three rules keep the seam honest:
    promoted to a top-level field. A stack definition with no Copier-specific
    keys must remain meaningful to a reader who has never used Copier.
 2. The neutral terms are **source**, **ref**, **answers**, and
-   **application record**. Copier's `_src_path`, `_commit`, answers file,
+   **stamp record**. Copier's `_src_path`, `_commit`, answers file,
    and update command are one runner's *projection* of those terms.
 3. A runner may decline an operation it cannot express. Unsupported is a
    reported outcome, never a silent downgrade.
@@ -47,7 +47,45 @@ implementation.
 
 ## Artifacts
 
-Three artifacts, versioned independently.
+Three artifacts, versioned independently, specified together in this one
+document so that an extracted stack specification carries all three with it.
+
+```mermaid
+flowchart LR
+    subgraph sources["Reusable sources"]
+        T1["Project template<br/>python"]
+        T2["Project template<br/>agentic overlay"]
+    end
+
+    subgraph defn["Stack definition — in the catalog"]
+        D["members, ordered<br/>ref · role · answers"]
+    end
+
+    T1 --> D
+    T2 --> D
+
+    D -->|"resolve + render + compose"| R["Resolution report<br/>contributions · precedence · conflicts"]
+
+    subgraph sub["Subproject A"]
+        S1["Stamp record A<br/>resolved refs · answers · native paths"]
+        F1["Rendered files"]
+        N1["Answers files, per member"]
+    end
+
+    subgraph sub2["Subproject B"]
+        S2["Stamp record B"]
+    end
+
+    R --> S1
+    R --> S2
+    S1 --> F1
+    S1 --> N1
+
+    N1 -->|"copier update -a, no ccc needed"| T1
+```
+
+One definition, many stamp records. The native answers files — not the stamp
+record — are what keep plain Copier updates working after `ccc` is removed.
 
 ### Stack definition
 
@@ -57,7 +95,7 @@ one-member stack and needs no composition-specific configuration.
 | Field | Required | Meaning |
 | --- | --- | --- |
 | `schema_version` | yes | Integer. Consumers must reject a major version they do not understand. |
-| `name` | for a named stack | Stable identifier within a catalog. An ephemeral stack omits it. |
+| `name` | for a named stack | Stable identifier within a catalog. An anonymous stack omits it. |
 | `members` | yes | Ordered, non-empty list of member objects. |
 | `composition` | no | Declared precedence rules and format adapters. Absence means review on collision. |
 | `requirements` | no | Explicit constraints a consumer must validate, such as at least one base. |
@@ -76,9 +114,20 @@ Each member carries:
 A stack definition never contains another project's answers. Fresh
 application does not depend on the state of any previously stamped project.
 
-### Application record
+### Stamp record
 
-What was actually applied to one child project. This is the artifact that
+What was actually applied to one subproject. Where the definition is what
+was *asked for*, the stamp record is what *happened*.
+
+One definition yields **many** stamp records: several subprojects can share
+a definition and diverge, because each resolved its refs at a different
+time and answered its questions differently. That one-to-many relationship
+is why they are separate artifacts in one document rather than one merged
+artifact. They also have different owners and lifetimes: the definition
+lives in the catalog and is edited as reusable intent, while the stamp
+record lives in the subproject and is never edited in place.
+
+This is the artifact that
 makes no-op detection, interrupted-run recovery, and later upgrades
 possible, and it is the record that principle 7 forbids silently rewriting:
 a corrected record supersedes the one it replaces.
@@ -86,7 +135,7 @@ a corrected record supersedes the one it replaces.
 | Field | Meaning |
 | --- | --- |
 | `schema_version` | Record format version. |
-| `project` | Identity and root of the child project. |
+| `project` | Identity and root of the subproject. |
 | `stack` | The stack `name` if named, plus the digest of the definition used. |
 | `members` | Per member: `id`, resolved `source`, resolved `ref` or content digest, resolved answers, and the runner's native stamp locator. |
 | `composition` | The composition rules and adapter versions actually used. |
@@ -98,7 +147,7 @@ a corrected record supersedes the one it replaces.
 records which members were applied so the next run can resume instead of
 re-applying them (principle 6).
 
-The application record is disposable. Deleting it must not impair any
+The stamp record is disposable. Deleting it must not impair any
 member's native update lifecycle, because `native` points at files the
 runner itself owns.
 

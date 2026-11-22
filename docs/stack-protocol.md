@@ -23,8 +23,8 @@ semantics. None of them commits, pushes, or opens a pull request.
 | `validate` | Resolved plan, rendered preview | Preview only | None beyond preview creation |
 | `preview` | Same as validate, plus composition | Preview only | Never writes the destination |
 | `apply` | Approved plan | Exactly the approved write scope | Explicit, at the moment of the write |
-| `diff` | Application record, current resolved inputs | Nothing | None |
-| `upgrade` | Application record, stack definition | One child project | Explicit, project scope only |
+| `diff` | Stamp record, current resolved inputs | Nothing | None |
+| `upgrade` | Stamp record, stack definition | One subproject | Explicit, project scope only |
 | `inspect` | Definitions, records, reports | Nothing | None |
 
 `resolve`, `validate`, `preview`, `diff`, and `inspect` are read-only with
@@ -41,7 +41,7 @@ local alias. `cc` is never used — it is the system C compiler.
 | --- | --- | --- | --- |
 | `ccc copy DESTINATION (--template SOURCE \| --stack STACK)` | A **new** project | `copier copy` | Designed |
 | `ccc adopt [PROJECT] (--template SOURCE \| --stack STACK)` | Existing project, first stamp | copier#2486 (does not exist upstream) | `adopt` shipped; `--stack` designed |
-| `ccc upgrade [PROJECT] [--stack STACK]` | One already-stamped child project | `copier update -a ANSWERS_FILE` | Designed |
+| `ccc upgrade [PROJECT] [--stack STACK]` | One already-stamped subproject | `copier update -a ANSWERS_FILE` | Designed |
 | `ccc stack new/edit/show/list` | Reusable definitions and catalog | None; Copier has no stack concept | `show`/`list` shipped |
 
 Three verbs, three different acts, and the native equivalents are the
@@ -72,7 +72,7 @@ one repository may hold several independently stamped projects, and an
 ordinary repository may hold none. Ambiguous discovery is an error, never a
 guess and never an implicit batch.
 
-One child project per invocation. Batch upgrades, if added later, orchestrate
+One subproject per invocation. Batch upgrades, if added later, orchestrate
 that primitive with separate previews, approvals, backups, and failure
 reports — they do not widen a single command's consent scope.
 
