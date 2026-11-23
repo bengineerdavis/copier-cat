@@ -122,18 +122,10 @@ def base_paths_with_id(root: Path, base: str, identifier: str) -> set[str]:
     return result
 
 
-def related_refs(
-    root: Path, left: str, right: str, identifier: str, old: str, new: str
-) -> bool:
-    """Whether a record moved between two related refs.
-
-    True when the refs share a merge base whose tree carries the
-    audited ID at exactly one of the two paths — the record existed at
-    the old path before the fork and the new path appeared after it.
-    Shared ancestry alone is not enough: independently added same-title
-    records on sibling branches also share a base, and a base path
-    carrying a different ID is not this record's history.
-    """
+def merge_base_of(root: Path | None, left: str, right: str) -> str | None:
+    """The merge base commit of two refs, if any."""
+    if root is None:
+        return None
 
     def rev(branch: str) -> str:
         return "HEAD" if branch == "working-tree" else branch
@@ -146,8 +138,25 @@ def related_refs(
         check=False,
     )
     if result.returncode != 0 or not result.stdout.strip():
+        return None
+    return result.stdout.strip()
+
+
+def related_refs(
+    root: Path, left: str, right: str, identifier: str, old: str, new: str
+) -> bool:
+    """Whether a record moved between two related refs.
+
+    True when the refs share a merge base whose tree carries the
+    audited ID at exactly one of the two paths — the record existed at
+    the old path before the fork and the new path appeared after it.
+    Shared ancestry alone is not enough: independently added same-title
+    records on sibling branches also share a base, and a base path
+    carrying a different ID is not this record's history.
+    """
+    base = merge_base_of(root, left, right)
+    if base is None:
         return False
-    base = result.stdout.strip()
     with_id = base_paths_with_id(root, base, identifier)
     return (old in with_id) != (new in with_id)
 
@@ -217,15 +226,27 @@ def collisions(
                     ):
                         nodes[find((branch, right))] = find((branch, left))
         if len(branches) > 1:
-            # Each old path may be consumed by at most one rename claim.
-            # Two branches renaming the same base path to DIFFERENT
-            # destinations is a divergence (git reports rename/rename
-            # conflict), not one lineage — record the first claim and
-            # refuse the second.
-            claimed_source: dict[str, tuple[str, str]] = {}
+            # Collect rename claims first, then resolve: a claim records
+            # (source path, destination path, source branch, dest branch).
+            # Two claims on one source diverge unless one continues the
+            # other as a chain — the later claim's source equals the
+            # earlier claim's destination AND its branch descends from
+            # the earlier claim's branch. Iterating first and resolving
+            # after avoids mid-loop poisoning between pair directions.
+            claims: dict[tuple[str, str], tuple[str, str, str, str]] = {}
+            checked_out = current_branch(root) if root is not None else None
             for branch_a, paths_a in branches.items():
                 for branch_b in branches:
                     if branch_a == branch_b:
+                        continue
+                    # The working-tree node is the checked-out branch's
+                    # current state; pairing it with that same branch
+                    # would duplicate one real branch's view. Against any
+                    # OTHER ref it carries real information (uncommitted
+                    # renames), so it participates there.
+                    if branch_a == "working-tree" and branch_b == checked_out:
+                        continue
+                    if branch_b == "working-tree" and branch_a == checked_out:
                         continue
                     only_a = [p for p in paths_a if p not in branches[branch_b]]
                     only_b = [p for p in branches[branch_b] if p not in paths_a]
@@ -239,18 +260,77 @@ def collisions(
                     titles_b = {title_on_branch[(branch_b, p)] for p in only_b}
                     if not (titles_a and titles_a == titles_b and None not in titles_a):
                         continue
-                    prior = claimed_source.get(only_a[0])
-                    claim = (branch_a, only_b[0])
-                    reverse = claimed_source.get(only_b[0])
-                    reverse_claim = (branch_b, only_a[0])
-                    if (prior is not None and prior != claim) or (
-                        reverse is not None and reverse != reverse_claim
-                    ):
-                        continue  # divergent rename: leave both works apart
-                    claimed_source[only_a[0]] = claim
-                    claimed_source[only_b[0]] = reverse_claim
-                    for path in only_b:
-                        nodes[find((branch_b, path))] = find((branch_a, only_a[0]))
+                    pair_key = (min(branch_a, branch_b), max(branch_a, branch_b))
+                    if pair_key in claims:
+                        continue  # same rename seen from the other side
+                    # Canonical orientation: the pair's merge base
+                    # carries the SOURCE path; the destination appeared
+                    # after the fork.
+                    assert root is not None
+                    base = merge_base_of(root, branch_a, branch_b)
+                    with_id = (
+                        base_paths_with_id(root, base, identifier)
+                        if base is not None
+                        else set()
+                    )
+                    if only_b[0] in with_id:
+                        claims[pair_key] = (
+                            only_b[0],
+                            only_a[0],
+                            branch_b,
+                            branch_a,
+                        )
+                    else:
+                        claims[pair_key] = (only_a[0], only_b[0], branch_a, branch_b)
+            accepted: list[tuple[str, str, str, str]] = []
+            # Staged renames are a git-provided fact — union them first.
+            if root is not None:
+                staged = subprocess.run(
+                    ["git", "diff", "--cached", "--name-status", "-M"],
+                    cwd=root,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                if staged.returncode == 0:
+                    for line in staged.stdout.splitlines():
+                        parts = line.split("\t")
+                        if len(parts) == 3 and parts[0].startswith("R"):
+                            old, new = parts[1], parts[2]
+                            if old in titles_by_path or new in titles_by_path:
+                                staged_union: tuple[str, str] | None = None
+                                for branch in branches:
+                                    if new in branches[branch]:
+                                        staged_union = (branch, new)
+                                src_node: tuple[str, str] | None = None
+                                for branch in branches:
+                                    if old in branches[branch]:
+                                        src_node = (branch, old)
+                                if staged_union and src_node:
+                                    nodes[find(staged_union)] = find(src_node)
+            for pair_key in sorted(claims):
+                source, dest, src_branch, dest_branch = claims[pair_key]
+                conflict = False
+                for other in accepted:
+                    o_src, o_dest, _o_src_branch, _o_dest_branch = other
+                    shares_path = bool({o_src, o_dest} & {source, dest})
+                    same_pair = {o_src, o_dest} == {source, dest}
+                    if shares_path and not same_pair:
+                        # Claims compete for one path. They compose into a
+                        # chain when the earlier claim's destination is
+                        # this claim's source (one→two then two→three)
+                        # or vice versa — the record moved along its own
+                        # lineage. Competing for the SAME source with
+                        # different destinations is divergence.
+                        composes = o_dest == source or o_src == dest
+                        if not composes:
+                            conflict = True
+                            break
+                if conflict:
+                    continue
+                accepted.append((source, dest, src_branch, dest_branch))
+            for source, dest, src_branch, dest_branch in accepted:
+                nodes[find((dest_branch, dest))] = find((src_branch, source))
         # A work is a set of paths; project branch-scoped components down
         # to their path sets, then compare. A path counts as belonging to
         # a work only through the refs that were merged above — a path

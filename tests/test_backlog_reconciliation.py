@@ -737,6 +737,70 @@ def test_audit_detects_titleless_id_reuse_on_another_branch(
     assert result.returncode == 1, result.stdout + result.stderr
 
 
+def test_audit_allows_sequential_renames_along_one_lineage(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Same title")
+    commit("first")
+    git("checkout", "-qb", "b1")
+    git("mv", "backlog/decisions/one.md", "backlog/decisions/two.md")
+    commit("renamed one to two")
+    git("checkout", "-qb", "b2")
+    git("mv", "backlog/decisions/two.md", "backlog/decisions/three.md")
+    commit("renamed two to three")
+    git("checkout", "-q", "main")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_audit_allows_a_staged_second_rename_in_a_chain(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Same title")
+    commit("first")
+    git("checkout", "-qb", "b1")
+    git("mv", "backlog/decisions/one.md", "backlog/decisions/two.md")
+    commit("renamed one to two")
+    # Second rename staged but uncommitted — the lint-time state.
+    git("mv", "backlog/decisions/two.md", "backlog/decisions/three.md")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 def test_current_checkout_has_unique_backlog_ids() -> None:
     result = run_audit(ROOT)
     assert result.returncode == 0, result.stdout + result.stderr
