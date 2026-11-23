@@ -320,18 +320,81 @@ def collisions(
                 source, dest, src_branch, dest_branch = claims[pair_key]
                 conflict = False
                 for other in accepted:
-                    o_src, o_dest, _o_src_branch, _o_dest_branch = other
+                    o_src, o_dest, _o_src_branch, o_dest_branch = other
                     shares_path = bool({o_src, o_dest} & {source, dest})
                     same_pair = {o_src, o_dest} == {source, dest}
                     if shares_path and not same_pair:
                         # Claims compete for one path. They compose into a
                         # chain when the earlier claim's destination is
-                        # this claim's source (one→two then two→three)
-                        # or vice versa — the record moved along its own
-                        # lineage. Competing for the SAME source with
-                        # different destinations is divergence.
+                        # this claim's source AND this claim's branch
+                        # descends from the earlier claim's destination
+                        # branch — the record moved along one lineage.
+                        # Otherwise the histories are independent and
+                        # git will report a rename/rename conflict.
                         composes = o_dest == source or o_src == dest
                         if not composes:
+                            conflict = True
+                            break
+                        if root is None:
+                            conflict = True
+                            break
+                        # The two claims must sit on ONE lineage: either
+                        # claim's branches may descend from the other's
+                        # (a chain read forward or backward through the
+                        # sorted pair order). The working-tree pseudo-ref
+                        # resolves to the checked-out branch.
+                        later_nodes = {src_branch, dest_branch}
+                        earlier_nodes = {
+                            _o_src_branch,
+                            o_dest_branch,
+                        }
+
+                        def real(b: str) -> str:
+                            if b != "working-tree" or root is None:
+                                return b
+                            return current_branch(root) or b
+
+                        related = False
+                        for ln in later_nodes:
+                            for en in earlier_nodes:
+                                a, b = real(ln), real(en)
+                                if a == b:
+                                    related = True
+                                else:
+                                    ok1 = (
+                                        subprocess.run(
+                                            [
+                                                "git",
+                                                "merge-base",
+                                                "--is-ancestor",
+                                                a,
+                                                b,
+                                            ],
+                                            cwd=root,
+                                            capture_output=True,
+                                            check=False,
+                                        ).returncode
+                                        == 0
+                                    )
+                                    ok2 = (
+                                        subprocess.run(
+                                            [
+                                                "git",
+                                                "merge-base",
+                                                "--is-ancestor",
+                                                b,
+                                                a,
+                                            ],
+                                            cwd=root,
+                                            capture_output=True,
+                                            check=False,
+                                        ).returncode
+                                        == 0
+                                    )
+                                    related = related or ok1 or ok2
+                            if related:
+                                break
+                        if not related:
                             conflict = True
                             break
                 if conflict:
