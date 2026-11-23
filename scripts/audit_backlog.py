@@ -193,11 +193,11 @@ def git_records(root: Path) -> list[dict[str, Any]]:
 
 
 def _has_head(root: Path) -> bool:
-    """True only when HEAD genuinely does not exist yet.
+    """Whether HEAD resolves to a commit.
 
-    ``rev-parse --verify --quiet`` exits 1 for an unborn HEAD and
-    prints nothing; any other failure (bad GIT_DIR, corrupt refs) is a
-    real git error and must not masquerade as a commitless checkout.
+    False only for a genuinely unborn HEAD; any other rev-parse
+    failure raises instead of masquerading as unborn (bad GIT_DIR,
+    corrupt refs are real git errors).
     """
     result = subprocess.run(
         ["git", "rev-parse", "--verify", "--quiet", "HEAD"],
@@ -474,6 +474,19 @@ def main() -> int:
         working = working_tree_commit(root)
         if working is None:
             raise AuditError("working-state commit could not be built")
+        # A parentless working commit shares no history with any ref, so
+        # an unchanged working copy would false-collide with its own
+        # committed record. When the working tree is byte-identical to
+        # a committed ref's tree, that ref IS the working state — use
+        # it instead of an unrelated commit.
+        working_tree = run_git_checked(root, "rev-parse", f"{working}^{{tree}}").strip()
+        for item in committed:
+            ref_tree = run_git_checked(
+                root, "rev-parse", f"{item['branch']}^{{tree}}"
+            ).strip()
+            if ref_tree == working_tree:
+                working = item["branch"]
+                break
         # The working state participates as its own ref (the throwaway commit)
         # for records the checked-out branch does not already carry — new or
         # edited-but-uncommitted records join; unchanged ones are already

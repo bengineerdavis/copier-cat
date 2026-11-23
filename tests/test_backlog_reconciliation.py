@@ -1151,16 +1151,21 @@ def test_audit_detects_collisions_with_an_unborn_head_and_refs_present(
         )
 
     git("init", "-q", "-b", "main")
-    # Commits live on refs; HEAD stays on the unborn main.
+    # Commits live on refs; HEAD stays on the unborn main. The committed
+    # refs are clean — the ONLY collision is the uncommitted record,
+    # so this fixture discriminates the working-state audit itself.
     git("checkout", "-qb", "left")
     write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "First meaning")
     commit("first meaning")
     git("checkout", "-qb", "right")
-    write_record(tmp_path, "backlog/decisions/two.md", "decision-10", "Second meaning")
-    commit("second meaning")
-    # Point HEAD at the unborn main: refs keep their commits, and every
-    # file on disk becomes working-tree state the audit must still see.
+    write_record(tmp_path, "backlog/tasks/marker.md", "CCC-98", "Marker")
+    commit("marker")
+    # Point HEAD at the unborn main: every file on disk becomes
+    # working-tree state, including the colliding uncommitted record.
     git("symbolic-ref", "HEAD", "refs/heads/main")
+    write_record(
+        tmp_path, "backlog/decisions/two.md", "decision-10", "Uncommitted meaning"
+    )
     head_state = subprocess.run(
         ["git", "rev-parse", "--verify", "--quiet", "HEAD"],
         cwd=tmp_path,
@@ -1172,7 +1177,10 @@ def test_audit_detects_collisions_with_an_unborn_head_and_refs_present(
     result = run_audit(tmp_path, "--refs")
     assert result.returncode == 1, result.stdout + result.stderr
     payload = json.loads(result.stdout)
-    assert any(c["id"] == "decision-10" for c in payload["collisions"]), payload
+    assert {
+        "id": "decision-10",
+        "titles": ["First meaning", "Uncommitted meaning"],
+    } in (payload["collisions"]), payload
 
 
 def test_audit_fails_closed_on_unclosed_frontmatter(
@@ -1206,6 +1214,43 @@ def test_audit_fails_closed_on_unclosed_frontmatter(
     result = run_audit(tmp_path, "--refs")
     assert result.returncode == 2, result.stdout + result.stderr
     assert "unclosed frontmatter" in result.stderr
+
+
+def test_audit_allows_an_unchanged_working_copy_with_an_unborn_head(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    git("checkout", "-qb", "left")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Original")
+    commit("first")
+    # HEAD goes unborn while the index keeps left's exact tree: the
+    # working copy is the SAME record, not a second meaning.
+    git("symbolic-ref", "HEAD", "refs/heads/main")
+    head_state = subprocess.run(
+        ["git", "rev-parse", "--verify", "--quiet", "HEAD"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+    )
+    assert head_state.returncode == 1, head_state.stderr
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_current_checkout_has_unique_backlog_ids() -> None:
