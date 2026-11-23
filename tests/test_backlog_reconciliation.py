@@ -544,7 +544,26 @@ def test_audit_allows_an_uncommitted_rename(
     assert result.returncode == 0, result.stdout + result.stderr
 
 
-def test_audit_detects_a_rename_claim_when_the_base_path_carries_another_id(
+def test_audit_allows_a_clean_merge_when_the_base_path_carried_another_id(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+
+def test_audit_allows_a_rename_when_the_base_path_carried_another_id(
     tmp_path: Path,
 ) -> None:
     def git(*args: str) -> None:
@@ -575,13 +594,17 @@ def test_audit_detects_a_rename_claim_when_the_base_path_carries_another_id(
     write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Same title")
     commit("independently adds decision-10 at the old path")
     git("checkout", "-q", "main")
+    # Git's own merge resolves this as one lineage: rename detection sees
+    # one.md become two.md while the sibling's same-content edit rides the
+    # rename, leaving a single path carrying decision-10 (verified with
+    # git merge-tree, both merge orders). Under the option A ruling the
+    # merge machinery is the arbiter — a clean merge is one record, not
+    # an ID collision.
 
     result = run_audit(tmp_path, "--refs")
-    assert result.returncode == 1
+    assert result.returncode == 0, result.stdout + result.stderr
     payload = json.loads(result.stdout)
-    assert {"id": "decision-10", "titles": ["Same title"]} in (payload["collisions"]), (
-        payload
-    )
+    assert not any(c["id"] == "decision-10" for c in payload["collisions"]), payload
 
 
 def test_audit_allows_a_rename_plus_independent_same_path_retitle(
@@ -724,9 +747,20 @@ def test_audit_detects_titleless_id_reuse_on_another_branch(
     git("init", "-q", "-b", "main")
     write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Same title")
     commit("first")
-    git("checkout", "-qb", "other")
     # No title: the record is malformed, but the ID still means a second
-    # record — the audit must not treat the path as nonexistent.
+    # record — the audit must not treat the path as nonexistent. The
+    # branch is an orphan holding only two.md, so duplicate_ids has no
+    # within-branch pair to report; only the cross-branch path check
+    # can catch it.
+    git("checkout", "-q", "--orphan", "other")
+    subprocess.run(
+        ["git", "rm", "-rq", "--cached", "."],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+    )
+    for stale in (tmp_path / "backlog").rglob("*.md"):
+        stale.unlink()
     target = tmp_path / "backlog/decisions/two.md"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text("---\nid: decision-10\n---\n")
@@ -876,15 +910,21 @@ def test_audit_detects_independent_competing_rename_chains(
     git("checkout", "-q", "main")
     # An independent sibling builds its own rename history over the same
     # paths; git reports rename/rename when the histories meet, so the
-    # audit keeps them apart instead of composing one lineage.
+    # audit keeps them apart instead of composing one lineage. Both
+    # renames are committed so duplicate_ids has no within-branch pair.
     git("checkout", "-qb", "b1")
     git("mv", "backlog/decisions/one.md", "backlog/decisions/two.md")
     commit("b1 independently renames one to two")
     git("mv", "backlog/decisions/two.md", "backlog/decisions/four.md")
+    commit("b1 renames two to four")
     git("checkout", "-q", "main")
 
     result = run_audit(tmp_path, "--refs")
     assert result.returncode == 1, result.stdout + result.stderr
+    payload = json.loads(result.stdout)
+    assert {"id": "decision-10", "titles": ["Same title"]} in (payload["collisions"]), (
+        payload
+    )
 
 
 def test_audit_detects_id_reuse_from_an_orphan_at_a_renamed_path(
