@@ -820,19 +820,30 @@ def test_audit_ignores_a_staged_rename_of_an_unrelated_id(
         )
 
     git("init", "-q", "-b", "main")
+    # main's one.md is an unrelated record; two siblings independently
+    # give decision-10 the same path and a new path — a collision the
+    # audit must keep reporting.
     write_record(tmp_path, "backlog/decisions/one.md", "CCC-1", "Same title")
     commit("first")
-    git("checkout", "-qb", "other")
-    write_record(tmp_path, "backlog/decisions/two.md", "decision-10", "Same title")
-    commit("reuses a different id at a new path")
+    git("checkout", "-qb", "sib1")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Same title")
+    commit("sib1 carries decision-10 at one.md")
     git("checkout", "-q", "main")
-    # Staging a rename of the CCC-1 record must not union decision-10's
-    # nodes — the staged evidence is scoped to the record's own ID.
+    git("checkout", "-qb", "sib2")
+    write_record(tmp_path, "backlog/decisions/two.md", "decision-10", "Same title")
+    commit("sib2 carries decision-10 at two.md")
+    git("checkout", "-q", "main")
+    # Staging a rename of the CCC-1 record between the same two paths
+    # must not union decision-10's nodes and hide the collision: staged
+    # evidence is scoped to the audited record's own ID.
     git("mv", "backlog/decisions/one.md", "backlog/decisions/two.md")
 
     result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 1, result.stdout + result.stderr
     payload = json.loads(result.stdout)
-    assert not any(c["id"] == "decision-10" for c in payload["collisions"]), payload
+    assert {"id": "decision-10", "titles": ["Same title"]} in (payload["collisions"]), (
+        payload
+    )
 
 
 def test_current_checkout_has_unique_backlog_ids() -> None:
