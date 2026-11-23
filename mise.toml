@@ -14,7 +14,7 @@ run = "uv run pytest tests/ -x -q"
 
 [tasks.lint]
 description = "Lint and type-check (non-mutating)"
-run = "uv run ruff check src tests && uv run pyrefly check src tests"
+run = "uv run ruff check src tests && uv run pyrefly check src tests && uv run scripts/audit_backlog.py"
 
 [tasks.lint-fix]
 description = "Apply lint fixes"

@@ -97,10 +97,11 @@ def collisions(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
     A record's identity is its path. All titles a path carries across
     refs belong to ONE record lineage — a retitle never splits meanings.
-    Distinct paths are distinct records, the same work only when their
-    title sets intersect (a rename without retitle). Same-path divergence
-    is delegated to git's own merge conflict, not detected here. An ID
-    collides when its records form more than one work.
+    Distinct paths are distinct records, merged into one work only when
+    a single branch holds both with the SAME title on each — the trace a
+    rename-without-retitle leaves. Same-title paths on independent
+    branches are not identity proof: they collide. Same-path divergence
+    is delegated to git's own merge conflict, not detected here.
     """
     by_id: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for item in items:
@@ -108,9 +109,11 @@ def collisions(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     results: list[dict[str, Any]] = []
     for identifier, recs in by_id.items():
         titles_by_path: dict[str, set[str]] = defaultdict(set)
+        title_on_branch: dict[tuple[str, str], str | None] = {}
         for item in recs:
             if item["title"] is not None:
                 titles_by_path[item["path"]].add(item["title"])
+            title_on_branch[(item["branch"], item["path"])] = item["title"]
         if len(titles_by_path) < 2:
             continue  # one path = one record lineage, retitles included
         paths = list(titles_by_path)
@@ -122,10 +125,20 @@ def collisions(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 path = links[path]
             return path
 
-        for index, left in enumerate(paths):
-            for right in paths[index + 1 :]:
-                if titles_by_path[left] & titles_by_path[right]:
-                    parent[find(right)] = find(left)
+        branches: dict[str, list[str]] = defaultdict(list)
+        for (branch, _), _title in title_on_branch.items():
+            branches[branch].append(_)
+        for branch, branch_paths in branches.items():
+            for index, left in enumerate(branch_paths):
+                for right in branch_paths[index + 1 :]:
+                    left_title = title_on_branch[(branch, left)]
+                    right_title = title_on_branch[(branch, right)]
+                    if (
+                        left_title is not None
+                        and left_title == right_title
+                        and find(left) != find(right)
+                    ):
+                        parent[find(right)] = find(left)
         works = {find(path) for path in paths}
         if len(works) > 1:
             titles = sorted({t for s in titles_by_path.values() for t in s})
