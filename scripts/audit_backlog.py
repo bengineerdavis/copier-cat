@@ -92,12 +92,16 @@ def git_records(root: Path) -> list[dict[str, Any]]:
     return result
 
 
-def related_refs(root: Path, left: str, right: str) -> bool:
-    """Whether two refs share history (a common merge base).
+def related_refs(
+    root: Path, left: str, right: str, identifier: str, old: str, new: str
+) -> bool:
+    """Whether a record moved between two related refs.
 
-    Sibling branches that both advanced after forking are related even
-    though neither tip contains the other; an orphan branch shares no
-    base at all. The working-tree pseudo-ref resolves against HEAD.
+    True when the refs share a merge base whose tree carries the ID at
+    exactly one of the two paths — the record existed at the old path
+    before the fork and the new path appeared after it. Shared ancestry
+    alone is not enough: independently added same-title records on
+    sibling branches also share a base.
     """
 
     def rev(branch: str) -> str:
@@ -110,7 +114,22 @@ def related_refs(root: Path, left: str, right: str) -> bool:
         text=True,
         check=False,
     )
-    return result.returncode == 0 and bool(result.stdout.strip())
+    if result.returncode != 0 or not result.stdout.strip():
+        return False
+    base = result.stdout.strip()
+    files = subprocess.run(
+        ["git", "ls-tree", "-r", "--name-only", base, "--", "backlog"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if files.returncode != 0:
+        return False
+    at_base = {path for path in files.stdout.splitlines() if path.endswith(".md")}
+    old_at_base = old in at_base
+    new_at_base = new in at_base
+    return old_at_base != new_at_base
 
 
 def collisions(
@@ -173,12 +192,14 @@ def collisions(
                 for branch_b in branches:
                     if branch_a == branch_b:
                         continue
-                    if root is not None and not related_refs(root, branch_a, branch_b):
-                        continue  # independent histories: not a rename
                     only_a = [p for p in paths_a if p not in branches[branch_b]]
                     only_b = [p for p in branches[branch_b] if p not in paths_a]
                     if not only_a or not only_b:
                         continue
+                    if root is not None and not related_refs(
+                        root, branch_a, branch_b, identifier, only_a[0], only_b[0]
+                    ):
+                        continue  # independent additions, not a rename
                     titles_a = {title_on_branch[(branch_a, p)] for p in only_a}
                     titles_b = {title_on_branch[(branch_b, p)] for p in only_b}
                     if titles_a and titles_a == titles_b and None not in titles_a:
