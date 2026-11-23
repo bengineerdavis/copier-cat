@@ -92,16 +92,47 @@ def git_records(root: Path) -> list[dict[str, Any]]:
     return result
 
 
+def base_paths_with_id(root: Path, base: str, identifier: str) -> set[str]:
+    """Base-tree paths carrying the audited ID."""
+    files = subprocess.run(
+        ["git", "ls-tree", "-r", "--name-only", base, "--", "backlog"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if files.returncode != 0:
+        return set()
+    result: set[str] = set()
+    for path in files.stdout.splitlines():
+        if not path.endswith(".md"):
+            continue
+        text = subprocess.run(
+            ["git", "show", f"{base}:{path}"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if text.returncode != 0:
+            continue
+        record = records(text.stdout, base, path)
+        if record and record["id"] == identifier:
+            result.add(path)
+    return result
+
+
 def related_refs(
     root: Path, left: str, right: str, identifier: str, old: str, new: str
 ) -> bool:
     """Whether a record moved between two related refs.
 
-    True when the refs share a merge base whose tree carries the ID at
-    exactly one of the two paths — the record existed at the old path
-    before the fork and the new path appeared after it. Shared ancestry
-    alone is not enough: independently added same-title records on
-    sibling branches also share a base.
+    True when the refs share a merge base whose tree carries the
+    audited ID at exactly one of the two paths — the record existed at
+    the old path before the fork and the new path appeared after it.
+    Shared ancestry alone is not enough: independently added same-title
+    records on sibling branches also share a base, and a base path
+    carrying a different ID is not this record's history.
     """
 
     def rev(branch: str) -> str:
@@ -117,19 +148,8 @@ def related_refs(
     if result.returncode != 0 or not result.stdout.strip():
         return False
     base = result.stdout.strip()
-    files = subprocess.run(
-        ["git", "ls-tree", "-r", "--name-only", base, "--", "backlog"],
-        cwd=root,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if files.returncode != 0:
-        return False
-    at_base = {path for path in files.stdout.splitlines() if path.endswith(".md")}
-    old_at_base = old in at_base
-    new_at_base = new in at_base
-    return old_at_base != new_at_base
+    with_id = base_paths_with_id(root, base, identifier)
+    return (old in with_id) != (new in with_id)
 
 
 def collisions(
@@ -158,21 +178,28 @@ def collisions(
             title_on_branch[(item["branch"], item["path"])] = item["title"]
         if len(titles_by_path) < 2:
             continue  # one path = one record lineage, retitles included
-        paths = list(titles_by_path)
-        parent = {path: path for path in paths}
-
-        def find(path: str, links: dict[str, str] = parent) -> str:
-            while links[path] != path:
-                links[path] = links[links[path]]
-                path = links[path]
-            return path
 
         # A rename leaves two visible shapes: (1) one ref holds both paths
         # with the SAME title on each; (2) an ordinary git mv leaves only
         # the new path on the rename branch and the old path on the
         # parent — same title, disjoint paths, across ancestor-connected
-        # refs. Same-title paths on independent branches are not identity
-        # proof: they collide.
+        # refs whose merge base carries the ID at the old path. Union
+        # nodes are (branch, path) pairs: the same path on a different
+        # branch is a different node, so a divergent branch's variant of
+        # a path is never absorbed by another branch's rename.
+        nodes: dict[tuple[str, str], tuple[str, str]] = {
+            (branch, path): (branch, path) for (branch, path) in title_on_branch
+        }
+
+        def find(
+            node: tuple[str, str],
+            links: dict[tuple[str, str], tuple[str, str]] = nodes,
+        ) -> tuple[str, str]:
+            while links[node] != node:
+                links[node] = links[links[node]]
+                node = links[node]
+            return node
+
         branches: dict[str, list[str]] = defaultdict(list)
         for (branch, _), _title in title_on_branch.items():
             branches[branch].append(_)
@@ -184,9 +211,9 @@ def collisions(
                     if (
                         left_title is not None
                         and left_title == right_title
-                        and find(left) != find(right)
+                        and find((branch, left)) != find((branch, right))
                     ):
-                        parent[find(right)] = find(left)
+                        nodes[find((branch, right))] = find((branch, left))
         if len(branches) > 1:
             for branch_a, paths_a in branches.items():
                 for branch_b in branches:
@@ -204,9 +231,25 @@ def collisions(
                     titles_b = {title_on_branch[(branch_b, p)] for p in only_b}
                     if titles_a and titles_a == titles_b and None not in titles_a:
                         for path in only_b:
-                            parent[find(path)] = find(only_a[0])
-        works = {find(path) for path in paths}
-        if len(works) > 1:
+                            nodes[find((branch_b, path))] = find((branch_a, only_a[0]))
+        # A work is a set of paths; project branch-scoped components down
+        # to their path sets, then compare. A path counts as belonging to
+        # a work only through the refs that were merged above — a path
+        # shared by several branches contributes the branch-specific node
+        # of each, so divergent variants stay separate unless git history
+        # connected them.
+        works: dict[tuple[str, str], set[str]] = defaultdict(set)
+        for node in nodes:
+            works[find(node)].add(node[1])
+        distinct_works: list[set[str]] = []
+        for component_paths in works.values():
+            for existing in distinct_works:
+                if component_paths & existing:
+                    existing |= component_paths
+                    break
+            else:
+                distinct_works.append(set(component_paths))
+        if len(distinct_works) > 1:
             titles = sorted({t for s in titles_by_path.values() for t in s})
             results.append({"id": identifier, "titles": titles})
     return results

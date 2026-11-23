@@ -544,6 +544,86 @@ def test_audit_allows_an_uncommitted_rename(
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+def test_audit_detects_a_rename_claim_when_the_base_path_carries_another_id(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    # The base's one.md carries a DIFFERENT id — not this record's history.
+    write_record(tmp_path, "backlog/decisions/one.md", "CCC-1", "Same title")
+    commit("first")
+    git("checkout", "-qb", "replace")
+    (tmp_path / "backlog/decisions/one.md").unlink()
+    write_record(tmp_path, "backlog/decisions/two.md", "decision-10", "Same title")
+    commit("replaced with a different record")
+    git("checkout", "-q", "main")
+    git("checkout", "-qb", "sibling")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Same title")
+    commit("independently adds decision-10 at the old path")
+    git("checkout", "-q", "main")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 1
+    payload = json.loads(result.stdout)
+    assert {"id": "decision-10", "titles": ["Same title"]} in (payload["collisions"]), (
+        payload
+    )
+
+
+def test_audit_allows_a_rename_plus_independent_same_path_retitle(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Original")
+    commit("first")
+    git("checkout", "-qb", "rename")
+    git("mv", "backlog/decisions/one.md", "backlog/decisions/two.md")
+    commit("renamed")
+    git("checkout", "-q", "main")
+    git("checkout", "-qb", "independent")
+    # Same path, different meaning on an independent branch. Git merges
+    # the whole sequence cleanly (verified with real `git merge` in both
+    # orders): the rename carries the retitled content to the new path —
+    # one record's history, not ID reuse. The audit agrees (option A).
+    write_record(
+        tmp_path, "backlog/decisions/one.md", "decision-10", "Different meaning"
+    )
+    commit("different record same path")
+    git("checkout", "-q", "main")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 def test_current_checkout_has_unique_backlog_ids() -> None:
     result = run_audit(ROOT)
     assert result.returncode == 0, result.stdout + result.stderr
