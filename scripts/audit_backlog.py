@@ -93,29 +93,24 @@ def git_records(root: Path) -> list[dict[str, Any]]:
 
 
 def related_refs(root: Path, left: str, right: str) -> bool:
-    """Whether two refs share history (one forked from the other).
+    """Whether two refs share history (a common merge base).
 
-    An ordinary rename branch shares history with its parent; an
-    orphan branch shares none. Used to merge a rename viewed from
-    opposite sides without merging independent same-title records.
+    Sibling branches that both advanced after forking are related even
+    though neither tip contains the other; an orphan branch shares no
+    base at all. The working-tree pseudo-ref resolves against HEAD.
     """
+
+    def rev(branch: str) -> str:
+        return "HEAD" if branch == "working-tree" else branch
+
     result = subprocess.run(
-        ["git", "merge-base", "--is-ancestor", left, right],
+        ["git", "merge-base", rev(left), rev(right)],
         cwd=root,
         capture_output=True,
         text=True,
         check=False,
     )
-    if result.returncode == 0:
-        return True
-    result = subprocess.run(
-        ["git", "merge-base", "--is-ancestor", right, left],
-        cwd=root,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    return result.returncode == 0
+    return result.returncode == 0 and bool(result.stdout.strip())
 
 
 def collisions(
