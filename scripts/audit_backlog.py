@@ -47,14 +47,17 @@ def run_git(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def parse_frontmatter(source: str) -> dict[str, Any]:
+def parse_frontmatter(source: str, context: str = "record") -> dict[str, Any]:
     match = FRONTMATTER_RE.match(source)
     if match is None:
         return {}
     try:
         fields = yaml.safe_load(match.group(1))
-    except yaml.YAMLError:
-        return {}
+    except yaml.YAMLError as error:
+        # A record the store cannot parse must fail the audit, not
+        # vanish from it — a silent {} hides the very duplicates this
+        # gate exists to catch.
+        raise AuditError(f"unparseable frontmatter in {context}: {error}") from error
     if not isinstance(fields, dict):
         return {}
     identifier = fields.get("id")
@@ -71,7 +74,7 @@ def checkout_records(root: Path) -> list[dict[str, Any]]:
     for path in sorted((root / "backlog").rglob("*.md")):
         if not path.is_file():
             continue
-        meta = parse_frontmatter(path.read_text(encoding="utf-8"))
+        meta = parse_frontmatter(path.read_text(encoding="utf-8"), context=str(path))
         if meta.get("id") is None:
             continue
         items.append(
@@ -168,7 +171,7 @@ def git_records(root: Path) -> list[dict[str, Any]]:
             oids.add(oid)
     sources = read_blobs(root, oids)
     for ref, relpath, oid in entries:
-        meta = parse_frontmatter(sources[oid])
+        meta = parse_frontmatter(sources[oid], context=f"{ref}:{relpath}")
         if meta.get("id") is None:
             continue
         items.append(
@@ -183,8 +186,31 @@ def git_records(root: Path) -> list[dict[str, Any]]:
 
 
 def _has_head(root: Path) -> bool:
-    head = run_git(root, "rev-parse", "--verify", "HEAD")
-    return head.returncode == 0
+    """True only when HEAD genuinely does not exist yet.
+
+    ``rev-parse --verify --quiet`` exits 1 for an unborn HEAD and
+    prints nothing; any other failure (bad GIT_DIR, corrupt refs) is a
+    real git error and must not masquerade as a commitless checkout.
+    """
+    result = subprocess.run(
+        ["git", "rev-parse", "--verify", "--quiet", "HEAD"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        return True
+    if (
+        result.returncode == 1
+        and not result.stdout.strip()
+        and not result.stderr.strip()
+    ):
+        return False
+    raise AuditError(
+        f"git rev-parse --verify HEAD failed (exit {result.returncode}): "
+        f"{result.stderr.strip()[:200]}"
+    )
 
 
 def working_tree_commit(root: Path) -> str | None:
@@ -219,7 +245,10 @@ def working_tree_commit(root: Path) -> str | None:
                 f"{seed.stderr.decode('utf-8', 'replace')[:200]}"
             )
         refresh = subprocess.run(
-            ["git", "add", "-A", "--", "backlog"],
+            # -f: checkout_records() reads ignored files too (they sit in
+            # backlog/ on disk), so the working-state commit must include
+            # them or a local collision hides behind a .gitignore rule.
+            ["git", "add", "-A", "-f", "--", "backlog"],
             cwd=root,
             capture_output=True,
             env=env,
@@ -295,7 +324,16 @@ def merged_tree_ids(root: Path, tree: str) -> dict[str, list[str]]:
     sources = read_blobs(root, oids)
     ids: dict[str, list[str]] = defaultdict(list)
     for relpath, oid in entries:
-        meta = parse_frontmatter(sources[oid])
+        # A conflicted merged tree embeds conflict markers in the blob —
+        # that is git's own merge conflict at ONE path, delegated to git
+        # by the option A ruling, not an audit failure. Skip it; every
+        # per-ref record was already validated during git_records().
+        try:
+            meta = parse_frontmatter(
+                sources[oid], context=f"merged tree {tree}:{relpath}"
+            )
+        except AuditError:
+            continue
         identifier = meta.get("id")
         if identifier is not None:
             ids[identifier].append(relpath)
@@ -409,30 +447,32 @@ def main() -> int:
             return int(bool(problems))
 
         committed = git_records(root)
-        # No commits yet: the working tree is the whole audit — only
-        # within-checkout duplicates can exist, and there is no ref to
-        # merge against. This is the one genuinely optional state.
-        if not _has_head(root):
+        has_head = _has_head(root)
+        if not has_head and not committed:
+            # No commits and no refs at all: the working tree is the
+            # whole audit — within-checkout duplicates only.
             items = checkout_records(root)
             problems = duplicate_ids(items)
             print(json.dumps({"records": len(items), "collisions": problems}, indent=2))
             return int(bool(problems))
-        working = working_tree_commit(root)
-        if working is None:
-            raise AuditError("working-state commit could not be built")
         items: list[dict[str, Any]] = list(committed)
+        working: str | None = None
+        if has_head:
+            working = working_tree_commit(root)
+            if working is None:
+                raise AuditError("working-state commit could not be built")
         # The working state participates as its own ref (the throwaway commit)
         # for records the checked-out branch does not already carry — new or
         # edited-but-uncommitted records join; unchanged ones are already
         # represented by the checked-out ref.
-        checked_out = run_git(root, "branch", "--show-current").stdout.strip() or None
+        checked_out = run_git_checked(root, "branch", "--show-current").strip() or None
         carried: set[tuple[str, str]] = {
             (rec["path"], rec["id"])
             for rec in committed
             if checked_out is not None and rec["branch"] == checked_out
         }
         for item in checkout_records(root):
-            if (item["path"], item["id"]) in carried:
+            if working is None or (item["path"], item["id"]) in carried:
                 continue
             items.append(
                 {

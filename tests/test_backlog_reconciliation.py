@@ -1061,6 +1061,112 @@ def test_audit_runs_with_an_empty_git_identity(
     ), payload
 
 
+def test_audit_fails_closed_on_malformed_frontmatter(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    # Unterminated quoted title: unparseable frontmatter must fail the
+    # audit, not silently drop the record and hide its ID.
+    target = tmp_path / "backlog/decisions/one.md"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text('---\nid: decision-10\ntitle: "unterminated\n---\n')
+    commit("first")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "unparseable frontmatter" in result.stderr
+
+
+def test_audit_detects_an_ignored_uncommitted_record_collision(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    ignore = tmp_path / ".gitignore"
+    ignore.write_text("backlog/drafts/\n")
+    commit("ignore drafts")
+    git("checkout", "-qb", "other")
+    write_record(tmp_path, "backlog/decisions/two.md", "decision-10", "Reused")
+    commit("other reuses the id")
+    git("checkout", "-q", "main")
+    # The colliding record is uncommitted AND git-ignored: checkout scans
+    # see it, so the working-state commit must include it too.
+    write_record(
+        tmp_path, "backlog/drafts/three.md", "decision-10", "Ignored collision"
+    )
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 1, result.stdout + result.stderr
+    payload = json.loads(result.stdout)
+    assert {"id": "decision-10", "titles": ["Ignored collision", "Reused"]} in (
+        payload["collisions"]
+    ), payload
+
+
+def test_audit_detects_collisions_with_an_unborn_head_and_refs_present(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    # main never gets a commit; refs exist and carry a collision.
+    git("checkout", "-qb", "left")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "First meaning")
+    commit("first meaning")
+    git("checkout", "-qb", "right")
+    write_record(tmp_path, "backlog/decisions/two.md", "decision-10", "Second meaning")
+    commit("second meaning")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 1, result.stdout + result.stderr
+    payload = json.loads(result.stdout)
+    assert {"id": "decision-10", "titles": ["First meaning", "Second meaning"]} in (
+        payload["collisions"]
+    ), payload
+
+
 def test_current_checkout_has_unique_backlog_ids() -> None:
     result = run_audit(ROOT)
     assert result.returncode == 0, result.stdout + result.stderr
