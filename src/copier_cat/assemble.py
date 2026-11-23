@@ -11,6 +11,7 @@ import contextlib
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -143,7 +144,7 @@ def load_catalog(path: Path, stack_name: str) -> Stack:
 def questions_for(member: Member) -> tuple[Question, ...]:
     """Read questions from the template Copier itself resolves."""
     try:
-        with contextlib.redirect_stdout(os.sys.stderr):
+        with contextlib.redirect_stdout(sys.stderr):
             template = copier.Template(url=member.source, ref=member.ref)
             question_data = template.questions_data
         result = []
@@ -348,7 +349,7 @@ def assemble(
     preview = Path(temporary.name).resolve()
     try:
         try:
-            with contextlib.redirect_stdout(os.sys.stderr):
+            with contextlib.redirect_stdout(sys.stderr):
                 rendered = render(
                     member.source,
                     preview / "render",
@@ -401,7 +402,7 @@ def assemble(
                 text=True,
             )
             # Prove the recorded native update path before reporting it.
-            with contextlib.redirect_stdout(os.sys.stderr):
+            with contextlib.redirect_stdout(sys.stderr):
                 update = copier.run_update(
                     preview / "render",
                     defaults=True,
