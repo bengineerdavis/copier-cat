@@ -48,9 +48,16 @@ def run_git(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
 
 
 def parse_frontmatter(source: str, context: str = "record") -> dict[str, Any]:
-    match = FRONTMATTER_RE.match(source)
-    if match is None:
-        return {}
+    # An opening delimiter with no closing one is a broken record, not a
+    # record-less file — its ID must not silently vanish from the audit.
+    if source.startswith("---"):
+        match = FRONTMATTER_RE.match(source)
+        if match is None:
+            raise AuditError(f"unclosed frontmatter block in {context}")
+    else:
+        match = FRONTMATTER_RE.match(source)
+        if match is None:
+            return {}
     try:
         fields = yaml.safe_load(match.group(1))
     except yaml.YAMLError as error:
@@ -244,6 +251,9 @@ def working_tree_commit(root: Path) -> str | None:
                 f"git read-tree HEAD failed (exit {seed.returncode}): "
                 f"{seed.stderr.decode('utf-8', 'replace')[:200]}"
             )
+        if seed.returncode != 0:
+            # Unborn HEAD: a valid empty index lets add start clean.
+            index.unlink(missing_ok=True)
         refresh = subprocess.run(
             # -f: checkout_records() reads ignored files too (they sit in
             # backlog/ on disk), so the working-state commit must include
@@ -275,6 +285,8 @@ def working_tree_commit(root: Path) -> str | None:
         parent: list[str] = []
         if head.returncode == 0 and head.stdout.strip():
             parent = ["-p", head.stdout.strip()]
+        # An unborn HEAD is fine here: the working state is audited as
+        # a parentless commit, and refs (if any) still merge against it.
         commit = subprocess.run(
             [
                 "git",
@@ -448,19 +460,20 @@ def main() -> int:
 
         committed = git_records(root)
         has_head = _has_head(root)
-        if not has_head and not committed:
-            # No commits and no refs at all: the working tree is the
-            # whole audit — within-checkout duplicates only.
+        if not committed and not has_head:
+            # No refs and no commits: the working tree is the whole
+            # audit — within-checkout duplicates only.
             items = checkout_records(root)
             problems = duplicate_ids(items)
             print(json.dumps({"records": len(items), "collisions": problems}, indent=2))
             return int(bool(problems))
         items: list[dict[str, Any]] = list(committed)
-        working: str | None = None
-        if has_head:
-            working = working_tree_commit(root)
-            if working is None:
-                raise AuditError("working-state commit could not be built")
+        # The working state always participates: parented on HEAD when
+        # one exists, parentless when HEAD is unborn but refs carry
+        # records — the uncommitted collision must still be caught.
+        working = working_tree_commit(root)
+        if working is None:
+            raise AuditError("working-state commit could not be built")
         # The working state participates as its own ref (the throwaway commit)
         # for records the checked-out branch does not already carry — new or
         # edited-but-uncommitted records join; unchanged ones are already
@@ -472,7 +485,7 @@ def main() -> int:
             if checked_out is not None and rec["branch"] == checked_out
         }
         for item in checkout_records(root):
-            if working is None or (item["path"], item["id"]) in carried:
+            if (item["path"], item["id"]) in carried:
                 continue
             items.append(
                 {

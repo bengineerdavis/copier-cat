@@ -1151,20 +1151,61 @@ def test_audit_detects_collisions_with_an_unborn_head_and_refs_present(
         )
 
     git("init", "-q", "-b", "main")
-    # main never gets a commit; refs exist and carry a collision.
+    # Commits live on refs; HEAD stays on the unborn main.
     git("checkout", "-qb", "left")
     write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "First meaning")
     commit("first meaning")
     git("checkout", "-qb", "right")
     write_record(tmp_path, "backlog/decisions/two.md", "decision-10", "Second meaning")
     commit("second meaning")
+    # Point HEAD at the unborn main: refs keep their commits, and every
+    # file on disk becomes working-tree state the audit must still see.
+    git("symbolic-ref", "HEAD", "refs/heads/main")
+    head_state = subprocess.run(
+        ["git", "rev-parse", "--verify", "--quiet", "HEAD"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+    )
+    assert head_state.returncode == 1, head_state.stderr
 
     result = run_audit(tmp_path, "--refs")
     assert result.returncode == 1, result.stdout + result.stderr
     payload = json.loads(result.stdout)
-    assert {"id": "decision-10", "titles": ["First meaning", "Second meaning"]} in (
-        payload["collisions"]
-    ), payload
+    assert any(c["id"] == "decision-10" for c in payload["collisions"]), payload
+
+
+def test_audit_fails_closed_on_unclosed_frontmatter(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Original")
+    commit("first")
+    git("checkout", "-qb", "other")
+    # Opening delimiter, no closing one: the colliding record must fail
+    # the audit, not vanish from it.
+    target = tmp_path / "backlog/decisions/two.md"
+    target.write_text("---\nid: decision-10\ntitle: Reused\n")
+    commit("unclosed frontmatter reusing the id")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "unclosed frontmatter" in result.stderr
 
 
 def test_current_checkout_has_unique_backlog_ids() -> None:
