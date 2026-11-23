@@ -544,25 +544,6 @@ def test_audit_allows_an_uncommitted_rename(
     assert result.returncode == 0, result.stdout + result.stderr
 
 
-def test_audit_allows_a_clean_merge_when_the_base_path_carried_another_id(
-    tmp_path: Path,
-) -> None:
-    def git(*args: str) -> None:
-        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
-
-    def commit(message: str) -> None:
-        git("add", "-A")
-        git(
-            "-c",
-            "user.name=tests",
-            "-c",
-            "user.email=tests@example.com",
-            "commit",
-            "-qm",
-            message,
-        )
-
-
 def test_audit_allows_a_rename_when_the_base_path_carried_another_id(
     tmp_path: Path,
 ) -> None:
