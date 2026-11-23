@@ -126,6 +126,18 @@ def project(tmp_path: Path) -> Path:
     return root
 
 
+@pytest.fixture(autouse=True)
+def _isolate_cwd(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """Keep every test's writes out of the shared worktree.
+
+    Tests that run a failing CLI (or a CLI with a path bug) must not drop
+    generated projects into the repository checkout. A traversal-shaped input
+    once did exactly that.
+    """
+    monkeypatch.chdir(tmp_path)
+    yield
+
+
 @pytest.fixture
 def destination(tmp_path: Path) -> Path:
     return tmp_path / "example-project"
