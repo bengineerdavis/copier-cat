@@ -115,26 +115,55 @@ def duplicate_ids(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     ]
 
 
+def current_branch(root: Path) -> str | None:
+    result = subprocess.run(
+        ["git", "branch", "--show-current"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    branch = result.stdout.strip()
+    return branch or None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--refs", action="store_true", help="Audit all Git refs")
     args = parser.parse_args()
     root = args.root.resolve()
-    items = checkout_records(root)
-    if args.refs:
-        # Keep working-tree records in scope; extend, never replace, so an
-        # uncommitted record colliding with a committed one is still caught.
-        items = items + git_records(root)
-        # A record committed on the checked-out branch also appears in the
-        # ref scan; identical (id, title, path) entries are the same record.
-        seen = {(item["id"], item["title"], item["path"]) for item in items}
-        items = [
-            item
+    if not args.refs:
+        items = checkout_records(root)
+    else:
+        items = git_records(root)
+        # Overlay the working tree onto committed records for the same path
+        # ONLY when the committed content matches the checked-out branch's
+        # committed content — the record the working tree edits. A divergent
+        # branch's own version of the path is different work and stays.
+        # Collisions are judged on the overlayed set; duplicate IDs are judged
+        # on the raw set, so a within-branch duplicate stays detectable even
+        # when the overlay replaces one of its paths.
+        branch = current_branch(root)
+        working = checkout_records(root)
+        committed_on_branch = {
+            item["path"]: (item["id"], item["title"])
             for item in items
-            if (item["id"], item["title"], item["path"]) in seen
-            and not seen.discard((item["id"], item["title"], item["path"]))
-        ]
+            if branch is not None and item["branch"] == branch
+        }
+        overlayed = []
+        for item in items:
+            same_as_branch = committed_on_branch.get(item["path"]) == (
+                item["id"],
+                item["title"],
+            )
+            if same_as_branch:
+                continue  # replaced by the working-tree version below
+            overlayed.append(item)
+        overlayed = overlayed + working
+        problems = collisions(overlayed) + duplicate_ids(items + working)
+        print(json.dumps({"records": len(overlayed), "collisions": problems}, indent=2))
+        return int(bool(problems))
     problems = collisions(items) + duplicate_ids(items)
     print(json.dumps({"records": len(items), "collisions": problems}, indent=2))
     return int(bool(problems))

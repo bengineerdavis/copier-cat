@@ -74,18 +74,25 @@ two identical runs produced nested conflict markers rather than
 convergence, and accepted conflicts, binary replacements, and answers-file
 stamping overwrite project content without a restorable backup. Assembly
 previews converge for unchanged inputs but repeated assembly against an
-existing destination is refused rather than reconciled. Adopting these
-principles makes those behaviors spec gaps, not compliant baselines.
-CCC-39 owns the adopt remediation: a second-stamp guard implementing
-decision-11's stamp-once rule (refuse, change nothing, point at
-upgrade), plus restorable backup before overwrites. CCC-40 owns the
-assembly remediation: make the existing-destination refusal explicit
-and adopt-pointing per decision-11 item 2 — refusal-with-pointer is the
-convergence principle 6 requires, not a gap to remove. CCC-35 owns the
-regression tests for both, verifying the remediated behaviors rather
-than pinning the current defects. Until CCC-39 and CCC-40 land, adopt's
-non-convergence and assembly's bare refusal are recorded gaps — not
-exceptions, because no exception has been approved.
+existing destination is refused rather than reconciled. How the recorded
+gaps are remediated is governed by decision-13, which reconciles this
+decision with decision-11; see that record for task ownership and the
+convergence semantics.
+
+Two gaps are now visible against the principles and have their own tasks:
+
+- **No reset capability exists in `spec.md`.** The prototype's reset, with its
+  required restorable backup and separate restore verb, has no requirements
+  home. Principle 7 makes that omission a spec gap rather than a design taste.
+  CCC-34 owns the requirements.
+- **Idempotency is untested as a property of the public operations.** The
+  prototype's walkthrough `apply()` double-applied on Previous-then-Run,
+  producing a duplicate overlay. Merger-level coverage exists on `main` —
+  `tests/test_mergers.py` `test_toml_merge_is_idempotent` performs a second
+  merge and asserts identical output with no warnings — but no test asserts
+  that repeating a public operation (adopt, assemble) converges, so
+  principle 6 currently has no enforcement at the operation level. CCC-35
+  owns the tests, scoped to the uncovered public operations.
 
 Two gaps are now visible against the principles and have their own tasks:
 
