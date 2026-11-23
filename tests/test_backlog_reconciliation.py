@@ -77,6 +77,42 @@ def test_audit_detects_one_id_meaning_different_things_on_two_branches(
     ]
 
 
+def test_audit_detects_uncommitted_record_colliding_with_a_committed_branch(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "First meaning")
+    commit("first")
+    git("checkout", "-qb", "other")
+    write_record(tmp_path, "backlog/decisions/two.md", "decision-10", "Other meaning")
+    commit("second")
+    git("checkout", "-q", "main")
+    # Uncommitted working-tree edit that collides with the committed branch.
+    write_record(tmp_path, "backlog/decisions/three.md", "decision-10", "Other meaning")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 1
+    payload = json.loads(result.stdout)
+    assert {"id": "decision-10", "titles": ["First meaning", "Other meaning"]} in (
+        payload["collisions"]
+    ), payload
+
+
 def test_current_checkout_has_unique_backlog_ids() -> None:
     result = run_audit(ROOT)
     assert result.returncode == 0, result.stdout + result.stderr

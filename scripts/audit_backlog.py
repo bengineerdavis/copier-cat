@@ -123,7 +123,18 @@ def main() -> int:
     root = args.root.resolve()
     items = checkout_records(root)
     if args.refs:
-        items = git_records(root)
+        # Keep working-tree records in scope; extend, never replace, so an
+        # uncommitted record colliding with a committed one is still caught.
+        items = items + git_records(root)
+        # A record committed on the checked-out branch also appears in the
+        # ref scan; identical (id, title, path) entries are the same record.
+        seen = {(item["id"], item["title"], item["path"]) for item in items}
+        items = [
+            item
+            for item in items
+            if (item["id"], item["title"], item["path"]) in seen
+            and not seen.discard((item["id"], item["title"], item["path"]))
+        ]
     problems = collisions(items) + duplicate_ids(items)
     print(json.dumps({"records": len(items), "collisions": problems}, indent=2))
     return int(bool(problems))
