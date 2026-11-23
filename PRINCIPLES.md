@@ -10,8 +10,8 @@ do not, and changes here are decisions, not edits.
 cc is a template manager for copier. Copier renders and updates projects
 from one template; cc manages the *lifecycle around* that: bringing
 existing projects under a template (adopt), carrying project-side fixes
-back to the template so every inheriting project benefits (contribute /
-phone home), and operating a collection of templates as one monorepo with
+back to the template so every inheriting project benefits (contribute),
+and operating a collection of templates as one monorepo with
 shared data and a chooser for selecting between them.
 
 The test for every capability in spec.md: it extends the maintainer, it prefers

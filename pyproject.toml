@@ -1,7 +1,7 @@
 [project]
 name = "copier-cat"
 version = "0.1.0"
-description = "Template manager for copier: adopt templates into existing projects, phone-home PRs upstream, collections of templates with a chooser."
+description = "Template manager for copier: adopt templates into existing projects, contribute changes upstream, collections of templates with a chooser."
 readme = "README.md"
 license = "FSL-1.1-MIT"
 requires-python = ">=3.12"

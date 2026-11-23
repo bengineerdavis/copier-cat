@@ -47,7 +47,7 @@ app = typer.Typer(
         "copier-cat extends copier's lifecycle: copier renders and updates a\n"
         "project from one template; cc brings existing projects under\n"
         "templates (adopt), routes template-worthy fixes back upstream\n"
-        "(phone home, planned), and manages template collections. Nothing\n"
+        "(contribute, planned), and manages template collections. Nothing\n"
         "cc produces requires cc: every command documents its copier-native\n"
         "equivalent and leaves you with plain copier."
     ),
