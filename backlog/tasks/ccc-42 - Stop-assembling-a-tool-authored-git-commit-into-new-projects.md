@@ -1,6 +1,6 @@
 ---
 id: CCC-42
-title: Stop assembling a tool-authored git commit into new projects
+title: Regression-test that assembly ships no git history to the destination
 status: To Do
 created_date: 2026-11-23 08:17
 ---
@@ -8,7 +8,7 @@ created_date: 2026-11-23 08:17
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-ccc assemble violates the no-commit consent contract: the assembly pipeline runs git init, git add -A, and a commit inside the isolated preview, then shutil.copytree copies the preview INCLUDING the .git directory into the approved destination — an ordinary ccc assemble --yes leaves a tool-authored 'Initial generated project' commit in the new project. Committing is always the user's action per the stack protocol's consent contract. Fix: either strip .git from the destination copy, or never commit inside the preview (keep the preview a plain directory and preserve the user's own git workflow). The preview commit currently exists to give copier a merge baseline for native-update validation; if the commit is removed, _check_native_update must create its baseline inside its own disposable copy instead of the shared preview.
+Scope narrowed 2026-11-23 (review 793): main's assembly already creates the validation commit only inside _check_native_update's disposable update_root (assemble.py:679-720) and composes the approved destination from the non-Git preview/render (:837-850) — the original description's shared-preview .git leak no longer exists. What remains is locking the guarantee in: no public-CLI test asserts that an approved destination arrives without a .git directory or tool-authored commit, so a future refactor could silently reintroduce the leak. Ship that regression test through the public CLI.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
