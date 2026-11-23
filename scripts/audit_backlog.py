@@ -215,6 +215,12 @@ def collisions(
                     ):
                         nodes[find((branch, right))] = find((branch, left))
         if len(branches) > 1:
+            # Each old path may be consumed by at most one rename claim.
+            # Two branches renaming the same base path to DIFFERENT
+            # destinations is a divergence (git reports rename/rename
+            # conflict), not one lineage — record the first claim and
+            # refuse the second.
+            claimed_source: dict[str, tuple[str, str]] = {}
             for branch_a, paths_a in branches.items():
                 for branch_b in branches:
                     if branch_a == branch_b:
@@ -229,9 +235,20 @@ def collisions(
                         continue  # independent additions, not a rename
                     titles_a = {title_on_branch[(branch_a, p)] for p in only_a}
                     titles_b = {title_on_branch[(branch_b, p)] for p in only_b}
-                    if titles_a and titles_a == titles_b and None not in titles_a:
-                        for path in only_b:
-                            nodes[find((branch_b, path))] = find((branch_a, only_a[0]))
+                    if not (titles_a and titles_a == titles_b and None not in titles_a):
+                        continue
+                    prior = claimed_source.get(only_a[0])
+                    claim = (branch_a, only_b[0])
+                    reverse = claimed_source.get(only_b[0])
+                    reverse_claim = (branch_b, only_a[0])
+                    if (prior is not None and prior != claim) or (
+                        reverse is not None and reverse != reverse_claim
+                    ):
+                        continue  # divergent rename: leave both works apart
+                    claimed_source[only_a[0]] = claim
+                    claimed_source[only_b[0]] = reverse_claim
+                    for path in only_b:
+                        nodes[find((branch_b, path))] = find((branch_a, only_a[0]))
         # A work is a set of paths; project branch-scoped components down
         # to their path sets, then compare. A path counts as belonging to
         # a work only through the refs that were merged above — a path

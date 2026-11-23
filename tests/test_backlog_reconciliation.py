@@ -662,6 +662,47 @@ def test_audit_detects_id_reuse_alongside_an_ordinary_rename(
     assert any(c["id"] == "decision-10" for c in payload["collisions"]), payload
 
 
+def test_audit_detects_divergent_renames_of_one_record(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Same title")
+    commit("first")
+    git("checkout", "-qb", "left")
+    git("mv", "backlog/decisions/one.md", "backlog/decisions/q.md")
+    commit("renamed q")
+    git("checkout", "-q", "main")
+    git("checkout", "-qb", "right")
+    # The same record renamed to two different destinations on sibling
+    # branches: git reports a rename/rename conflict, and both files
+    # keep the ID after any resolution — a divergence, not one lineage.
+    git("mv", "backlog/decisions/one.md", "backlog/decisions/r.md")
+    commit("renamed r")
+    git("checkout", "-q", "main")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 1
+    payload = json.loads(result.stdout)
+    assert {"id": "decision-10", "titles": ["Same title"]} in (payload["collisions"]), (
+        payload
+    )
+
+
 def test_current_checkout_has_unique_backlog_ids() -> None:
     result = run_audit(ROOT)
     assert result.returncode == 0, result.stdout + result.stderr
