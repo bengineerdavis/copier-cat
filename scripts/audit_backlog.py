@@ -171,12 +171,14 @@ def collisions(
     results: list[dict[str, Any]] = []
     for identifier, recs in by_id.items():
         titles_by_path: dict[str, set[str]] = defaultdict(set)
+        paths_seen: set[str] = set()
         title_on_branch: dict[tuple[str, str], str | None] = {}
         for item in recs:
+            paths_seen.add(item["path"])
             if item["title"] is not None:
                 titles_by_path[item["path"]].add(item["title"])
             title_on_branch[(item["branch"], item["path"])] = item["title"]
-        if len(titles_by_path) < 2:
+        if len(paths_seen) < 2:
             continue  # one path = one record lineage, retitles included
 
         # A rename leaves two visible shapes: (1) one ref holds both paths

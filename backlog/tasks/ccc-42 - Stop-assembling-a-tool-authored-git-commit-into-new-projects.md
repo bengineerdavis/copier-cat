@@ -1,6 +1,6 @@
 ---
 id: CCC-42
-title: Regression-test that assembly ships no git history to the destination
+title: Stop assembling a tool-authored git commit into new projects
 status: To Do
 created_date: 2026-11-23 08:17
 ---

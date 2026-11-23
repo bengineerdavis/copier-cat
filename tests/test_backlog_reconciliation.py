@@ -703,6 +703,40 @@ def test_audit_detects_divergent_renames_of_one_record(
     )
 
 
+def test_audit_detects_titleless_id_reuse_on_another_branch(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Same title")
+    commit("first")
+    git("checkout", "-qb", "other")
+    # No title: the record is malformed, but the ID still means a second
+    # record — the audit must not treat the path as nonexistent.
+    target = tmp_path / "backlog/decisions/two.md"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("---\nid: decision-10\n---\n")
+    commit("titleless record reusing the id")
+    git("checkout", "-q", "main")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 1, result.stdout + result.stderr
+
+
 def test_current_checkout_has_unique_backlog_ids() -> None:
     result = run_audit(ROOT)
     assert result.returncode == 0, result.stdout + result.stderr
