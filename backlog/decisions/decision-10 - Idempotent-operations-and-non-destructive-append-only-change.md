@@ -76,12 +76,14 @@ stamping overwrite project content without a restorable backup. Assembly
 previews converge for unchanged inputs but repeated assembly against an
 existing destination is refused rather than reconciled. Adopting these
 principles makes those behaviors spec gaps, not compliant baselines.
-CCC-39 owns the remediation: repeated-run convergence and restorable
-backup before overwrites for adopt. CCC-35 owns the regression tests,
-including the repeated-conflict scenario, and verifies the remediated
-behavior rather than pinning the current nesting defect. Until CCC-39
-lands, adopt's non-convergence and lack of backup are recorded gaps —
-not exceptions, because no exception has been approved.
+CCC-39 owns the adopt remediation: repeated-run convergence and restorable
+backup before overwrites. CCC-40 owns the assembly remediation: converge
+repeated assembly against an existing destination (reviewed reconciliation
+or explicit upgrade-pointer, not bare refusal). CCC-35 owns the regression
+tests for both, verifying the remediated behaviors rather than pinning
+the current defects. Until CCC-39 and CCC-40 land, adopt's
+non-convergence and assembly's refusal are recorded gaps — not
+exceptions, because no exception has been approved.
 
 Two gaps are now visible against the principles and have their own tasks:
 
