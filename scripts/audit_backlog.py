@@ -283,7 +283,10 @@ def collisions(
                     else:
                         claims[pair_key] = (only_a[0], only_b[0], branch_a, branch_b)
             accepted: list[tuple[str, str, str, str]] = []
-            # Staged renames are a git-provided fact — union them first.
+            # Staged renames are a git-provided fact — union them, but
+            # only for the audited ID: the destination must carry this
+            # ID in the working tree, and the source must be the
+            # checked-out branch's committed record for this ID.
             if root is not None:
                 staged = subprocess.run(
                     ["git", "diff", "--cached", "--name-status", "-M"],
@@ -292,22 +295,27 @@ def collisions(
                     text=True,
                     check=False,
                 )
-                if staged.returncode == 0:
+                checked_out = current_branch(root)
+                if staged.returncode == 0 and checked_out is not None:
                     for line in staged.stdout.splitlines():
                         parts = line.split("\t")
-                        if len(parts) == 3 and parts[0].startswith("R"):
-                            old, new = parts[1], parts[2]
-                            if old in titles_by_path or new in titles_by_path:
-                                staged_union: tuple[str, str] | None = None
-                                for branch in branches:
-                                    if new in branches[branch]:
-                                        staged_union = (branch, new)
-                                src_node: tuple[str, str] | None = None
-                                for branch in branches:
-                                    if old in branches[branch]:
-                                        src_node = (branch, old)
-                                if staged_union and src_node:
-                                    nodes[find(staged_union)] = find(src_node)
+                        if len(parts) != 3 or not parts[0].startswith("R"):
+                            continue
+                        old, new = parts[1], parts[2]
+                        working_for_id = {
+                            (item["branch"], item["path"])
+                            for item in recs
+                            if item["branch"] == "working-tree" and item["path"] == new
+                        }
+                        committed_for_id = {
+                            (item["branch"], item["path"])
+                            for item in recs
+                            if item["branch"] == checked_out and item["path"] == old
+                        }
+                        if working_for_id and committed_for_id:
+                            nodes[find(next(iter(working_for_id)))] = find(
+                                next(iter(committed_for_id))
+                            )
             for pair_key in sorted(claims):
                 source, dest, src_branch, dest_branch = claims[pair_key]
                 conflict = False

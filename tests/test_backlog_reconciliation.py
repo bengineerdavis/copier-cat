@@ -801,6 +801,40 @@ def test_audit_allows_a_staged_second_rename_in_a_chain(
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+def test_audit_ignores_a_staged_rename_of_an_unrelated_id(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    write_record(tmp_path, "backlog/decisions/one.md", "CCC-1", "Same title")
+    commit("first")
+    git("checkout", "-qb", "other")
+    write_record(tmp_path, "backlog/decisions/two.md", "decision-10", "Same title")
+    commit("reuses a different id at a new path")
+    git("checkout", "-q", "main")
+    # Staging a rename of the CCC-1 record must not union decision-10's
+    # nodes — the staged evidence is scoped to the record's own ID.
+    git("mv", "backlog/decisions/one.md", "backlog/decisions/two.md")
+
+    result = run_audit(tmp_path, "--refs")
+    payload = json.loads(result.stdout)
+    assert not any(c["id"] == "decision-10" for c in payload["collisions"]), payload
+
+
 def test_current_checkout_has_unique_backlog_ids() -> None:
     result = run_audit(ROOT)
     assert result.returncode == 0, result.stdout + result.stderr
