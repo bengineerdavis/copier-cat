@@ -6,6 +6,8 @@ anything without per-file consent in --json mode.
 """
 
 import json
+import subprocess
+import sys
 
 import yaml
 from typer.testing import CliRunner
@@ -158,6 +160,56 @@ def test_adopt_human_mode_reports_every_file(template, project):
     assert any(line == "identical\tmise.toml\tidentical" for line in lines)
     assert any(line == "conflict\tnotes.txt\tapplied" for line in lines)
     assert "stamped: .copier-answers.yml" in lines
+
+
+def test_adopt_supports_two_sequential_native_updates(template, project):
+    (project / "notes.txt").unlink()  # conflict-free project: exit 0
+    result = invoke(template, project, "--trust", "--accept-all", "--json")
+    assert result.exit_code == 0, result.output + result.stderr
+    subprocess.run(["git", "init", "-q", "."], cwd=project, check=True)
+    subprocess.run(["git", "add", "-A"], cwd=project, check=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.email=tests@example.com",
+            "-c",
+            "user.name=tests",
+            "commit",
+            "-qm",
+            "adopted",
+        ],
+        cwd=project,
+        check=True,
+    )
+    for _ in range(2):
+        update = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "copier",
+                "update",
+                "--defaults",
+                "--skip-tasks",
+                "-a",
+                ".copier-answers.yml",
+            ],
+            cwd=project,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert update.returncode == 0, update.stdout + update.stderr
+        assert (
+            subprocess.run(
+                ["git", "status", "--porcelain"],
+                cwd=project,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout
+            == ""
+        )
 
 
 def test_adopt_binary_asset_lands_verbatim(binary_template, project):

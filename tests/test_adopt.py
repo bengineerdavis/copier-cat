@@ -125,6 +125,31 @@ def test_stamp_writes_the_copier_answers_convention(template, project, tmp_path)
     assert "now" not in record
 
 
+def test_stamp_matches_copier_render_byte_for_byte(template, project, tmp_path):
+    # A native update immediately re-renders this answers template. If our
+    # stamp differs by even one newline, the next sequential update refuses
+    # the dirty project before it can do any work.
+    rendered = render(str(template), tmp_path / "render", ANSWERS)
+    native = (tmp_path / "render" / rendered.answers_relpath).read_bytes()
+    target = stamp(rendered, project)
+    assert target.read_bytes() == native
+
+
+def test_stamp_preserves_native_answers_template_formatting(tmp_path, project):
+    custom = tmp_path / "custom"
+    custom.mkdir()
+    (custom / "copier.yml").write_text("project_name:\n  type: str\n  default: demo\n")
+    (custom / "{{ _copier_conf.answers_file }}.jinja").write_text(
+        "# Native formatting is intentional\n"
+        "{{ _copier_answers|to_nice_yaml(indent=4) -}}\n"
+        "# End of native record\n"
+    )
+    rendered = render(str(custom), tmp_path / "render", ANSWERS)
+    native = (tmp_path / "render" / rendered.answers_relpath).read_bytes()
+    target = stamp(rendered, project)
+    assert target.read_bytes() == native
+
+
 def test_jinja_answers_filename_is_expanded_and_stamped(
     jinja_answers_template, project, tmp_path
 ):
