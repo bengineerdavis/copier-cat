@@ -357,7 +357,7 @@ def test_identical_shared_text_is_not_silently_selected(
     )
 
 
-def test_same_key_toml_collision_keeps_base_and_reports_warning(
+def test_same_key_toml_collision_requires_a_declared_rule_or_review(
     composed_catalog: Path, agentic_template: Path, destination: Path
 ):
     (agentic_template / "mise.toml.jinja").write_text(
@@ -379,10 +379,44 @@ def test_same_key_toml_collision_keeps_base_and_reports_warning(
         check=True,
     )
     result = assemble(composed_catalog, destination, "--yes", "--json")
+    assert result.exit_code == 2, result.output + result.stderr
+    payload = json.loads(result.stdout_bytes)
+    assert payload["stage"] == "composition"
+    assert "same-key conflict" in payload["error"]
+    assert "kept existing value" in payload["error"]
+    assert "declared precedence rule or review" in payload["error"]
+    assert not destination.exists()
+
+
+@pytest.mark.parametrize("empty_member", ["base", "overlay"])
+def test_empty_shared_toml_contribution_is_valid(
+    composed_catalog: Path,
+    python_template: Path,
+    agentic_template: Path,
+    destination: Path,
+    empty_member: str,
+):
+    template = python_template if empty_member == "base" else agentic_template
+    (template / "mise.toml.jinja").write_text("")
+    git_commit_all(template, f"empty {empty_member} TOML")
+    result = assemble(composed_catalog, destination, "--yes", "--json")
     assert result.exit_code == 0, result.output + result.stderr
-    config = tomllib.loads((destination / "mise.toml").read_text())
-    assert config["tools"]["python"] == "3.12"
-    assert config["tasks"]["check"] == "echo agentic"
+    assert (destination / "mise.toml").is_file()
+
+
+def test_template_owned_stack_artifact_path_is_a_composition_error(
+    composed_catalog: Path, agentic_template: Path, destination: Path
+):
+    (agentic_template / "agentic-python.stack.yml").write_text(
+        "template-owned content\n"
+    )
+    git_commit_all(agentic_template, "template-owned stack artifact path")
+    result = assemble(composed_catalog, destination, "--yes", "--json")
+    assert result.exit_code == 2, result.output + result.stderr
+    payload = json.loads(result.stdout_bytes)
+    assert payload["stage"] == "composition"
+    assert "reserved stack artifact" in payload["error"]
+    assert not destination.exists()
 
 
 def test_overlay_requires_capabilities_without_python_dependency(

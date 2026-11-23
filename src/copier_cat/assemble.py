@@ -13,7 +13,8 @@ import re
 import shutil
 import subprocess
 import tempfile
-from dataclasses import dataclass, field
+import tomllib
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -21,19 +22,21 @@ import copier
 import yaml
 
 from .adopt import Rendered, render
-from .merge import default_registry
+from .merge import TomlMerger
+
+
+def _safe_path_component(value: str, label: str) -> str:
+    """Reject identifiers that cannot safely name one directory entry."""
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", value) or value in {".", ".."}:
+        raise AssemblyError(
+            "catalog", f"{label} is not a safe path component: {value!r}"
+        )
+    return value
 
 
 def stack_artifact_name(stack_name: str) -> str:
     """Return one safe project-local artifact name, or reject the stack name."""
-    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", stack_name) or stack_name in {
-        ".",
-        "..",
-    }:
-        raise AssemblyError(
-            "catalog", f"stack name is not a safe artifact filename: {stack_name!r}"
-        )
-    return f"{stack_name}.stack.yml"
+    return f"{_safe_path_component(stack_name, 'stack name')}.stack.yml"
 
 
 class AssemblyError(Exception):
@@ -99,6 +102,79 @@ def _mapping(value: Any, label: str) -> dict[str, Any]:
     return value
 
 
+def _is_git_template(source: str) -> bool:
+    """Recognize local Git checkouts, including linked-worktree .git files."""
+    path = Path(source)
+    return path.is_dir() and (path / ".git").exists()
+
+
+def _git_head(source: Path) -> str:
+    return subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=source,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+
+def _native_answers_source(source: Path | None, rendered: Rendered) -> Rendered:
+    """Record a resolvable Git source and committed baseline for native update."""
+    if source is None or rendered.commit is None:
+        return rendered
+    dirty = subprocess.run(
+        ["git", "status", "--porcelain"],
+        cwd=source,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    return replace(
+        rendered,
+        src=f"git+{source.resolve()}",
+        commit=_git_head(source)[:7] if dirty else rendered.commit,
+    )
+
+
+def _validation_source(
+    member: Member, rendered: Rendered, source: Path, preview: Path
+) -> tuple[str, str | None]:
+    """Use a committed copy when a no-ref local template is dirty.
+
+    Copier's dirty update mode can record a synthetic ref that its next clone
+    cannot resolve. The user's source is never modified; only this disposable
+    validation project uses the clean source and its real committed baseline.
+    """
+    local = _local_git_source(member.source)
+    if local is None or member.ref is not None or rendered.commit is None:
+        return rendered.src, member.ref or rendered.commit
+    if not subprocess.run(
+        ["git", "status", "--porcelain"],
+        cwd=local,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout:
+        return rendered.src, member.ref or rendered.commit
+    clean = preview / f"validation-source-{member.name}"
+    subprocess.run(
+        ["git", "clone", "-q", str(local), str(clean)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return f"git+{clean.resolve()}", _git_head(local)[:7]
+
+
+def _local_git_source(source: str) -> Path | None:
+    """Recover the original local checkout from Copier's Git URL form."""
+    if source.startswith("git+"):
+        path = Path(source[4:])
+        if _is_git_template(str(path)):
+            return path
+    return None
+
+
 def load_catalog(path: Path, stack_name: str) -> Stack:
     """Load one named stack; no other project's answers file is consulted."""
     try:
@@ -124,6 +200,8 @@ def load_catalog(path: Path, stack_name: str) -> Stack:
         )
     if len(set(names)) != len(names):
         raise AssemblyError("catalog", "a stack cannot repeat a template")
+    for name in names:
+        _safe_path_component(name, "template ID")
     members: list[Member] = []
     for name in names:
         if name not in templates:
@@ -135,6 +213,11 @@ def load_catalog(path: Path, stack_name: str) -> Stack:
         ref = data.get("ref")
         if ref is not None and not isinstance(ref, str):
             raise AssemblyError("catalog", f"template {name!r} ref must be a string")
+        if ref is not None and Path(source).is_dir() and not _is_git_template(source):
+            raise AssemblyError(
+                "catalog",
+                f"template {name!r} selects a ref but is not a Git repository",
+            )
         answers = _mapping(data.get("answers", {}), f"template {name!r} answers")
         capabilities = data.get("capabilities", [])
         if not isinstance(capabilities, list) or not all(
@@ -155,7 +238,11 @@ def load_catalog(path: Path, stack_name: str) -> Stack:
             Member(
                 name=name,
                 role=role,
-                source=source,
+                source=(
+                    f"git+{Path(source).resolve()}"
+                    if _is_git_template(source)
+                    else source
+                ),
                 ref=ref,
                 answers=answers,
                 trust=bool(data.get("trust", False)),
@@ -290,6 +377,18 @@ def resolve_answers(
     return answers
 
 
+def _member_preview_path(preview: Path, prefix: str, member: Member) -> Path:
+    """Contain every generated member path inside the isolated preview."""
+    path = (preview / f"{prefix}-{member.name}").resolve()
+    try:
+        path.relative_to(preview)
+    except ValueError as error:
+        raise AssemblyError(
+            "catalog", f"template ID escapes the preview: {member.name!r}"
+        ) from error
+    return path
+
+
 def _assert_new_destination(destination: Path) -> None:
     if destination.exists():
         raise AssemblyError(
@@ -356,7 +455,7 @@ def _validate(
         raise AssemblyError("validation", "native answers file is not a mapping")
     if record.get("_src_path") != rendered.src:
         raise AssemblyError(
-            "validation", "native answers source does not match the catalog"
+            "validation", "native answers source does not match the rendered template"
         )
     if stack_artifact is not None and not stack_artifact.is_file():
         raise AssemblyError(
@@ -365,14 +464,10 @@ def _validate(
     if list(destination.rglob("*.rej")):
         raise AssemblyError("validation", "Copier left rejected update hunks (.rej)")
     for path in destination.rglob("*.toml"):
-        result = default_registry().merge(
-            path.relative_to(destination).as_posix(),
-            "",
-            path.read_text(encoding="utf-8"),
-            path.read_text(encoding="utf-8"),
-        )
-        if result.merger != "toml":
-            raise AssemblyError("validation", f"invalid TOML: {path}")
+        try:
+            tomllib.loads(path.read_text(encoding="utf-8"))
+        except tomllib.TOMLDecodeError as error:
+            raise AssemblyError("validation", f"invalid TOML: {path}") from error
     tests_ran = _run_project_tests(destination, environment) if run_tests else False
     return (
         "rendered output exists",
@@ -400,6 +495,13 @@ def _compose_members(
     destination: Path,
 ) -> list[tuple[Member, Rendered, Path]]:
     """Compose disjoint files and explicit shared structures into one preview."""
+    artifact = stack_artifact_name(stack.name)
+    for _, rendered, source in renders:
+        if rendered.answers_relpath == artifact or (source / artifact).exists():
+            raise AssemblyError(
+                "composition",
+                f"template contribution uses reserved stack artifact path: {artifact}",
+            )
     destination.mkdir()
     seen: dict[str, Member] = {}
     answers: dict[str, Path] = {}
@@ -421,7 +523,11 @@ def _compose_members(
             from .adopt import stamp
 
             stamp(rendered, source)
-        shutil.copy2(native_answers, answers_target)
+        # The render may carry a normalized Git source for future updates.
+        # Copy that prepared answers file once; do not replace it with the raw
+        # render's source metadata in the second file-composition pass.
+        answers_record = native_answers.read_bytes()
+        answers_target.write_bytes(answers_record)
         for path in sorted(source.rglob("*")):
             if path.is_dir():
                 continue
@@ -443,16 +549,21 @@ def _compose_members(
                 target.write_text("\n".join(lines) + "\n", encoding="utf-8")
                 continue
             if relative.endswith(".toml"):
-                result = default_registry().merge(
-                    relative,
-                    "",
-                    target.read_text(encoding="utf-8"),
-                    path.read_text(encoding="utf-8"),
-                )
-                if result.merger != "toml":
+                merger = TomlMerger()
+                ours = target.read_text(encoding="utf-8")
+                theirs = path.read_text(encoding="utf-8")
+                if not merger.accepts(relative, "", ours, theirs):
                     raise AssemblyError(
                         "composition",
                         f"cannot parse shared TOML {relative} from {member.name}",
+                    )
+                result = merger.merge(relative, "", ours, theirs)
+                if result.warnings:
+                    raise AssemblyError(
+                        "composition",
+                        f"same-key conflict in {relative} from {member.name}: "
+                        + "; ".join(result.warnings)
+                        + "; require a declared precedence rule or review",
                     )
                 target.write_text(result.text, encoding="utf-8")
                 continue
@@ -470,7 +581,8 @@ def _native_update_commands(
 ) -> tuple[str, ...]:
     return tuple(
         f"copier update --defaults -a {rendered.answers_relpath}"
-        for _, rendered, _ in renders
+        + (" --trust" if member.trust else "")
+        for member, rendered, _ in renders
     )
 
 
@@ -515,6 +627,7 @@ def _write_stack_artifact(
                         "answers_file": rendered.answers_relpath,
                         "update_command": (
                             f"copier update --defaults -a {rendered.answers_relpath}"
+                            + (" --trust" if member.trust else "")
                         ),
                     },
                 }
@@ -536,7 +649,10 @@ def _validate_members(
     environment: Path,
     stack_artifact: Path,
 ) -> tuple[str, ...]:
-    checks = ("rendered output exists", "disjoint template files composed")
+    checks: tuple[str, ...] = (
+        "rendered output exists",
+        "disjoint template files composed",
+    )
     for _, rendered, _ in renders:
         checks += _validate(destination, rendered, False, environment, stack_artifact)
     checks += tuple(
@@ -559,8 +675,19 @@ def _check_native_update(
     preview: Path,
 ) -> None:
     """Verify one ordinary Copier update without rewriting the composed preview."""
-    update_root = preview / f"update-{member.name}"
+    update_root = _member_preview_path(preview, "update", member)
+    update_source, update_ref = _validation_source(member, rendered, source, preview)
     shutil.copytree(source, update_root)
+    if update_source != rendered.src:
+        answers = update_root / rendered.answers_relpath
+        original = answers.read_text(encoding="utf-8")
+        original = re.sub(
+            r"(?m)^_src_path: .*$", f"_src_path: {update_source}", original, count=1
+        )
+        original = re.sub(
+            r"(?m)^_commit: .*$", f"_commit: {update_ref}", original, count=1
+        )
+        answers.write_text(original, encoding="utf-8")
     subprocess.run(
         ["git", "init", "-q", str(update_root.resolve())],
         check=True,
@@ -598,7 +725,8 @@ def _check_native_update(
             overwrite=True,
             skip_tasks=True,
             answers_file=rendered.answers_relpath,
-            vcs_ref=member.ref,
+            unsafe=member.trust,
+            vcs_ref=update_ref,
         )
     if update.answers_relpath != Path(rendered.answers_relpath):
         raise AssemblyError(
@@ -635,14 +763,14 @@ def assemble(
         try:
             renders: list[tuple[Member, Rendered, Path]] = []
             for member in stack.members:
-                member_preview = preview / f"render-{member.name}"
+                member_preview = _member_preview_path(preview, "render", member)
+                local_source = _local_git_source(member.source)
+                render_source = (
+                    str(local_source)
+                    if member.ref is None and local_source is not None
+                    else member.source
+                )
                 with contextlib.redirect_stdout(os.sys.stderr):
-                    render_source = member.source
-                    source_path = Path(render_source)
-                    if source_path.is_dir():
-                        # Copier resolves short commits only for its recognized
-                        # Git URL path, not its local-directory shortcut.
-                        render_source = f"git+{source_path.resolve()}"
                     rendered = render(
                         render_source,
                         member_preview,
@@ -651,6 +779,34 @@ def assemble(
                         trust=member.trust,
                         vcs_ref=member.ref or "HEAD",
                     )
+                rendered = _native_answers_source(local_source, rendered)
+                if rendered.src != render_source:
+                    native_answers = member_preview / rendered.answers_relpath
+                    original_text = native_answers.read_text(encoding="utf-8")
+                    source_line = next(
+                        line
+                        for line in original_text.splitlines(keepends=True)
+                        if line.startswith("_src_path:")
+                    )
+                    original_text = original_text.replace(
+                        source_line, f"_src_path: {rendered.src}\n", 1
+                    )
+                    original_commit = yaml.safe_load(original_text)["_commit"]
+                    if rendered.commit is not None and rendered.commit != str(
+                        original_commit
+                    ):
+                        commit_line = next(
+                            line
+                            for line in original_text.splitlines(keepends=True)
+                            if line.startswith("_commit:")
+                        )
+                        serialized_commit = yaml.safe_dump(
+                            {"_commit": rendered.commit}, default_flow_style=False
+                        ).split(": ", 1)[1]
+                        original_text = original_text.replace(
+                            commit_line, f"_commit: {serialized_commit}", 1
+                        )
+                    native_answers.write_text(original_text, encoding="utf-8")
                 renders.append((member, rendered, member_preview))
             _compose_members(stack, renders, preview / "render")
             _write_stack_artifact(
@@ -664,6 +820,12 @@ def assemble(
                 preview / "render" / stack_artifact_name(stack.name),
             )
             for member, rendered, source in renders:
+                if rendered.commit is None:
+                    checks += (
+                        f"native Copier update unavailable: {member.name} has no "
+                        "Git commit baseline",
+                    )
+                    continue
                 _check_native_update(member, rendered, source, preview)
                 checks += (f"native Copier update succeeded: {member.name}",)
         except AssemblyError:
