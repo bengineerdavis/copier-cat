@@ -247,9 +247,128 @@ def test_audit_detects_retitle_when_the_id_means_two_different_records(
     result = run_audit(tmp_path, "--refs")
     assert result.returncode == 1
     payload = json.loads(result.stdout)
+    # Under option A the distinct record is flagged where it is visible:
+    # branch `other` carries the ID at two unrelated paths.
+    assert {
+        "id": "decision-10",
+        "paths": ["backlog/decisions/one.md", "backlog/decisions/two.md"],
+    } in payload["collisions"], payload
+
+
+def test_audit_detects_id_reuse_when_no_branch_holds_both_paths(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Old title")
+    commit("first")
+    git("checkout", "-q", "--orphan", "other")
+    git("rm", "-rq", "--cached", ".")
+    (tmp_path / "backlog/decisions/one.md").unlink()
+    write_record(tmp_path, "backlog/decisions/two.md", "decision-10", "New meaning")
+    commit("unrelated branch reuses the id")
+    git("checkout", "-q", "main")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 1
+    payload = json.loads(result.stdout)
     assert {"id": "decision-10", "titles": ["New meaning", "Old title"]} in (
         payload["collisions"]
     ), payload
+
+
+def test_audit_detects_retitle_plus_rename_hiding_id_reuse(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Old title")
+    commit("first")
+    git("checkout", "-qb", "retitle")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "New title")
+    commit("retitle")
+    git("checkout", "-q", "main")
+    git("checkout", "-qb", "rename")
+    # Remove the path and re-add the ID at a new path with a new title:
+    # a genuinely different record wearing the same ID.
+    (tmp_path / "backlog/decisions/one.md").unlink()
+    write_record(
+        tmp_path, "backlog/decisions/two.md", "decision-10", "Different meaning"
+    )
+    commit("rename to a different record")
+    git("checkout", "-q", "main")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 1
+    payload = json.loads(result.stdout)
+    expected = {
+        "id": "decision-10",
+        "titles": ["Different meaning", "New title", "Old title"],
+    }
+    assert expected in payload["collisions"], payload
+
+
+def test_audit_allows_a_local_edit_matching_a_divergent_branch_title(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "First meaning")
+    commit("first")
+    git("checkout", "-qb", "other")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Other meaning")
+    commit("divergent same-path on other")
+    git("checkout", "-q", "main")
+    # Uncommitted edit on main matches the divergent branch's title. One
+    # path is one record lineage: same-path title differences are retitles
+    # (option A), and same-path divergence is delegated to git's own merge
+    # conflict. The audit exits clean.
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Other meaning")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_current_checkout_has_unique_backlog_ids() -> None:

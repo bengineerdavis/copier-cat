@@ -95,30 +95,42 @@ def git_records(root: Path) -> list[dict[str, Any]]:
 def collisions(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """One ID with more than one meaning across refs.
 
-    A same-path retitle is one record, not two meanings: when two refs
-    carry the same path for an ID, their titles describe the same record
-    at different times, so only titles from records whose paths are NOT
-    shared across refs count as distinct meanings.
+    A record's identity is its path. All titles a path carries across
+    refs belong to ONE record lineage — a retitle never splits meanings.
+    Distinct paths are distinct records, the same work only when their
+    title sets intersect (a rename without retitle). Same-path divergence
+    is delegated to git's own merge conflict, not detected here. An ID
+    collides when its records form more than one work.
     """
-    grouped: dict[str, set[str]] = defaultdict(set)
+    by_id: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for item in items:
-        if item["title"] is None:
-            continue
-        # Count a title as a distinct meaning only when this record's
-        # path is not shared with another ref carrying the same ID.
-        shared = sum(
-            1
-            for other in items
-            if other["id"] == item["id"] and other["path"] == item["path"]
-        )
-        if shared > 1:
-            continue
-        grouped[item["id"]].add(item["title"])
-    return [
-        {"id": identifier, "titles": sorted(titles)}
-        for identifier, titles in grouped.items()
-        if len(titles) > 1
-    ]
+        by_id[item["id"]].append(item)
+    results: list[dict[str, Any]] = []
+    for identifier, recs in by_id.items():
+        titles_by_path: dict[str, set[str]] = defaultdict(set)
+        for item in recs:
+            if item["title"] is not None:
+                titles_by_path[item["path"]].add(item["title"])
+        if len(titles_by_path) < 2:
+            continue  # one path = one record lineage, retitles included
+        paths = list(titles_by_path)
+        parent = {path: path for path in paths}
+
+        def find(path: str, links: dict[str, str] = parent) -> str:
+            while links[path] != path:
+                links[path] = links[links[path]]
+                path = links[path]
+            return path
+
+        for index, left in enumerate(paths):
+            for right in paths[index + 1 :]:
+                if titles_by_path[left] & titles_by_path[right]:
+                    parent[find(right)] = find(left)
+        works = {find(path) for path in paths}
+        if len(works) > 1:
+            titles = sorted({t for s in titles_by_path.values() for t in s})
+            results.append({"id": identifier, "titles": titles})
+    return results
 
 
 def duplicate_ids(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -163,20 +175,24 @@ def main() -> int:
         # when the overlay replaces one of its paths.
         branch = current_branch(root)
         working = checkout_records(root)
-        committed_on_branch = {
-            item["path"]: (item["id"], item["title"])
-            for item in items
-            if branch is not None and item["branch"] == branch
-        }
+        working_by_path = {item["path"]: item for item in working}
         overlayed = []
         for item in items:
-            same_as_branch = committed_on_branch.get(item["path"]) == (
-                item["id"],
-                item["title"],
-            )
-            if same_as_branch:
-                continue  # replaced by the working-tree version below
+            if branch is None or item["branch"] != branch:
+                overlayed.append(item)  # other refs keep their versions
+                continue
+            local = working_by_path.get(item["path"])
+            if local is None:
+                overlayed.append(item)  # no working-tree version at this path
+                continue
+            if (local["id"], local["title"]) == (item["id"], item["title"]):
+                overlayed.append(item)
+                continue  # identical: keep one copy, appended once below
             overlayed.append(item)
+            # A CHANGED local edit still leaves the committed version in
+            # scope: the collision check needs the checked-out branch's
+            # committed state to compare divergent refs against. The
+            # working-tree version joins below as the record's new state.
         overlayed = overlayed + working
         problems = collisions(overlayed) + duplicate_ids(items + working)
         print(json.dumps({"records": len(overlayed), "collisions": problems}, indent=2))
