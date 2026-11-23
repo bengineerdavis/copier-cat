@@ -66,11 +66,20 @@ Existing requirements are unaffected in text but now derive from a principle:
 `decision-9` and `spec.md` C6's idempotent setup become instances of principle
 6 rather than isolated requirements.
 
-`spec.md` C1 adopt already satisfies principle 6 through its recorded baseline
-and per-file review, and principle 7 through its no-residue requirement.
-`spec.md` C8 assembly satisfies principle 6 through isolated previews that
-write only on approval, and principle 7 through the rule that approval
-authorizes only the displayed new-destination write.
+`spec.md` C1 adopt and `spec.md` C8 assembly do not yet satisfy these
+principles, and this decision does not claim they do. Measured 2026-11-22
+(review 746): repeating an identical `adopt --defaults --accept-all --json`
+run against a conflicted project re-renders, re-merges, and re-stamps —
+two identical runs produced nested conflict markers rather than
+convergence, and accepted conflicts, binary replacements, and answers-file
+stamping overwrite project content without a restorable backup. Assembly
+previews converge for unchanged inputs but repeated assembly against an
+existing destination is refused rather than reconciled. Adopting these
+principles makes those behaviors spec gaps, not compliant baselines:
+convergence and backup-before-overwrite for adopt are implementation work
+that the tasks below must own, with observable tests including the
+repeated-conflict scenario. Until that work lands, adopt and assemble run
+under a reviewed per-capability exception with the maintainer as owner.
 
 Two gaps are now visible against the principles and have their own tasks:
 
