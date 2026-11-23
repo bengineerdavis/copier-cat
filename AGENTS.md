@@ -46,3 +46,15 @@ escalate conflicts, and never let a diff carry a governance change.
   Hooks are per-clone state; continuing an existing clone needs neither.
   Update this stamped project with
   `copier update -a .copier-answers.copier-cat.yml`.
+- Before merging any branch: `mise run quality` passes on the merged
+  result AND the branch review has a recorded disposition. Tests passing
+  alone is not a merge signal.
+- Backlog records live on the branch that created them. Before editing a
+  task from another worktree, check the branch that owns it — the CLI
+  will report `Task not found` in worktrees predating the record.
+
+<!-- This section is maintained by the coding agent via lore (https://github.com/BYK/loreai) -->
+## Long-term Knowledge
+
+For long-term knowledge entries managed by [lore](https://github.com/BYK/loreai) (gotchas, patterns, decisions, architecture), see [`.lore.md`](.lore.md) in the project root.
+<!-- End lore-managed section -->
