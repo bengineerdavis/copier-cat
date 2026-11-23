@@ -481,13 +481,16 @@ def main() -> int:
         # working record's (path, ID) — giving the merge the lineage it
         # needs to see one record, not two.
         parent_ref: str | None = None
-        working_records = {
-            (item["path"], item["id"]) for item in checkout_records(root)
-        }
+        # The derivation ref is the ref the working tree's records came
+        # from — the ref sharing the most record IDs with the working
+        # set. A rename breaks exact (path, id) matches, so match on
+        # IDs, which renames preserve.
+        ref_id_overlap: dict[str, int] = defaultdict(int)
         for item in committed:
-            if (item["path"], item["id"]) in working_records:
-                parent_ref = item["branch"]
-                break
+            if item["id"] in {rec["id"] for rec in checkout_records(root)}:
+                ref_id_overlap[item["branch"]] += 1
+        if ref_id_overlap:
+            parent_ref = max(ref_id_overlap, key=lambda ref: ref_id_overlap[ref])
         working = working_tree_commit(root, parent_ref=parent_ref)
         if working is None:
             raise AuditError("working-state commit could not be built")

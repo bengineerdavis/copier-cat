@@ -1306,9 +1306,16 @@ def test_audit_allows_an_unrelated_edit_outside_backlog_with_an_unborn_head(
     git("checkout", "-qb", "left")
     write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Original")
     commit("first")
+    # A sibling ref that sorts BEFORE left and shares no record with the
+    # working tree: the derivation parent must still be left.
+    git("checkout", "-qb", "aaa")
+    write_record(tmp_path, "backlog/tasks/shared.md", "CCC-1", "Marker")
+    commit("marker on aaa")
+    git("checkout", "-q", "left")
+    # HEAD goes unborn while the index keeps left's tree; the working
+    # state stages an ordinary rename of left's record.
     git("symbolic-ref", "HEAD", "refs/heads/main")
-    # The backlog is untouched; only a file outside the store changed.
-    (tmp_path / "README.md").write_text("unrelated edit\n")
+    git("mv", "backlog/decisions/one.md", "backlog/decisions/two.md")
 
     result = run_audit(tmp_path, "--refs")
     assert result.returncode == 0, result.stdout + result.stderr
