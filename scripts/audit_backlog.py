@@ -125,17 +125,26 @@ def read_blobs(root: Path, oids: set[str]) -> dict[str, str]:
     while offset < len(output):
         end_of_header = output.find(b"\n", offset)
         if end_of_header == -1:
-            break
+            raise AuditError("truncated cat-file response: no header terminator")
         header = output[offset:end_of_header].decode("ascii", "replace").split()
-        if len(header) < 3 or header[1] != "blob":
-            break
-        oid = header[0]
+        if len(header) < 2:
+            raise AuditError(f"malformed cat-file header: {header!r}")
+        oid, kind = header[0], header[1]
+        if kind != "blob":
+            raise AuditError(f"requested object {oid} is a {kind}, not a blob")
+        if len(header) < 3:
+            raise AuditError(f"missing size for object {oid}")
         size = int(header[2])
         body_start = end_of_header + 1
+        if body_start + size > len(output):
+            raise AuditError(f"truncated cat-file body for object {oid}")
         contents[oid] = output[body_start : body_start + size].decode(
             "utf-8", "replace"
         )
         offset = body_start + size + 1
+    missing = sorted(oids - set(contents))
+    if missing:
+        raise AuditError(f"cat-file returned no blob for: {', '.join(missing[:5])}")
     return contents
 
 
@@ -159,7 +168,7 @@ def git_records(root: Path) -> list[dict[str, Any]]:
             oids.add(oid)
     sources = read_blobs(root, oids)
     for ref, relpath, oid in entries:
-        meta = parse_frontmatter(sources.get(oid, ""))
+        meta = parse_frontmatter(sources[oid])
         if meta.get("id") is None:
             continue
         items.append(
@@ -237,13 +246,26 @@ def working_tree_commit(root: Path) -> str | None:
         parent: list[str] = []
         if head.returncode == 0 and head.stdout.strip():
             parent = ["-p", head.stdout.strip()]
-        commit = run_git(
-            root,
-            "commit-tree",
-            *parent,
-            "-m",
-            "backlog-audit working state",
-            tree.stdout.strip(),
+        commit = subprocess.run(
+            [
+                "git",
+                "commit-tree",
+                *parent,
+                "-m",
+                "backlog-audit working state",
+                tree.stdout.strip(),
+            ],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            env={
+                **env,
+                "GIT_AUTHOR_NAME": "backlog-audit",
+                "GIT_AUTHOR_EMAIL": "audit@localhost",
+                "GIT_COMMITTER_NAME": "backlog-audit",
+                "GIT_COMMITTER_EMAIL": "audit@localhost",
+            },
+            check=False,
         )
         if commit.returncode != 0:
             raise AuditError(
@@ -273,7 +295,7 @@ def merged_tree_ids(root: Path, tree: str) -> dict[str, list[str]]:
     sources = read_blobs(root, oids)
     ids: dict[str, list[str]] = defaultdict(list)
     for relpath, oid in entries:
-        meta = parse_frontmatter(sources.get(oid, ""))
+        meta = parse_frontmatter(sources[oid])
         identifier = meta.get("id")
         if identifier is not None:
             ids[identifier].append(relpath)

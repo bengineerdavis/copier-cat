@@ -1,6 +1,7 @@
 """Public CLI contract for the cross-branch Backlog identity audit."""
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -951,6 +952,113 @@ def test_audit_detects_id_reuse_from_an_orphan_at_a_renamed_path(
 
     result = run_audit(tmp_path, "--refs")
     assert result.returncode == 1, result.stdout + result.stderr
+
+
+def test_audit_fails_closed_when_an_object_is_unreadable(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Original")
+    commit("first")
+    # Remove one loose blob: the audit must fail loudly, not report a
+    # clean store missing the record.
+    oid = subprocess.run(
+        ["git", "rev-parse", "HEAD:backlog/decisions/one.md"],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    loose = tmp_path / ".git/objects" / oid[:2] / oid[2:]
+    backup = loose.read_bytes()
+    try:
+        loose.unlink()
+        result = run_audit(tmp_path, "--refs")
+        assert result.returncode == 2, result.stdout + result.stderr
+    finally:
+        loose.write_bytes(backup)
+
+
+def test_audit_runs_with_an_empty_git_identity(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Original")
+    commit("first")
+    git("checkout", "-qb", "other")
+    write_record(tmp_path, "backlog/decisions/two.md", "decision-10", "Reused")
+    commit("reuses the id at a new path")
+    git("checkout", "-q", "main")
+    write_record(tmp_path, "backlog/decisions/three.md", "decision-11", "Uncommitted")
+    # The throwaway working-state commit carries audit-local identities,
+    # so a minimally configured environment still gets a full audit.
+    env = {
+        key: value
+        for key, value in os.environ.items()
+        if key
+        not in (
+            "GIT_AUTHOR_NAME",
+            "GIT_AUTHOR_EMAIL",
+            "GIT_COMMITTER_NAME",
+            "GIT_COMMITTER_EMAIL",
+        )
+    }
+    env.update(
+        {
+            "GIT_AUTHOR_NAME": "",
+            "GIT_AUTHOR_EMAIL": "",
+            "GIT_COMMITTER_NAME": "",
+            "GIT_COMMITTER_EMAIL": "",
+        }
+    )
+    result = subprocess.run(
+        [
+            sys.executable,
+            AUDIT,
+            "--root",
+            str(tmp_path),
+            "--refs",
+        ],
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=120,
+    )
+    assert result.returncode == 1, result.stdout + result.stderr
+    payload = json.loads(result.stdout)
+    assert {"id": "decision-10", "titles": ["Original", "Reused"]} in (
+        payload["collisions"]
+    ), payload
 
 
 def test_current_checkout_has_unique_backlog_ids() -> None:
