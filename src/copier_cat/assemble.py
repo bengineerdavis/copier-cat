@@ -12,6 +12,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import tomllib
 from dataclasses import dataclass, field, replace
@@ -302,7 +303,7 @@ def resolve_stack_answers(
 def questions_for(member: Member) -> tuple[Question, ...]:
     """Read questions from the template Copier itself resolves."""
     try:
-        with contextlib.redirect_stdout(os.sys.stderr):
+        with contextlib.redirect_stdout(sys.stderr):
             template = copier.Template(url=member.source, ref=member.ref)
             question_data = template.questions_data
         result = []
@@ -717,7 +718,7 @@ def _check_native_update(
         capture_output=True,
         text=True,
     )
-    with contextlib.redirect_stdout(os.sys.stderr):
+    with contextlib.redirect_stdout(sys.stderr):
         update = copier.run_update(
             update_root,
             defaults=True,
@@ -770,7 +771,7 @@ def assemble(
                     if member.ref is None and local_source is not None
                     else member.source
                 )
-                with contextlib.redirect_stdout(os.sys.stderr):
+                with contextlib.redirect_stdout(sys.stderr):
                     rendered = render(
                         render_source,
                         member_preview,
