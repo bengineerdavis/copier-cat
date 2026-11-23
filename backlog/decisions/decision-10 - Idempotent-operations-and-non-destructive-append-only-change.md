@@ -75,11 +75,13 @@ convergence, and accepted conflicts, binary replacements, and answers-file
 stamping overwrite project content without a restorable backup. Assembly
 previews converge for unchanged inputs but repeated assembly against an
 existing destination is refused rather than reconciled. Adopting these
-principles makes those behaviors spec gaps, not compliant baselines:
-convergence and backup-before-overwrite for adopt are implementation work
-that the tasks below must own, with observable tests including the
-repeated-conflict scenario. Until that work lands, adopt and assemble run
-under a reviewed per-capability exception with the maintainer as owner.
+principles makes those behaviors spec gaps, not compliant baselines.
+CCC-39 owns the remediation: repeated-run convergence and restorable
+backup before overwrites for adopt. CCC-35 owns the regression tests,
+including the repeated-conflict scenario, and verifies the remediated
+behavior rather than pinning the current nesting defect. Until CCC-39
+lands, adopt's non-convergence and lack of backup are recorded gaps —
+not exceptions, because no exception has been approved.
 
 Two gaps are now visible against the principles and have their own tasks:
 
@@ -87,11 +89,14 @@ Two gaps are now visible against the principles and have their own tasks:
   required restorable backup and separate restore verb, has no requirements
   home. Principle 7 makes that omission a spec gap rather than a design taste.
   CCC-34 owns the requirements.
-- **Idempotency is untested as a general property.** The prototype's
-  walkthrough `apply()` double-applied on Previous-then-Run, producing a
-  duplicate overlay. No test on `main` asserts that repeating an operation
-  converges, so principle 6 currently has no enforcement. CCC-35 owns the
-  tests.
+- **Idempotency is untested as a property of the public operations.** The
+  prototype's walkthrough `apply()` double-applied on Previous-then-Run,
+  producing a duplicate overlay. Merger-level coverage exists on `main` —
+  `tests/test_mergers.py` `test_toml_merge_is_idempotent` performs a second
+  merge and asserts identical output with no warnings — but no test asserts
+  that repeating a public operation (adopt, assemble) converges, so
+  principle 6 currently has no enforcement at the operation level. CCC-35
+  owns the tests, scoped to the uncovered public operations.
 
 This decision does not govern cc's own repository housekeeping. How
 `backlog/decisions/` and other project documents are corrected remains ordinary
