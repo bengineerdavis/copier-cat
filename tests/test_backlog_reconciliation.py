@@ -185,6 +185,73 @@ def test_audit_detects_duplicate_ids_inside_a_non_current_branch(
     } in payload["collisions"], payload
 
 
+def test_audit_allows_committed_retitle_on_a_sibling_branch(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Old title")
+    commit("first")
+    git("checkout", "-qb", "other")
+    # Same path, retitled on the sibling branch: one record, not two meanings.
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "New title")
+    commit("retitle on other")
+    git("checkout", "-q", "main")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_audit_detects_retitle_when_the_id_means_two_different_records(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Old title")
+    commit("first")
+    git("checkout", "-qb", "other")
+    # Different path, different title: a genuinely different record —
+    # a same-path retitle would NOT collide.
+    write_record(tmp_path, "backlog/decisions/two.md", "decision-10", "New meaning")
+    commit("different record on other")
+    git("checkout", "-q", "main")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 1
+    payload = json.loads(result.stdout)
+    assert {"id": "decision-10", "titles": ["New meaning", "Old title"]} in (
+        payload["collisions"]
+    ), payload
+
+
 def test_current_checkout_has_unique_backlog_ids() -> None:
     result = run_audit(ROOT)
     assert result.returncode == 0, result.stdout + result.stderr

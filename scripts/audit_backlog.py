@@ -93,10 +93,27 @@ def git_records(root: Path) -> list[dict[str, Any]]:
 
 
 def collisions(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """One ID with more than one meaning across refs.
+
+    A same-path retitle is one record, not two meanings: when two refs
+    carry the same path for an ID, their titles describe the same record
+    at different times, so only titles from records whose paths are NOT
+    shared across refs count as distinct meanings.
+    """
     grouped: dict[str, set[str]] = defaultdict(set)
     for item in items:
-        if item["title"] is not None:
-            grouped[item["id"]].add(item["title"])
+        if item["title"] is None:
+            continue
+        # Count a title as a distinct meaning only when this record's
+        # path is not shared with another ref carrying the same ID.
+        shared = sum(
+            1
+            for other in items
+            if other["id"] == item["id"] and other["path"] == item["path"]
+        )
+        if shared > 1:
+            continue
+        grouped[item["id"]].add(item["title"])
     return [
         {"id": identifier, "titles": sorted(titles)}
         for identifier, titles in grouped.items()
