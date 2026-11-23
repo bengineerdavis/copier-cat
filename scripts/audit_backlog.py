@@ -92,7 +92,35 @@ def git_records(root: Path) -> list[dict[str, Any]]:
     return result
 
 
-def collisions(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def related_refs(root: Path, left: str, right: str) -> bool:
+    """Whether two refs share history (one forked from the other).
+
+    An ordinary rename branch shares history with its parent; an
+    orphan branch shares none. Used to merge a rename viewed from
+    opposite sides without merging independent same-title records.
+    """
+    result = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", left, right],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        return True
+    result = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", right, left],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.returncode == 0
+
+
+def collisions(
+    items: list[dict[str, Any]], root: Path | None = None
+) -> list[dict[str, Any]]:
     """One ID with more than one meaning across refs.
 
     A record's identity is its path. All titles a path carries across
@@ -125,6 +153,12 @@ def collisions(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 path = links[path]
             return path
 
+        # A rename leaves two visible shapes: (1) one ref holds both paths
+        # with the SAME title on each; (2) an ordinary git mv leaves only
+        # the new path on the rename branch and the old path on the
+        # parent — same title, disjoint paths, across ancestor-connected
+        # refs. Same-title paths on independent branches are not identity
+        # proof: they collide.
         branches: dict[str, list[str]] = defaultdict(list)
         for (branch, _), _title in title_on_branch.items():
             branches[branch].append(_)
@@ -139,6 +173,22 @@ def collisions(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
                         and find(left) != find(right)
                     ):
                         parent[find(right)] = find(left)
+        if len(branches) > 1:
+            for branch_a, paths_a in branches.items():
+                for branch_b in branches:
+                    if branch_a == branch_b:
+                        continue
+                    if root is not None and not related_refs(root, branch_a, branch_b):
+                        continue  # independent histories: not a rename
+                    only_a = [p for p in paths_a if p not in branches[branch_b]]
+                    only_b = [p for p in branches[branch_b] if p not in paths_a]
+                    if not only_a or not only_b:
+                        continue
+                    titles_a = {title_on_branch[(branch_a, p)] for p in only_a}
+                    titles_b = {title_on_branch[(branch_b, p)] for p in only_b}
+                    if titles_a and titles_a == titles_b and None not in titles_a:
+                        for path in only_b:
+                            parent[find(path)] = find(only_a[0])
         works = {find(path) for path in paths}
         if len(works) > 1:
             titles = sorted({t for s in titles_by_path.values() for t in s})
@@ -207,7 +257,7 @@ def main() -> int:
             # committed state to compare divergent refs against. The
             # working-tree version joins below as the record's new state.
         overlayed = overlayed + working
-        problems = collisions(overlayed) + duplicate_ids(items + working)
+        problems = collisions(overlayed, root) + duplicate_ids(items + working)
         print(json.dumps({"records": len(overlayed), "collisions": problems}, indent=2))
         return int(bool(problems))
     problems = collisions(items) + duplicate_ids(items)

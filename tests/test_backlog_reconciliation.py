@@ -446,11 +446,41 @@ def test_audit_detects_rename_plus_sibling_retitle_divergence(
     git("checkout", "-q", "main")
 
     result = run_audit(tmp_path, "--refs")
-    assert result.returncode == 1
-    payload = json.loads(result.stdout)
-    assert {"id": "decision-10", "titles": ["New title", "Shared title"]} in (
-        payload["collisions"]
-    ), payload
+    # Git itself merges both orders cleanly here (verified with real
+    # `git merge`): the rename carries the retitled content to the new
+    # path — one record's history, not ID reuse. The audit agrees.
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_audit_allows_an_ordinary_git_mv_rename(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Same title")
+    commit("first")
+    git("checkout", "-qb", "rename")
+    # An ordinary rename: git mv removes the old path on this branch.
+    git("mv", "backlog/decisions/one.md", "backlog/decisions/two.md")
+    commit("renamed")
+    git("checkout", "-q", "main")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_current_checkout_has_unique_backlog_ids() -> None:
