@@ -2,6 +2,7 @@
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -1319,6 +1320,44 @@ def test_audit_allows_an_unrelated_edit_outside_backlog_with_an_unborn_head(
 
     result = run_audit(tmp_path, "--refs")
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_audit_audsits_refs_with_no_working_backlog(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "left")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Original")
+    commit("left")
+    git("branch", "-q", "right", "left")
+    # An unborn HEAD with an empty checkout: refs stay auditable.
+    git("symbolic-ref", "HEAD", "refs/heads/main")
+    subprocess.run(
+        ["git", "rm", "-rq", "--cached", "."],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+    )
+    shutil.rmtree(tmp_path / "backlog")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 0, result.stdout + result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["collisions"] == [], payload
 
 
 def test_current_checkout_has_unique_backlog_ids() -> None:

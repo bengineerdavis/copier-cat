@@ -258,13 +258,19 @@ def working_tree_commit(root: Path, parent_ref: str | None = None) -> str | None
             # -f: checkout_records() reads ignored files too (they sit in
             # backlog/ on disk), so the working-state commit must include
             # them or a local collision hides behind a .gitignore rule.
+            # When no backlog/ exists the pathspec matches nothing, so
+            # fall back to an empty index.
             ["git", "add", "-A", "-f", "--", "backlog"],
             cwd=root,
             capture_output=True,
             env=env,
             check=False,
         )
-        if refresh.returncode != 0:
+        if refresh.returncode != 0 and not (root / "backlog").exists():
+            # No backlog path on disk: seed the empty index read-tree
+            # already produced; nothing to add.
+            pass
+        elif refresh.returncode != 0:
             raise AuditError(
                 f"git add failed (exit {refresh.returncode}): "
                 f"{refresh.stderr.decode('utf-8', 'replace')[:200]}"
