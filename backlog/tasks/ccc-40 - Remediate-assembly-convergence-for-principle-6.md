@@ -15,7 +15,7 @@ Decision-10 (principles 6 and 7) records a measured assembly gap: repeated assem
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A second identical assemble run against an existing destination converges per decision-11: it refuses before any write with an explicit, machine-readable pointer to adopt — never a bare error, never a write into the existing tree
+- [ ] #1 A second identical assemble run against an existing destination converges per decision-13 (refusal-with-pointer; implements decision-11 item 2): it refuses before any write with an explicit, machine-readable pointer to adopt — never a bare error, never a write into the existing tree
 - [ ] #2 The convergence path never duplicates contributions or writes outside the displayed destination
 - [ ] #3 uv run pytest -q passes with this task's own regression tests asserting remediated behavior
 <!-- AC:END -->

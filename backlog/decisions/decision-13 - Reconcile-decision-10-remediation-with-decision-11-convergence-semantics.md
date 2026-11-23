@@ -8,20 +8,28 @@ status: accepted
 ## Context
 
 decision-10 (accepted 2026-11-22) added principles 6 and 7 to the
-constitution and measured two non-compliances: repeated adopt re-renders,
-re-merges, and re-stamps (two identical runs produced nested conflict
-markers), and overwrites carry no restorable backup; assembly refuses an
-existing destination outright. decision-11 (accepted 2026-11-22, on main)
-independently ruled the verb semantics: adopt stamps once, refuses a
-second stamp, and points at upgrade; the new-project surface (assemble
-today, copy after CCC-37) refuses an existing destination and points at
-adopt. Reviews 753 and 755 flagged that remediation tasks written as
-"no-op or reviewed reconciliation" would reverse decision-11.
+constitution and asserted that C1 adopt already satisfies them and that
+C8 assembly satisfies them. That assertion is factually false: measured
+2026-11-22 (review 746), repeated adopt re-renders, re-merges, and
+re-stamps — two identical runs against a conflicted project produced
+nested conflict markers — and overwrites (accepted conflicts, binary
+replacements, answers-file stamping) carry no restorable backup;
+assembly refuses an existing destination outright. decision-11
+(accepted 2026-11-22, on main) independently ruled the verb semantics:
+adopt stamps once, refuses a second stamp, and points at upgrade; the
+new-project surface (assemble today, copy after CCC-37) refuses an
+existing destination and points at adopt. Reviews 753 and 755 flagged
+that remediation tasks written as "no-op or reviewed reconciliation"
+would reverse decision-11, and review 758 required the correction live
+in a superseding record rather than as an edit to decision-10's
+accepted body.
 
 ## Decision
 
-Both decisions stand. Refusal-with-pointer IS the convergence principle 6
-requires — same inputs, same refusal, zero state change.
+Both decisions stand. decision-10's compliance claim is factually
+corrected here rather than edited in place: adopt and assembly do NOT
+yet satisfy principles 6 and 7. Refusal-with-pointer IS the convergence
+principle 6 requires — same inputs, same refusal, zero state change.
 
 1. **Adopt converges by refusing.** The second-stamp guard implementing
    decision-11's stamp-once rule satisfies principle 6; no

@@ -66,18 +66,11 @@ Existing requirements are unaffected in text but now derive from a principle:
 `decision-9` and `spec.md` C6's idempotent setup become instances of principle
 6 rather than isolated requirements.
 
-`spec.md` C1 adopt and `spec.md` C8 assembly do not yet satisfy these
-principles, and this decision does not claim they do. Measured 2026-11-22
-(review 746): repeating an identical `adopt --defaults --accept-all --json`
-run against a conflicted project re-renders, re-merges, and re-stamps —
-two identical runs produced nested conflict markers rather than
-convergence, and accepted conflicts, binary replacements, and answers-file
-stamping overwrite project content without a restorable backup. Assembly
-previews converge for unchanged inputs but repeated assembly against an
-existing destination is refused rather than reconciled. How the recorded
-gaps are remediated is governed by decision-13, which reconciles this
-decision with decision-11; see that record for task ownership and the
-convergence semantics.
+`spec.md` C1 adopt already satisfies principle 6 through its recorded baseline
+and per-file review, and principle 7 through its no-residue requirement.
+`spec.md` C8 assembly satisfies principle 6 through isolated previews that
+write only on approval, and principle 7 through the rule that approval
+authorizes only the displayed new-destination write.
 
 Two gaps are now visible against the principles and have their own tasks:
 
@@ -85,29 +78,11 @@ Two gaps are now visible against the principles and have their own tasks:
   required restorable backup and separate restore verb, has no requirements
   home. Principle 7 makes that omission a spec gap rather than a design taste.
   CCC-34 owns the requirements.
-- **Idempotency is untested as a property of the public operations.** The
-  prototype's walkthrough `apply()` double-applied on Previous-then-Run,
-  producing a duplicate overlay. Merger-level coverage exists on `main` —
-  `tests/test_mergers.py` `test_toml_merge_is_idempotent` performs a second
-  merge and asserts identical output with no warnings — but no test asserts
-  that repeating a public operation (adopt, assemble) converges, so
-  principle 6 currently has no enforcement at the operation level. CCC-35
-  owns the tests, scoped to the uncovered public operations.
-
-Two gaps are now visible against the principles and have their own tasks:
-
-- **No reset capability exists in `spec.md`.** The prototype's reset, with its
-  required restorable backup and separate restore verb, has no requirements
-  home. Principle 7 makes that omission a spec gap rather than a design taste.
-  CCC-34 owns the requirements.
-- **Idempotency is untested as a property of the public operations.** The
-  prototype's walkthrough `apply()` double-applied on Previous-then-Run,
-  producing a duplicate overlay. Merger-level coverage exists on `main` —
-  `tests/test_mergers.py` `test_toml_merge_is_idempotent` performs a second
-  merge and asserts identical output with no warnings — but no test asserts
-  that repeating a public operation (adopt, assemble) converges, so
-  principle 6 currently has no enforcement at the operation level. CCC-35
-  owns the tests, scoped to the uncovered public operations.
+- **Idempotency is untested as a general property.** The prototype's
+  walkthrough `apply()` double-applied on Previous-then-Run, producing a
+  duplicate overlay. No test on `main` asserts that repeating an operation
+  converges, so principle 6 currently has no enforcement. CCC-35 owns the
+  tests.
 
 This decision does not govern cc's own repository housekeeping. How
 `backlog/decisions/` and other project documents are corrected remains ordinary

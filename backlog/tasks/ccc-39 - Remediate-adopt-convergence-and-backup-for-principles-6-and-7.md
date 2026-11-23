@@ -13,7 +13,7 @@ Decision-10 (principles 6 and 7) makes two measured adopt behaviors spec gaps, r
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A second identical adopt run against an unchanged stamped project converges per decision-11: it refuses the second stamp, changes nothing, and points at upgrade — never nested conflict markers or duplicated effects
+- [ ] #1 A second identical adopt run against an unchanged stamped project converges per decision-13 (refusal-with-pointer; implements decision-11's stamp-once rule): it refuses the second stamp, changes nothing, and points at upgrade — never nested conflict markers or duplicated effects
 - [ ] #2 Adopt takes a restorable backup before overwriting project content (accepted conflicts, binary replacements, answers-file stamping) and can restore it
 - [ ] #3 uv run pytest -q passes with this task's own regression tests asserting remediated behavior
 <!-- AC:END -->
