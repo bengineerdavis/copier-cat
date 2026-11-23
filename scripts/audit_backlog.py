@@ -220,7 +220,7 @@ def _has_head(root: Path) -> bool:
     )
 
 
-def working_tree_commit(root: Path) -> str | None:
+def working_tree_commit(root: Path, parent_ref: str | None = None) -> str | None:
     """A throwaway commit of the full working state, parented on HEAD.
 
     A temporary index (``GIT_INDEX_FILE``) is seeded from HEAD and
@@ -285,8 +285,12 @@ def working_tree_commit(root: Path) -> str | None:
         parent: list[str] = []
         if head.returncode == 0 and head.stdout.strip():
             parent = ["-p", head.stdout.strip()]
-        # An unborn HEAD is fine here: the working state is audited as
-        # a parentless commit, and refs (if any) still merge against it.
+        elif parent_ref is not None:
+            # Unborn HEAD: parent the working state on the committed ref
+            # it derives from (identical backlog subtree), so a routine
+            # uncommitted retitle merges as one lineage instead of
+            # false-colliding with its own record.
+            parent = ["-p", parent_ref]
         commit = subprocess.run(
             [
                 "git",
@@ -469,24 +473,24 @@ def main() -> int:
             return int(bool(problems))
         items: list[dict[str, Any]] = list(committed)
         # The working state always participates: parented on HEAD when
-        # one exists, parentless when HEAD is unborn but refs carry
-        # records — the uncommitted collision must still be caught.
-        working = working_tree_commit(root)
+        # one exists. When HEAD is unborn, a parentless commit shares no
+        # history with any ref, so unchanged copies and routine
+        # uncommitted retitles would false-collide with their own
+        # committed records. The working commit therefore takes as its
+        # parent the ref its records derive from — a ref carrying a
+        # working record's (path, ID) — giving the merge the lineage it
+        # needs to see one record, not two.
+        parent_ref: str | None = None
+        working_records = {
+            (item["path"], item["id"]) for item in checkout_records(root)
+        }
+        for item in committed:
+            if (item["path"], item["id"]) in working_records:
+                parent_ref = item["branch"]
+                break
+        working = working_tree_commit(root, parent_ref=parent_ref)
         if working is None:
             raise AuditError("working-state commit could not be built")
-        # A parentless working commit shares no history with any ref, so
-        # an unchanged working copy would false-collide with its own
-        # committed record. When the working tree is byte-identical to
-        # a committed ref's tree, that ref IS the working state — use
-        # it instead of an unrelated commit.
-        working_tree = run_git_checked(root, "rev-parse", f"{working}^{{tree}}").strip()
-        for item in committed:
-            ref_tree = run_git_checked(
-                root, "rev-parse", f"{item['branch']}^{{tree}}"
-            ).strip()
-            if ref_tree == working_tree:
-                working = item["branch"]
-                break
         # The working state participates as its own ref (the throwaway commit)
         # for records the checked-out branch does not already carry — new or
         # edited-but-uncommitted records join; unchanged ones are already

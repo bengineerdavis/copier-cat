@@ -1253,6 +1253,67 @@ def test_audit_allows_an_unchanged_working_copy_with_an_unborn_head(
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+def test_audit_allows_an_uncommitted_retitle_with_an_unborn_head(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    git("checkout", "-qb", "left")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Original")
+    commit("first")
+    git("symbolic-ref", "HEAD", "refs/heads/main")
+    # A routine uncommitted retitle: same record, new title. The working
+    # state derives from left, so the edit is that record's next state.
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Edited")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_audit_allows_an_unrelated_edit_outside_backlog_with_an_unborn_head(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    git("checkout", "-qb", "left")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Original")
+    commit("first")
+    git("symbolic-ref", "HEAD", "refs/heads/main")
+    # The backlog is untouched; only a file outside the store changed.
+    (tmp_path / "README.md").write_text("unrelated edit\n")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 def test_current_checkout_has_unique_backlog_ids() -> None:
     result = run_audit(ROOT)
     assert result.returncode == 0, result.stdout + result.stderr
