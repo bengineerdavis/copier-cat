@@ -887,6 +887,51 @@ def test_audit_detects_independent_competing_rename_chains(
     assert result.returncode == 1, result.stdout + result.stderr
 
 
+def test_audit_detects_id_reuse_from_an_orphan_at_a_renamed_path(
+    tmp_path: Path,
+) -> None:
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    def commit(message: str) -> None:
+        git("add", "-A")
+        git(
+            "-c",
+            "user.name=tests",
+            "-c",
+            "user.email=tests@example.com",
+            "commit",
+            "-qm",
+            message,
+        )
+
+    git("init", "-q", "-b", "main")
+    write_record(tmp_path, "backlog/decisions/one.md", "decision-10", "Original")
+    commit("first")
+    git("checkout", "-qb", "rename")
+    git("mv", "backlog/decisions/one.md", "backlog/decisions/two.md")
+    commit("renamed")
+    # An orphan branch shares no history: no git merge will ever exist to
+    # catch its ID reuse at the old path, so the audit reports it.
+    git("checkout", "-q", "--orphan", "orphan")
+    subprocess.run(
+        ["git", "rm", "-rq", "--cached", "."],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+    )
+    for stale in (tmp_path / "backlog").rglob("*.md"):
+        stale.unlink()
+    write_record(
+        tmp_path, "backlog/decisions/one.md", "decision-10", "Different record"
+    )
+    commit("orphan independently creates one.md")
+    git("checkout", "-q", "main")
+
+    result = run_audit(tmp_path, "--refs")
+    assert result.returncode == 1, result.stdout + result.stderr
+
+
 def test_current_checkout_has_unique_backlog_ids() -> None:
     result = run_audit(ROOT)
     assert result.returncode == 0, result.stdout + result.stderr

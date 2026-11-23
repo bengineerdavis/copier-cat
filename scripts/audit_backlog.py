@@ -403,22 +403,39 @@ def collisions(
             for source, dest, src_branch, dest_branch in accepted:
                 nodes[find((dest_branch, dest))] = find((src_branch, source))
         # A work is a set of paths; project branch-scoped components down
-        # to their path sets, then compare. A path counts as belonging to
-        # a work only through the refs that were merged above — a path
-        # shared by several branches contributes the branch-specific node
-        # of each, so divergent variants stay separate unless git history
-        # connected them.
+        # to their path sets, then compare. Components sharing a path are
+        # the same record ONLY when their refs are related — on related
+        # refs, same-path divergence is git's own merge conflict; on
+        # unrelated refs (an orphan branch), no git merge will ever
+        # exist to catch the ID reuse, so the components stay apart and
+        # the collision is reported here.
         works: dict[tuple[str, str], set[str]] = defaultdict(set)
         for node in nodes:
             works[find(node)].add(node[1])
+        components: dict[tuple[str, str], set[tuple[str, str]]] = defaultdict(set)
+        for node in nodes:
+            components[find(node)].add(node)
         distinct_works: list[set[str]] = []
-        for component_paths in works.values():
-            for existing in distinct_works:
-                if component_paths & existing:
-                    existing |= component_paths
-                    break
-            else:
-                distinct_works.append(set(component_paths))
+        component_refs: list[set[str]] = []
+        for _root_node, comp_nodes in components.items():
+            comp_paths = {n[1] for n in comp_nodes}
+            comp_branches = {n[0] for n in comp_nodes}
+            merged = False
+            for index, existing in enumerate(distinct_works):
+                if comp_paths & existing:
+                    prior_branches = component_refs[index]
+                    if root is None or any(
+                        merge_base_of(root, a, b) is not None
+                        for a in comp_branches
+                        for b in prior_branches
+                    ):
+                        existing |= comp_paths
+                        component_refs[index] |= comp_branches
+                        merged = True
+                        break
+            if not merged:
+                distinct_works.append(comp_paths)
+                component_refs.append(comp_branches)
         if len(distinct_works) > 1:
             titles = sorted({t for s in titles_by_path.values() for t in s})
             results.append({"id": identifier, "titles": titles})
