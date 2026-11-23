@@ -17,7 +17,7 @@ PRINCIPLES.md principle 6 (decision-10) requires that repeating an operation wit
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A second identical adopt run is a no-op or produces only new work
+- [ ] #1 A second adopt run against an already-stamped project exhibits the decision-13 remediated behavior: refusal before any write, zero state change, and a pointer to upgrade (supplied by CCC-39; this task verifies it)
 - [ ] #2 Re-running a validated composition does not duplicate contributions
 - [ ] #3 Partial failure leaves the operation resumable rather than half-applied
 - [ ] #4 uv run pytest -q passes

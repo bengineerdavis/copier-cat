@@ -47,8 +47,10 @@ principle 6 requires — same inputs, same refusal, zero state change.
 
 ## Consequences
 
-decision-10's consequences paragraph points here for remediation
-semantics rather than restating them. No accepted decision is edited in
-place: this record supersedes only the remediation interpretation, not
-either accepted ruling. CCC-39/CCC-40 acceptance criteria cite this
-record for their convergence semantics.
+decision-10 is restored verbatim to its accepted body, so it carries no
+forward link to this record; a reader of decision-10's original
+compliance claims finds the correction here by date (this record is the
+only later decision addressing principles 6 and 7 remediation). This
+record supersedes only the remediation interpretation — neither accepted
+ruling is reversed. CCC-39/CCC-40 acceptance criteria cite this record
+for their convergence semantics.
