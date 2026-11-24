@@ -1,8 +1,9 @@
 ---
 id: CCC-33
 title: Restore the full quality gate for assemble.py
-status: To Do
+status: Done
 created_date: 2026-11-19 21:04
+updated_date: 2026-11-23 02:42
 ---
 
 ## Description
@@ -24,9 +25,9 @@ Measured 2026-11-19: the same os.sys calls exist in origin/main; this wrap-up di
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The three mypy attr-defined errors in assemble.py are resolved without changing behavior
-- [ ] #2 uv run pytest -q passes
-- [ ] #3 mise run quality passes
+- [x] #1 The three mypy attr-defined errors in assemble.py are resolved without changing behavior
+- [x] #2 uv run pytest -q passes
+- [x] #3 mise run quality passes
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -38,9 +39,8 @@ Measured 2026-11-19: the same os.sys calls exist in origin/main; this wrap-up di
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
-
+Replaced os.sys.stderr with sys.stderr in assemble.py. mypy clean, 94 tests pass, mise run quality green on fix-ccc-33-quality-gate dae4f5d.
 <!-- SECTION:FINAL_SUMMARY:END -->
-
 ## Definition of Done
 <!-- DOD:BEGIN -->
 <!-- DOD:END -->

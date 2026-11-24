@@ -31,7 +31,13 @@ from .adopt import (
     render,
     stamp,
 )
-from .assemble import AssemblyError, load_catalog, questions_for, resolve_answers
+from .assemble import (
+    AssemblyError,
+    load_catalog,
+    questions_for,
+    resolve_stack_answers,
+    stack_artifact_name,
+)
 from .assemble import assemble as assemble_project
 from .merge import MergeToolError, default_registry
 
@@ -41,7 +47,7 @@ app = typer.Typer(
         "copier-cat extends copier's lifecycle: copier renders and updates a\n"
         "project from one template; cc brings existing projects under\n"
         "templates (adopt), routes template-worthy fixes back upstream\n"
-        "(phone home, planned), and manages template collections. Nothing\n"
+        "(contribute, planned), and manages template collections. Nothing\n"
         "cc produces requires cc: every command documents its copier-native\n"
         "equivalent and leaves you with plain copier."
     ),
@@ -440,7 +446,7 @@ Copier equivalent: `copier copy TEMPLATE DESTINATION` renders one
 ordinary template. cc resolves that template from a named local stack,
 previews and validates it in isolation, and writes only after approval.
 Plain `copier update -a ANSWERS_FILE` continues the resulting project;
-the disposable .copier-cat-stack.yml provenance is not required.
+the disposable <stack name>.stack.yml artifact is not required.
 
 Examples:
   copier-cat assemble example-project --stack python --catalog catalog.yml
@@ -483,7 +489,8 @@ def _assembly_payload(plan: Any, *, wrote: bool) -> dict[str, Any]:
         "answers": plan.answers,
         "answers_file": plan.rendered.answers_relpath,
         "native_update": plan.update_command,
-        "provenance": ".copier-cat-stack.yml",
+        "native_updates": list(plan.update_commands),
+        "stack_artifact": stack_artifact_name(plan.stack.name),
         "validation": list(plan.checks),
         "preview": str(plan.preview) if plan.retained else None,
         "preview_cleanup": f"rm -rf {plan.preview.parent}"
@@ -524,8 +531,8 @@ def assemble(
         selected = load_catalog(catalog, stack)
         overrides = _parse_answers(answers or [])
         interactive = not json_output and not dry_run and not yes
-        resolved = resolve_answers(
-            selected.members[0],
+        resolved = resolve_stack_answers(
+            selected,
             overrides,
             interactive=interactive,
             guided=guided,
@@ -568,7 +575,9 @@ def assemble(
                 f"({stack}); {len(plan.checks)} checks passed"
             )
             if write:
-                typer.echo(f"Next: cd {destination} && {plan.update_command}")
+                typer.echo(f"Next: cd {destination}")
+                for command in plan.update_commands:
+                    typer.echo(f"  {command}")
             if plan.retained:
                 typer.echo(
                     f"Preview: {plan.preview}; cleanup: rm -rf {plan.preview.parent}"
@@ -604,18 +613,20 @@ def stack_show(
     """Show a stack's independent template source, role, ref, and answers."""
     try:
         selected = load_catalog(catalog, name)
-        member = selected.members[0]
         typer.echo(f"Stack: {name}")
-        typer.echo(f"Template: {member.name} ({member.role})")
-        typer.echo(f"Source: {member.source}")
-        typer.echo(f"Ref: {member.ref or 'default'}")
-        for question in questions_for(member):
-            default = (
-                "required" if question.required else f"default: {question.default}"
-            )
-            typer.echo(f"  {question.label} ({question.name}; {default})")
-            if question.help:
-                typer.echo(f"    {question.help}")
+        for member in selected.members:
+            typer.echo(f"Template: {member.name} ({member.role})")
+            typer.echo(f"Source: {member.source}")
+            typer.echo(f"Ref: {member.ref or 'default'}")
+            if member.capabilities:
+                typer.echo(f"Capabilities: {', '.join(member.capabilities)}")
+            for question in questions_for(member):
+                default = (
+                    "required" if question.required else f"default: {question.default}"
+                )
+                typer.echo(f"  {question.label} ({question.name}; {default})")
+                if question.help:
+                    typer.echo(f"    {question.help}")
     except AssemblyError as error:
         _assembly_failure(error, False)
 

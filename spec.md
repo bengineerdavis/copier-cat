@@ -71,7 +71,8 @@ Assembly MUST:
   requirements;
 - expose first-class stack creation, inspection, and editing. The user-facing
   noun is `stack`, matching the artifact being modified; a stack definition is
-  reusable input, not required runtime residue in every project;
+  reusable input, stored with application state in one project-local stack
+  artifact;
 - render each ordinary template through Copier in an isolated preview, extract
   structured contributions with deterministic format adapters, and serialize one
   valid shared result. Explicit pre-render contribution contracts may optimize
@@ -86,9 +87,10 @@ Assembly MUST:
   cancellation unless explicitly retained. Approval of an assembly authorizes
   only the displayed new destination; existing-project changes, source-template
   changes, and publication each require separate consent;
-- write independent native answers files and disposable `.copier-cat-stack.yml`
-  provenance. Removing cc or that provenance must not impair any template's
-  native `copier update -a` lifecycle;
+- write independent native answers files and one disposable
+  `<stack name>.stack.yml` artifact containing the stack definition and its
+  application state, not a separate stamp file. Removing cc or that artifact
+  must not impair any template's native `copier update -a` lifecycle;
 - always validate rendered structure, assembly invariants and attribution, and
   the generated project's own tests, without asking whether to validate. Guided
   mode presents the validation results so the user can see how choices affect
