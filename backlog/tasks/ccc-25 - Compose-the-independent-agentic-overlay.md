@@ -1,7 +1,7 @@
 ---
 id: CCC-25
 title: Compose the independent agentic overlay
-status: To Do
+status: Done
 created_date: 2026-11-15 06:09
 dependencies:
 - CCC-24
@@ -10,7 +10,7 @@ labels:
 parent_task_id: CCC-11
 references:
 - backlog/docs/session-2026-11-19-lore-self-heal-retro.md
-updated_date: 2026-11-19 21:03
+updated_date: 2026-11-24 21:52
 orchestration:
   status_key: inprogress
   lease_owner: opencode-ccc-25
@@ -40,12 +40,12 @@ Agreed with the maintainer 2026-11-14: convert the approved second DOC-10 origin
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Isolated rendering preserves all disjoint files from both ordinary templates
-- [ ] #2 Structured TOML and ordered deduplicated .gitignore composition retain both templates contributions deterministically
-- [ ] #3 Same-key collisions require a declared rule or visible review, and unsupported shared formats fail explicitly
-- [ ] #4 The agentic overlay declares capabilities without requiring or inheriting from Python
-- [ ] #5 Both native answers files and reported update commands work independently
-- [ ] #6 Real local and synthetic conflict fixtures cover composition, validation, and failure reporting without stack-wide update orchestration
+- [x] #1 Isolated rendering preserves all disjoint files from both ordinary templates
+- [x] #2 Structured TOML and ordered deduplicated .gitignore composition retain both templates contributions deterministically
+- [x] #3 Same-key collisions require a declared rule or visible review, and unsupported shared formats fail explicitly
+- [x] #4 The agentic overlay declares capabilities without requiring or inheriting from Python
+- [x] #5 Both native answers files and reported update commands work independently
+- [x] #6 Real local and synthetic conflict fixtures cover composition, validation, and failure reporting without stack-wide update orchestration
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -60,7 +60,14 @@ Session wrap-up 2026-11-19: implementation is WIP, not Done. Branch feature/ccc-
 ## Final Summary
 
 <!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Closed 2026-11-24 on main (150 tests passing) after walking all six acceptance criteria against the merged implementation (feature/ccc-25-agentic-overlay landed via 6d0cdf0 with review-734 fixes; branch merged through PR #18):
 
+- #1 Isolated rendering preserves disjoint files: test_agentic_overlay_composes_and_updates_independently asserts README.md (python) and AGENTS.md/agents.toml (agentic) coexist in one destination.
+- #2 Structured TOML and ordered deduplicated .gitignore: same test pins mise.toml carrying both templates' sections and .gitignore composed to exactly [".python-version", ".shared-cache/", ".agents/"].
+- #3 Collision and unsupported-format handling: test_same_key_toml_collision_requires_a_declared_rule_or_review (exit 2, "declared precedence rule or review"), test_unsupported_shared_format_fails_without_destination, test_identical_shared_text_is_not_silently_selected — none pick a silent winner and none write the destination.
+- #4 Overlay independence: test_overlay_can_compose_without_python (agentic-alone stack, no pyproject) and test_overlay_requires_capabilities_without_python_dependency (capabilities contract enforced).
+- #5 Native independence: test_extended_stack_native_updates_survive_stack_artifact_removal — after DELETING the stack artifact, both copier update -a .agentic-answers.yml and -a .copier-answers.yml succeed, apply real version upgrades, and repeat updates leave the tree clean.
+- #6 Fixtures: 12 composition tests plus the CLI suite cover composition, validation, and failure reporting; no stack-wide update orchestration exists anywhere (assembly creates; adopt extends; updates are user-run copier update).
 <!-- SECTION:FINAL_SUMMARY:END -->
 
 ## Definition of Done
