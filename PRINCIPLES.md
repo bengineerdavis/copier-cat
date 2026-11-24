@@ -40,6 +40,19 @@ they conflict, the conflict is recorded and resolved deliberately.
    shared data, automation) are additive layers on top, never
    prerequisites. A template that never touches cc's extras must remain
    fully usable by plain copier and by cc alike.
+6. **Idempotent operations.** Repeating an operation with unchanged
+   inputs converges on the same state and does not duplicate its
+   effects. Re-adopting an already-adopted template, re-preparing a
+   changeset, and re-running a validated composition are no-ops or
+   produce only new work. Partial failure leaves the operation
+   resumable rather than half-applied.
+7. **Non-destructive change with a way back.** cc never destroys a
+   project's working state without a restorable backup taken before the
+   write. Content cc removes goes to quarantine, which is the only
+   staging area, and restore is a first-class operation. Records cc
+   writes into a project — answers files, provenance, backups,
+   quarantine manifests — are not silently rewritten in place; a
+   corrected record supersedes the one it replaces.
 
 ## Constraints
 
